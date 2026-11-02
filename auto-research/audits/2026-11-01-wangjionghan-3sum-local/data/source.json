@@ -1,0 +1,26 @@
+{
+  "repo": "https://github.com/Wang-jiong-han/3sum-weighted-cache.git",
+  "commit": "ac885d10bdbf723c3e0549198f9345bedf2a4131",
+  "submission_dir": "",
+  "submission_lean_files": 1092,
+  "submission_lean_bytes": 8049566,
+  "largest_lean_file_bytes": 237988,
+  "largest_lean_file": "Submission/PaperStatements.lean",
+  "repo_tracked_files_at_sha": 1103,
+  "key_files_sha256": {
+    "Submission.lean": "38fc0f5af5ea5f6ca88389ba348e7486a3d588f43602b4ab5f65878a72e3a5c5",
+    "Submission/EndStatement.lean": "4291e3f05781cea42f9d672ff73ceac1f6d1a0c3021038e94372fa8f7e1ad987",
+    "Submission/Weighted.lean": "9eb4f1fd8e20217de34f22bb3d00bed1aa578677728d13d9bc392a1abc7cd7fd",
+    "Audit.lean": "340fdd11ee02ebf01439b25f54cd87c11cf432777761a8dac09fb2aad66338e6",
+    "README.md": "ac150bbf4f1138a72bdca2cea6093924b55d9adc75a37eaec706b1c30c5812a9"
+  },
+  "challenge_file": "challenges/3sum-apsp/EndStatement.lean",
+  "challenge_sha256": "4291e3f05781cea42f9d672ff73ceac1f6d1a0c3021038e94372fa8f7e1ad987",
+  "statement_git_blob": "b2e03ddc7dc78c273aa5a1edda073fd2274d87de",
+  "statement_blob_sha256": "4291e3f05781cea42f9d672ff73ceac1f6d1a0c3021038e94372fa8f7e1ad987",
+  "statement_blob_bytes": 7255,
+  "generated_challenge_sha256": "26ac8aab575031cc901110cad191514b3458f1298d5b37ce9b297bc95b0da0c2",
+  "lean_toolchain": "leanprover/lean4:v4.33.1",
+  "mathlib_rev": "0df444a360eaa60ab8c11dca51a86af692955474",
+  "challenge_note": "challenge_sha256 is the trusted bytes pinned by profiles/direct.json for the 3sum profile. The submission's tracked blob at HEAD:Submission/EndStatement.lean hashes to the same value with zero CR bytes, i.e. it is byte-identical, not a normalized copy. A working-tree checkout on a host with core.autocrlf=true rewrites it to CRLF (7394 bytes, sha256 141b77e26f906faf0ebe8a55fd6a67980d8b01218fe3ea386564913276540de0); that is a local git setting, not a property of the submission."
+}

@@ -1,0 +1,16 @@
+{
+  "track": "audits",
+  "status": "audit",
+  "problem": "Deterministic word-RAM 3SUM with three distinct positions and n^kappa-bounded magnitudes, in the verifier's trusted EndStatement model",
+  "bound": "exponent 96013971/50000000 (approximately 1.92027942) in O(n^r)",
+  "evidence_before": "bigospeedrun/verifier issue #92 Lean Verified receipt, 2026-11-01",
+  "base_commit": "8cf5db1875213723d16b435b1e47c9174b9dd156",
+  "reproduce": "python3 auto-research/audits/2026-11-01-wangjionghan-3sum-local/verify.py",
+  "scope": "Independent local Lean 4.33.1 replay of the pinned submission commit in the verifier's own staged build layout; kernel axiom probe on Race.bound and on the theorem behind it and on a theorem reading the development's opaque package; byte-identity check of the statement module against the profile-pinned trusted challenge; byte-identity check of the staged verifier-generated target against scripts/submissions.py:challenge_source; verbatim-target and rfl-expansion scope probe; positive control proving the axiom probe traverses opaque bodies; and a check that the stated bound is strictly below the development's own cost-ledger certificate and the prior 3SUM record.",
+  "models": [
+    "deepseek-v4-flash (DeepSeek)"
+  ],
+  "predecessors": [
+    "https://github.com/Wang-jiong-han/3sum-weighted-cache/tree/ac885d10bdbf723c3e0549198f9345bedf2a4131"
+  ]
+}

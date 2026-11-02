@@ -1,0 +1,40 @@
+# Trimmed excerpt of the `lake build VerifierAudit VerifierChallenge` log
+# produced by verify.py on a clean workdir. Full log: 5519 lines, exit 0,
+# 4546 jobs. Style warnings are elided below; the counts in
+# evidence/local-run.json are the full-log counts.
+
+warning: manifest out of date: git url of dependency 'mathlib' changed; use `lake update mathlib` to update it
+warning: manifest out of date: git revision of dependency 'mathlib' changed; use `lake update mathlib` to update it
+warning: mathlib: repository '/Volumes/Substrate-1/bigo/audit-3sum-92-verify-work/stage/.lake/packages/mathlib' has local changes
+warning: batteries: repository '/Volumes/Substrate-1/bigo/audit-3sum-92-verify-work/stage/.lake/packages/batteries' has local changes
+✔ [1313/1616] Built Submission.EndStatement (413ms)
+✔ [3139/3233] Built Submission.ThreeSumApsp.Lang.Regions (2.5s)
+✔ [3140/3250] Built Submission.ThreeSumApsp.Lang.Syntax (2.8s)
+✔ [3141/3250] Built Submission.ThreeSumApsp.Util.Index (2.8s)
+✔ [3142/3259] Built Submission.ThreeSumApsp.Util.Basic (3.5s)
+✔ [3143/3259] Built Submission.ThreeSumApsp.Util.List (3.6s)
+✔ [3144/3259] Built Submission.ThreeSum.LayerCounts (4.4s)
+✔ [3145/3259] Built Submission.ThreeSum.BinarySearch (4.7s)
+
+# (job lines and style warnings elided)
+
+# ---- every `#print axioms` line in the submission sources ----
+info: Submission/Weighted/Cache.lean:345:0: 'WeightedCache.bank_card_gibbs' depends on axioms: [propext, Classical.choice, Quot.sound]
+info: Submission/Weighted/Cache.lean:346:0: 'WeightedCache.near_card_gibbs' depends on axioms: [propext, Classical.choice, Quot.sound]
+info: Submission/Weighted/Cache.lean:347:0: 'WeightedCache.zeta_euler' depends on axioms: [propext, Classical.choice, Quot.sound]
+info: Submission/Weighted/Cache.lean:348:0: 'WeightedCache.euler_unique_from_downset' depends on axioms: [propext, Classical.choice, Quot.sound]
+... (45 such lines in total, all reporting the same triple) ...
+info: Submission/Weighted/KernelProgram.lean:220:0: 'ThreeSum.WeightedKernel.near_setup_meets' depends on axioms: [propext, Classical.choice, Quot.sound]
+info: VerifierAudit.lean:2:0: 'Race.bound' depends on axioms: [propext, Classical.choice, Quot.sound]
+
+# ---- the one `sorry`: it is the verifier-generated target, not a submission module ----
+warning: VerifierChallenge.lean:142:8: declaration uses `sorry`
+
+# ---- lake notices about the warm package clone (not about the submission) ----
+warning: mathlib: repository '/Volumes/Substrate-1/bigo/audit-3sum-92-verify-work/stage/.lake/packages/mathlib' has local changes
+warning: batteries: repository '/Volumes/Substrate-1/bigo/audit-3sum-92-verify-work/stage/.lake/packages/batteries' has local changes
+
+# ---- tail ----
+ℹ [4545/4546] Built VerifierAudit (2.7s)
+info: VerifierAudit.lean:2:0: 'Race.bound' depends on axioms: [propext, Classical.choice, Quot.sound]
+Build completed successfully (4546 jobs).
