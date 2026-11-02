@@ -1,0 +1,16 @@
+{
+  "source_repository": "https://github.com/openai/math",
+  "source_commit": "1581d4cbdd69a0faf34b2089614fe2a814316a6a",
+  "original_path": "lean/ComparatorChallenges/SnakyTwentyOne.lean",
+  "original_git_blob": "0fe6ab5c77ba9e4a7819c75c4be0b45d1f50d194",
+  "original_sha256": "6b26e6b265ec08aaf044c3564cb346d6a989cfbf92f0e102af741c6962c988f5",
+  "extracted_lines": "3-40",
+  "extracted_sha256": "0d999f2d9ea7a88ee3a28067de5ac85566e4541c0763b006b30c4b6a30abf638",
+  "local_path": "Model.lean",
+  "local_lines": "9-46",
+  "source_author": "OpenAI",
+  "license": "Apache-2.0",
+  "adapter_author": "fluorine with OpenAI Codex assistance (verifier PR #65); BOS Integrations (VerifierStatement.lean, Validation.lean)",
+  "lean": "leanprover/lean4:v4.34.1",
+  "mathlib": "d13f23b723b8a846827a245b89c10fc7d3f11612"
+}

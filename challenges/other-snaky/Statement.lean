@@ -1,8 +1,8 @@
 import challenges.«other-snaky».Model
 
-/-! A proposed target, not a proof of a Snaky move bound.
-New parameterization by fluorine with Codex; Apache-2.0.
-The entire conclusion of OpenAI's 21-move template is retained. -/
+/-! The Big O Speedrun Snaky target, not a proof of a Snaky move bound.
+New parameterization by fluorine with Codex (verifier PR #65); Apache-2.0.
+OpenAI's 21-move statement is kept whole, with 21 replaced by n and 20 by n - 1. -/
 namespace BigOSpeedrun.Snaky
 open OAI.SnakyPrototype OAI.SnakyPrototype.OrdinaryStrategy
 
