@@ -230,3 +230,46 @@ class SubsetSumSmokeTests(unittest.TestCase):
         with self.assertRaises(ValueError):
             self.dispatch(self.issue(),actor='someone-else')
         self.assertFalse(Path('requests').exists())
+
+
+class SnakyMutationTests(SubsetSumSmokeTests):
+    """The Snaky runs that must fail before that problem opens (Lead, 2026-11-02, verifier #106): our own repository,
+    proofs by sorry, each on a maintainer test issue only, test_only, silent, no record gate."""
+    def issue(self,labels=('test',),tag='snaky-m2-cell-eca2430-v1',**fields):
+        from test_submissions import issue
+        problem,bound,repo,commit=smoke.SNAKY_MUTATIONS[tag]
+        item=issue(95,**{'problem':problem,'bound':bound,'commit':commit,**fields})
+        item['body']=item['body'].replace('https://github.com/example/proof',repo)
+        return dict(item,labels=[{'name':name} for name in labels])
+
+    def test_fixture(self):
+        repo='https://github.com/bigospeedrun/verifier-smoke-snaky'
+        self.assertEqual({tag:(b,c[:7]) for tag,(p,b,r,c) in smoke.SNAKY_MUTATIONS.items() if (p,r)==('snaky',repo)},
+                         {'snaky-control-c89f809-v1':('20','c89f809'),'snaky-m1-bound19-c89f809-v1':('19','c89f809'),
+                          'snaky-m2-cell-eca2430-v1':('20','eca2430'),'snaky-m3-symmetry-73041ba-v1':('20','73041ba'),
+                          'snaky-m4-freshness-299e232-v1':('20','299e232'),'snaky-m5-legality-9ddfaee-v1':('20','9ddfaee')})
+        # Snaky stays closed: only these maintainer runs reach it.
+        self.assertIn('snaky',s.CLOSED)
+
+    def test_dispatch_selects_one_silent_issue_entry(self):
+        for tag,pinned in smoke.SNAKY_MUTATIONS.items():
+            with self.subTest(tag=tag):
+                selected=self.dispatch(self.issue(tag=tag))
+                self.assertEqual(smoke.fixture(selected['submission']),pinned)
+                self.assertEqual((selected['test_only'],selected['live_smoke'],selected['lease_kind']),(True,tag,'smoke'))
+                self.assertTrue(selected['record_gate']['test_only'])
+                self.assertTrue(smoke.active(selected));self.assertTrue(smoke.silent(selected))
+                self.assertEqual(selected['inputs']['challenge_file'],'challenges/other-snaky/VerifierStatement.lean')
+                for field,value in [('test_only',False),('live_smoke',smoke.SS_TAG),('route','pull_request'),
+                                    ('submission',dict(selected['submission'],bound='18'))]:
+                    with self.subTest(field=field,value=value):
+                        self.assertFalse(smoke.active(dict(selected,**{field:value})))
+
+    def test_only_a_maintainer_test_issue_with_the_fixture_form(self):
+        # Another bound or commit is no fixture: 21 is in range, and the m2 commit with the bound 19 is not pinned.
+        for item in [self.issue(labels=()),self.issue(bound='21'),self.issue(bound='19'),self.issue(commit='b'*40)]:
+            with self.subTest(body=item['body'],labels=item['labels']),self.assertRaises(ValueError):
+                self.dispatch(item)
+        with self.assertRaises(ValueError):
+            self.dispatch(self.issue(),actor='someone-else')
+        self.assertFalse(Path('requests').exists())

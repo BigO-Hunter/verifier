@@ -226,6 +226,24 @@ issue number. The run clones the repository of the author (verifier issue
 #94); do not copy its files into a `bigospeedrun` repository, because it has
 no license. It posts nothing. Read the artifacts.
 
+### Snaky statement-mismatch runs (maintainers only)
+
+Snaky opens only after these runs and the Snaky smoke with a real proof
+(`submissions.CLOSED`). They run the same way as the Subset Sum smoke, one test
+issue per entry of `smoke.SNAKY_MUTATIONS`, on the repository
+`https://github.com/bigospeedrun/verifier-smoke-snaky` (our own files; the
+proofs are `sorry`). Every run must be refused. Comparator compares the
+statement before it checks axioms, so:
+
+- the control (commit `c89f809`, bound `20`: an exact statement copy) must fail
+  on the axiom check (`sorryAx`), not on the statement;
+- each other entry must end with the Lean reason `statement_mismatch`: the
+  bound `19` for the theorem about 20 (`c89f809`), one Snaky cell moved
+  (`eca2430`), one symmetry dropped (`73041ba`), the freshness condition removed
+  (`299e232`), and Breaker's reply legality for `k < N` (`9ddfaee`).
+
+They post nothing. Read the receipts.
+
 ### Known limits
 
 - The Lean checkpoint watcher (`live_publish.watch`, 330 minutes) cannot see the

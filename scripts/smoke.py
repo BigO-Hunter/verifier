@@ -1,7 +1,7 @@
 """Maintainer-dispatched, non-importable smokes: the fixed historical DFT proof, the pinned average-sensitivity
-proof that had to pass before that problem opened (submissions.CLOSED), the Catalan split-build smoke and the Subset
-Sum smoke. The Catalan and Subset Sum smokes run only on a maintainer test issue (label 'test') whose form is their
-fixture, and they post nothing."""
+proof that had to pass before that problem opened (submissions.CLOSED), the Catalan split-build smoke, the Subset
+Sum smoke and the Snaky statement-mismatch runs. These silent smokes run only on a maintainer test issue (label
+'test') whose form is their fixture, and they post nothing."""
 import json
 import os
 from pathlib import Path
@@ -29,8 +29,22 @@ CATALAN_TAG = 'catalan-a3d4849-split-v1'
 SS_FIXTURE = ('subset-sum', '3/4', 'https://github.com/darkhipo/subset-sum-mitm',
               '8b105f01848fc0e370abfa3a23ed5c3de463f321')
 SS_TAG = 'subset-sum-8b105f0-v1'
+# Snaky runs that must FAIL before that problem opens (Lead, 2026-11-02, verifier #106): our own repository, proofs
+# by sorry. Comparator compares the statement before it checks axioms, so the control (an exact statement copy) must
+# fail on sorryAx, and each mutation of the copy, or the bound 19 for the theorem about 20, must fail as
+# statement_mismatch.
+SNAKY_REPO = 'https://github.com/bigospeedrun/verifier-smoke-snaky'
+SNAKY_CONTROL = 'c89f80904e29433fa97449849e6df017b790a2fd'
+SNAKY_MUTATIONS = {
+    'snaky-control-c89f809-v1': ('snaky', '20', SNAKY_REPO, SNAKY_CONTROL),
+    'snaky-m1-bound19-c89f809-v1': ('snaky', '19', SNAKY_REPO, SNAKY_CONTROL),
+    'snaky-m2-cell-eca2430-v1': ('snaky', '20', SNAKY_REPO, 'eca2430c189ae50eb0eaf514d8cd43dee33fbd50'),
+    'snaky-m3-symmetry-73041ba-v1': ('snaky', '20', SNAKY_REPO, '73041babbfd876eda749055ce15e31f75cb97dbe'),
+    'snaky-m4-freshness-299e232-v1': ('snaky', '20', SNAKY_REPO, '299e232db1c9d5b5766df87b6d581003224540e9'),
+    'snaky-m5-legality-9ddfaee-v1': ('snaky', '20', SNAKY_REPO, '9ddfaeef790579437b716529586eec3fcfdefaee'),
+}
 # Smokes that post nothing and run only on a maintainer test issue.
-SILENT = {CATALAN_TAG: CATALAN_FIXTURE, SS_TAG: SS_FIXTURE}
+SILENT = {CATALAN_TAG: CATALAN_FIXTURE, SS_TAG: SS_FIXTURE, **SNAKY_MUTATIONS}
 
 
 def fixture(sub):
@@ -61,7 +75,7 @@ def issue_submission(sub):
 
 
 def silent(selected):
-    """The Catalan and Subset Sum smokes: no result comment, no Lean checkpoint comment, no label."""
+    """The Catalan, Subset Sum and Snaky smokes: no result comment, no Lean checkpoint comment, no label."""
     return active(selected) and selected.get('live_smoke') in SILENT
 
 
