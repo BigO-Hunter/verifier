@@ -232,6 +232,43 @@ class SubsetSumSmokeTests(unittest.TestCase):
         self.assertFalse(Path('requests').exists())
 
 
+class SnakySmokeTests(SubsetSumSmokeTests):
+    """The Snaky smoke that must pass before that problem opens (Lead, 2026-11-02): darkhipo's proof of the bound 20,
+    cloned from its own repository (issue #106), on a maintainer test issue only, test_only, silent, no record gate."""
+    def issue(self,labels=('test',),**fields):
+        from test_submissions import issue
+        problem,bound,repo,commit=smoke.SNAKY_FIXTURE
+        item=issue(95,**{'problem':problem,'bound':bound,'commit':commit,**fields})
+        item['body']=item['body'].replace('https://github.com/example/proof',repo)
+        return dict(item,labels=[{'name':name} for name in labels])
+
+    def test_fixture(self):
+        self.assertEqual((smoke.SNAKY_FIXTURE,smoke.SNAKY_TAG),(('snaky','20','https://github.com/darkhipo/snaky-twenty',
+                                                                 'f6248dc39a05a6c5665240d860d2dbb95db707d9'),'snaky-f6248dc-v1'))
+        self.assertEqual(smoke.SILENT[smoke.SNAKY_TAG],smoke.SNAKY_FIXTURE)
+        self.assertIn('snaky',s.CLOSED)
+
+    def test_dispatch_selects_one_silent_issue_entry(self):
+        selected=self.dispatch(self.issue())
+        self.assertEqual(smoke.fixture(selected['submission']),smoke.SNAKY_FIXTURE)
+        self.assertEqual((selected['test_only'],selected['live_smoke'],selected['lease_kind']),(True,smoke.SNAKY_TAG,'smoke'))
+        self.assertTrue(selected['record_gate']['test_only'])
+        self.assertTrue(smoke.active(selected));self.assertTrue(smoke.silent(selected))
+        self.assertEqual(selected['inputs']['challenge_file'],'challenges/other-snaky/VerifierStatement.lean')
+        for field,value in [('test_only',False),('live_smoke',smoke.SS_TAG),('route','pull_request'),
+                            ('submission',dict(selected['submission'],bound='19'))]:
+            with self.subTest(field=field,value=value):
+                self.assertFalse(smoke.active(dict(selected,**{field:value})))
+
+    def test_only_a_maintainer_test_issue_with_the_fixture_form(self):
+        for item in [self.issue(labels=()),self.issue(bound='19'),self.issue(bound='21'),self.issue(commit='b'*40)]:
+            with self.subTest(body=item['body'],labels=item['labels']),self.assertRaises(ValueError):
+                self.dispatch(item)
+        with self.assertRaises(ValueError):
+            self.dispatch(self.issue(),actor='someone-else')
+        self.assertFalse(Path('requests').exists())
+
+
 class SnakyMutationTests(SubsetSumSmokeTests):
     """The Snaky runs that must fail before that problem opens (Lead, 2026-11-02, verifier #106): our own repository,
     proofs by sorry, each on a maintainer test issue only, test_only, silent, no record gate."""

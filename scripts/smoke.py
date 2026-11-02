@@ -43,8 +43,13 @@ SNAKY_MUTATIONS = {
     'snaky-m4-freshness-299e232-v1': ('snaky', '20', SNAKY_REPO, '299e232db1c9d5b5766df87b6d581003224540e9'),
     'snaky-m5-legality-9ddfaee-v1': ('snaky', '20', SNAKY_REPO, '9ddfaeef790579437b716529586eec3fcfdefaee'),
 }
+# The Snaky smoke that must PASS before that problem opens (Lead, 2026-11-02): darkhipo's public proof of the bound 20
+# (verifier issue #106, posted 2026-11-02), cloned from its own repository (Apache-2.0) as the issue source. Issue route
+# only. Its Submission/SnakyStatement.lean is a byte copy of the challenge (sha256 49e630b3).
+SNAKY_FIXTURE = ('snaky', '20', 'https://github.com/darkhipo/snaky-twenty', 'f6248dc39a05a6c5665240d860d2dbb95db707d9')
+SNAKY_TAG = 'snaky-f6248dc-v1'
 # Smokes that post nothing and run only on a maintainer test issue.
-SILENT = {CATALAN_TAG: CATALAN_FIXTURE, SS_TAG: SS_FIXTURE, **SNAKY_MUTATIONS}
+SILENT = {CATALAN_TAG: CATALAN_FIXTURE, SS_TAG: SS_FIXTURE, SNAKY_TAG: SNAKY_FIXTURE, **SNAKY_MUTATIONS}
 
 
 def fixture(sub):

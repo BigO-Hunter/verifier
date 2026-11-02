@@ -244,6 +244,14 @@ statement before it checks axioms, so:
 
 They post nothing. Read the receipts.
 
+The Snaky smoke itself must pass: a test issue with the form of
+`smoke.SNAKY_FIXTURE` (problem `snaky`, repository
+`https://github.com/darkhipo/snaky-twenty`, commit
+`f6248dc39a05a6c5665240d860d2dbb95db707d9`, bound `20`, label `test`). The run
+clones the author's repository (verifier issue #106, Apache-2.0). It posts
+nothing. Read the artifacts, and check the log for `autoImplicit` errors (the
+profile builds with `autoImplicit = false`).
+
 ### Known limits
 
 - The Lean checkpoint watcher (`live_publish.watch`, 330 minutes) cannot see the
