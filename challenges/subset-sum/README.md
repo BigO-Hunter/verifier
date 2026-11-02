@@ -67,11 +67,12 @@ Decisions a reviewer should check:
   `q > 0` and `0 ≤ p/q ≤ 1`. A negative `p` makes `α.num.toNat = 0`, and
   `q = 0` normalizes to `0`; both turn the claim into `O(1)`, which no
   program can meet, but the gate should reject them rather than rely on
-  that. The classic
-  `O*(2^(n/2))` of Horowitz and Sahni has a polynomial factor and is a
-  strict frontier, not an attained value of this statement; the first
-  attained values below `1/2` are the paper's `0.49` and the current
-  claim's `0.4877`. The statement is for attained bounds.
+  that. The classic bound of Horowitz and Sahni is usually written
+  `O*(2^(n/2))`, but this statement attains `1/2` itself: a sum of inputs
+  fits in one word, so a deterministic program that builds each sorted list
+  of half-sums by merging and then does a two-pointer scan uses
+  `O(2^(n/2))` operations, with no polynomial factor. A proof of `1/2` ties
+  the classical baseline. The statement is for attained bounds.
 
 ## Toolchain
 

@@ -49,12 +49,12 @@ class GateTests(unittest.TestCase):
             return s.current_record('subset-sum', 'https://github.com/bigospeedrun/verifier/issues/90')
 
     def test_every_bound_in_range_runs_until_a_lean_verified_row_exists(self):
-        # Nil ruling 2026-11-02 (issue #94): a first Lean proof above the classical 1/2 (a strict frontier that no
-        # proof under the statement attains) is a stepping stone and runs.
+        # Nil ruling 2026-11-02 (issue #94): a first Lean proof above the classical 1/2 is a stepping stone and
+        # runs. The statement attains 1/2 itself (Lead, 2026-11-02, issue #101), so a tie with the baseline runs too.
         rows = [{'id': 'classical-baseline', 'score': '1/2'}, {'id': 'a-kapila', 'score': '4877/10000', 'score_relation': 'attained'}]
         record = self.gate(rows, {'a-kapila': {'site_tier': 'claimed'}})
         self.assertEqual((record['score'], record['leader_ids'], record['any_lean_verified_at_bound']), ('1', ['profile-range'], False))
-        for bound in ['4877/10000', '3/5', '3/4', '1']:
+        for bound in ['4877/10000', '1/2', '3/5', '3/4', '1']:
             with self.subTest(bound=bound):
                 self.assertTrue(s.qualifies_for_run({'problem': 'subset-sum', 'bound': bound}, record))
 

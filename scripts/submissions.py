@@ -423,8 +423,9 @@ def current_record(problem, issue_url):
 
     The gate is the best Lean Verified row of the board (Nil ruling 2026-10-20): a Claimed
     or Human Verified row never blocks a proof run. With no Lean Verified row, every bound in the
-    profile range runs (Nil ruling 2026-11-02, issue #94): the classical baseline of Subset Sum (1/2)
-    is a strict frontier that no proof under the statement attains, so a first proof is above it."""
+    profile range runs (Nil ruling 2026-11-02, issue #94), also a first proof above the classical
+    baseline of Subset Sum (1/2). The statement attains 1/2 itself (Lead, 2026-11-02, issue #101), so a
+    proof of exactly 1/2 runs too and ties the baseline."""
     if problem in OTHER:
         return other_record(problem, issue_url)
     sha, raw = site_snapshot(problem)
