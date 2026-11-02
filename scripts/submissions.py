@@ -42,6 +42,9 @@ def validate_submission(value):
     bound = Fraction(value['bound'])
     if not 0 <= bound <= Fraction(profiles[value['problem']]['maximum']):
         raise ValueError('bound is outside the problem range')
+    # A Snaky bound counts Maker moves (Lead, 2026-11-02, verifier #106): a whole number, no fraction.
+    if value['problem'] == 'snaky' and bound.denominator != 1:
+        raise ValueError('bound must be a whole number of Maker moves for snaky')
     if not isinstance(value['repo_url'], str) or not re.fullmatch(r'https://github\.com/[A-Za-z0-9][A-Za-z0-9_.-]{0,99}/[A-Za-z0-9][A-Za-z0-9_.-]{0,99}', value['repo_url']):
         raise ValueError('repo_url must be a public GitHub repository URL without query or credentials')
     if not isinstance(value['commit'], str) or not re.fullmatch('[0-9a-f]{40}', value['commit']):
@@ -67,15 +70,16 @@ def validate_submission(value):
 FORM_FIELDS = ['Problem', 'Repository URL', 'Commit SHA', 'Bound']
 MODEL_IDS = {'dft': 'exact-dft/uniform-exact-arithmetic', '3sum': '3sum/word-ram', 'apsp': 'apsp/word-ram',
              'average-sensitivity': 'other/average-sensitivity', 'catalan': 'other/catalan',
-             'subset-sum': 'subset-sum/randomized-word-ram'}
+             'subset-sum': 'subset-sum/randomized-word-ram', 'snaky': 'other/snaky'}
 # Other bounds rows with a trusted statement: the record gate reads the row, not a board file.
-OTHER = {'average-sensitivity', 'catalan'}
+OTHER = {'average-sensitivity', 'catalan', 'snaky'}
 # A profile whose proof route is not open yet: selection skips it, and only the maintainer smoke runs
 # it (smoke.py). Opening is a reviewed change that removes the problem from this set. Average
 # sensitivity opened on 2026-10-23 after its smoke (run 39943626205, issue #48) passed. Catalan opened on
 # 2026-10-27 after its split-build smoke (run 40497685416, issue #68) passed. Subset Sum opened on 2026-11-01
-# after its smoke (run 41353572059, issue #98, darkhipo's 3/4 proof) passed.
-CLOSED = set()
+# after its smoke (run 41353572059, issue #98, darkhipo's 3/4 proof) passed. Snaky (2026-11-02, verifier #106)
+# waits for a proof on its profile to smoke with.
+CLOSED = {'snaky'}
 
 
 def form_error(body):
@@ -190,6 +194,10 @@ theorem Race.bound : ∃ order solve W, DFTProgram order solve W ∧
         target = f'theorem Race.bound : BigOSpeedrun.Catalan.Bound (({n} : ℚ) / {d}) := by\n  sorry\n'
     elif submission['problem'] == 'subset-sum':
         target = f'theorem Race.bound : BigOSpeedrun.SubsetSum.SolvedInTime (({n} : Rat) / {d}) := by\n  sorry\n'
+    elif submission['problem'] == 'snaky':
+        if d != 1:
+            raise ValueError('bound must be a whole number of Maker moves for snaky')
+        target = f'theorem Race.bound : BigOSpeedrun.Snaky.Bound {n} := by\n  sorry\n'
     else:
         problem = 'ThreeSum' if submission['problem'] == '3sum' else 'APSP'
         target = f'theorem Race.bound : EndStatement.{problem}.SolvedInTime (({n} : Rat) / {d}) := by\n  sorry\n'
@@ -475,7 +483,8 @@ def qualifies_for_run(submission, record):
 # site). A final result names it in one line; the site routes are /<slug> for Big O boards, /other/<slug> otherwise.
 BOARDS = {'dft': ('Exact discrete Fourier transform', 'exact-dft'), '3sum': ('3SUM', '3sum'),
           'apsp': ('All-pairs shortest paths', 'apsp'), 'average-sensitivity': ('Average sensitivity', 'other/average-sensitivity'),
-          'catalan': ("Catalan's constant", 'other/catalan'), 'subset-sum': ('Subset Sum', 'subset-sum')}
+          'catalan': ("Catalan's constant", 'other/catalan'), 'subset-sum': ('Subset Sum', 'subset-sum'),
+          'snaky': ('Snaky', 'other/snaky')}
 
 
 def board_line(problem):
