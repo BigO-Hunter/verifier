@@ -89,10 +89,14 @@ It is an operation-count theorem, not a bit-complexity claim.
 ## Split build for large proofs
 
 A profile with `"runner": "github-split"` runs in two hosted jobs of one
-workflow run. Today only `catalan` has it. Catalan opened on 2026-10-27, after
-the maintainer smoke below passed (run 40497685416, issue #68). Each job has the 350-minute job timeout and its
-own 320-minute deadline from its own `prepare`. The PR route has no build job,
-so a PR for a split profile starts no job.
+workflow run. Today `catalan` and `3sum` have it. Catalan opened on 2026-10-27, after
+the maintainer smoke below passed (run 40497685416, issue #68). 3SUM issues run split
+since 2026-11-02: issue #99 compiled one module at a time for 5 h 16 min in one job
+and ran out of time (run 41393097953). Each job has the 350-minute job timeout and its
+own 320-minute deadline from its own `prepare`. Both issue jobs set `BOS_SPLIT`
+from the matrix entry. The PR route has no build job and never splits: a 3SUM PR
+runs as one job, as before, and keeps the chain build. A Catalan PR starts no job
+(the PR route admits only `dft`, `3sum` and `apsp` folders).
 
 1. Job `build` (`contents: read`, `issues: read`, no secrets) runs the same
    gate, tests, `prepare` and `setup`. Then `verifier.py build` runs one
@@ -124,7 +128,7 @@ so a PR for a split profile starts no job.
    build folder from `prepare`, with `O_EXCL` and `O_NOFOLLOW`, and sets the
    mtimes. If unpack fails, no check runs, and the receipt ends as
    `setup_failed`. The report job runs as before.
-4. `prepare` writes one chain target for a split profile, the solution module.
+4. In a split run (`BOS_SPLIT`), `prepare` writes one chain target, the solution module.
    So Comparator's solution build is one Lake call through the shim. It finds
    the restored files up to date, or rebuilds at the submission's own time cost.
    The kernel checks, the audit and the nanoda pass do not change. Nanoda gets

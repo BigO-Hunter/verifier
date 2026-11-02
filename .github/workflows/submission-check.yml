@@ -25,6 +25,8 @@ jobs:
     env:
       BOS_REQUEST_PATH: request/request.json
       ISSUE_NUMBER: ${{ inputs.issue_number }}
+      # prepare writes one solution target in a split run (verifier.chain_targets).
+      BOS_SPLIT: ${{ inputs.split }}
     outputs:
       proceed: ${{ steps.gate.outputs.proceed }}
       build_sha256: ${{ steps.pack.outputs.build_sha256 }}
@@ -75,6 +77,8 @@ jobs:
     env:
       BOS_REQUEST_PATH: request/request.json
       ISSUE_NUMBER: ${{ inputs.issue_number }}
+      # The gate and prepare read it (a split run follows job 1; verifier.chain_targets).
+      BOS_SPLIT: ${{ inputs.split }}
     steps:
       - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
         with:
@@ -89,7 +93,6 @@ jobs:
         env:
           GH_TOKEN: ${{ github.token }}
           # A split run follows job 1's gate: a claimed-only end there uploads no build.
-          BOS_SPLIT: ${{ inputs.split }}
           BOS_BUILD_PROCEED: ${{ needs.build.outputs.proceed }}
         run: python3 scripts/submissions.py preflight
       - if: steps.gate.outputs.proceed == 'true'

@@ -23,6 +23,9 @@ ROOT = Path(__file__).resolve().parents[1]
 WORKFLOW = '.github/workflows/submissions.yml'
 PUBLISHER = '.github/workflows/pr-publish.yml'
 MAX_FILES = 500
+# The problems whose submission folders a PR may add (validate_layout). A PR of any of them runs as one job.
+PR_PROBLEMS = ('dft', '3sum', 'apsp')
+PR_FOLDER = 'submissions/(' + '|'.join(PR_PROBLEMS) + ')/'
 MAX_ARCHIVE = 50 * 1024 * 1024
 SHA = re.compile('[0-9a-f]{40}\\Z')
 
@@ -137,7 +140,7 @@ def validate_layout(pr, changed, base_exists, entries):
     paths = set()
     for file in changed:
         path = file['filename']
-        match = re.fullmatch(r'submissions/(dft|3sum|apsp)/(' + re.escape(login) + r'-[a-z0-9][a-z0-9-]{0,39})/(.+)', path)
+        match = re.fullmatch(PR_FOLDER + r'(' + re.escape(login) + r'-[a-z0-9][a-z0-9-]{0,39})/(.+)', path)
         if not match or file['status'] != 'added' or file.get('previous_filename'):
             raise LayoutError('PR must add only files inside its own new submission folder')
         prefix = '/'.join(path.split('/')[:3])
@@ -202,7 +205,7 @@ def inspect_pr(pr, manifest_bytes=None):
         raise LayoutError('Empty PR')
     # Resolve folder from a bounded path; validate_layout checks every path.
     folder = '/'.join(changed[0]['filename'].split('/')[:3])
-    if not re.fullmatch(r'submissions/(dft|3sum|apsp)/[a-z0-9-]+', folder):
+    if not re.fullmatch(PR_FOLDER + r'[a-z0-9-]+', folder):
         raise LayoutError('PR changes a protected path')
     base_exists = file_at(base, folder) is not None
     head_entry = file_at(head, folder)
@@ -362,8 +365,9 @@ def select_candidate(issue, lease, reader=None, comments=()):
             return None
         except TrustUnavailable:
             return None
-        if s.runner(selected['submission']) != 'github':
-            # The PR route has no build job. Today it admits only dft/3sum/apsp folders, and no such profile is split.
+        if selected['submission']['problem'] not in PR_PROBLEMS:
+            # The PR route has no build job: a PR always runs as one job (pr_verify), whatever the profile runner. 3SUM
+            # issues run split since 2026-11-02 (issue #99 timed out in one job); 3SUM PRs still run here.
             return None
         record = s.current_record(selected['submission']['problem'], selected['pr_url'])
         selected['record_gate'] = record

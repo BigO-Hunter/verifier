@@ -175,9 +175,12 @@ def plan_sources(stage, root):
     return chains
 
 
-def chain_targets(profile, chains):
-    # Split profile: job 1 built the solution, so the shim makes one Lake call (docs/execution.md).
-    if profile.get('runner') == 'github-split':
+def chain_targets(profile, chains, split):
+    # Split run (BOS_SPLIT, the issue jobs of a split profile): job 1 built the solution, so the shim makes one Lake call
+    # (docs/execution.md). A PR or maintainer run of a split profile has no build job and keeps the chains.
+    if split:
+        if profile.get('runner') != 'github-split':
+            raise ValueError('a split run needs a split profile')
         return profile['solution_module'] + '\n'
     return ''.join(chain[-1] + '\n' for chain in chains)
 
@@ -327,7 +330,7 @@ def prepare():
     write_json(ART / 'source-sha256.json', hashes)
     chains = plan_sources(stage, profile['solution_module'])
     write_json(WORK / 'control/chains.json', chains)
-    (WORK / 'control/chain-targets.txt').write_text(chain_targets(profile, chains))
+    (WORK / 'control/chain-targets.txt').write_text(chain_targets(profile, chains, os.environ.get('BOS_SPLIT') == 'true'))
     if 'direct_submission' in request:
         from submissions import challenge_source
         (stage / 'VerifierChallenge.lean').write_text(challenge_source(request['direct_submission']))

@@ -31,7 +31,8 @@
     ],
     "bound_kind": "exponent",
     "maximum": "2",
-    "upstream_commit": "e1a4e6508154ea59f030480661590a9fe3018011"
+    "upstream_commit": "e1a4e6508154ea59f030480661590a9fe3018011",
+    "runner": "github-split"
   },
   "apsp": {
     "challenge_file": "challenges/3sum-apsp/EndStatement.lean",

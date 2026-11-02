@@ -28,7 +28,9 @@ def sub(problem, bound='1'):
 class RunnerTests(unittest.TestCase):
     def test_runner_values(self):
         self.assertEqual(s.runner(sub('catalan')), 'github-split')
-        for problem in ['dft', '3sum', 'apsp', 'average-sensitivity', 'subset-sum']:
+        # 3SUM issues run split since 2026-11-02: issue #99 built for over 5 h 16 min in one job and timed out.
+        self.assertEqual(s.runner(sub('3sum')), 'github-split')
+        for problem in ['dft', 'apsp', 'average-sensitivity', 'subset-sum']:
             self.assertEqual(s.runner(sub(problem)), 'github')
         self.assertEqual(s.runner(dict(sub('dft', '7547360/10000000000'), entrypoint='dft233')), 'github')
         # Catalan opened on 2026-10-27; its issues run as split runs.
@@ -47,6 +49,8 @@ class RunnerTests(unittest.TestCase):
     def test_matrix_entry(self):
         self.assertEqual(s.matrix_entry(5, 'x', 'issue', sub('catalan')),
                          {'issue_number': 5, 'login': 'x', 'route': 'issue', 'split': True})
+        self.assertEqual(s.matrix_entry(5, 'x', 'issue', sub('3sum')),
+                         {'issue_number': 5, 'login': 'x', 'route': 'issue', 'split': True})
         self.assertEqual(s.matrix_entry(5, 'x', 'issue', sub('dft')), {'issue_number': 5, 'login': 'x', 'route': 'issue'})
         # A PR request can have no submission (invalid layout); the PR route never splits.
         self.assertEqual(s.matrix_entry(6, 'y', 'pull_request', None), {'issue_number': 6, 'login': 'y', 'route': 'pull_request'})
@@ -61,6 +65,21 @@ class RunnerTests(unittest.TestCase):
              patch.dict(os.environ, GITHUB_SHA='b' * 40):
             self.assertIsNone(p.select_candidate({'number': 7}, Lease()))
             record.assert_not_called()
+
+    def test_a_3sum_pr_runs_as_one_job(self):
+        # 3SUM issues run split; a 3SUM PR is still selected and runs in pr_verify (no build job).
+        class Lease:
+            def admitted(self, key): return False
+        pr = {'number': 8, 'head': {'sha': 'h'}, 'base': {'sha': 'b'}, 'user': {'login': 'u'}}
+        submission = sub('3sum', '19/10')
+        with patch.object(p, 'api', return_value=pr), patch.object(p, 'proof_candidate', return_value=True), \
+             patch.object(p, 'inspect_pr', return_value={'head_sha': 'h', 'submission': submission, 'pr_url': 'u'}), \
+             patch.object(p, 'validate_controller'), patch.object(s, 'current_record', return_value='record') as record, \
+             patch.object(s, 'qualifies_for_run', return_value=True), patch.dict(os.environ, GITHUB_SHA='b' * 40):
+            selected = p.select_candidate({'number': 8}, Lease())
+        record.assert_called_once_with('3sum', 'u')
+        self.assertEqual((selected['gate'], selected['record_gate']), ('ready', 'record'))
+        self.assertEqual(s.matrix_entry(8, 'u', 'pull_request', submission), {'issue_number': 8, 'login': 'u', 'route': 'pull_request'})
 
 
 ROOTS = ['Submission']
@@ -107,10 +126,15 @@ class AllowListTests(unittest.TestCase):
 class ChainTargetTests(unittest.TestCase):
     def test_split_writes_one_line(self):
         chains = [['Submission.A', 'Submission.B'], ['Submission.C', 'Submission']]
-        catalan = json.loads((ROOT / 'profiles/direct.json').read_text())['catalan']
-        self.assertEqual(v.chain_targets(catalan, chains), 'Submission\n')
-        dft = json.loads((ROOT / 'profiles/direct.json').read_text())['dft']
-        self.assertEqual(v.chain_targets(dft, chains), 'Submission.B\nSubmission\n')
+        profiles = json.loads((ROOT / 'profiles/direct.json').read_text())
+        for name in ['catalan', '3sum']:
+            with self.subTest(profile=name):
+                self.assertEqual(v.chain_targets(profiles[name], chains, True), 'Submission\n')
+                # A PR or maintainer run of a split profile has no build job: it keeps the chains.
+                self.assertEqual(v.chain_targets(profiles[name], chains, False), 'Submission.B\nSubmission\n')
+        self.assertEqual(v.chain_targets(profiles['dft'], chains, False), 'Submission.B\nSubmission\n')
+        with self.assertRaises(ValueError):
+            v.chain_targets(profiles['dft'], chains, True)
 
 
 class SplitGateTests(unittest.TestCase):
@@ -463,10 +487,13 @@ class WorkflowTests(unittest.TestCase):
         for step in [download, unpack]:
             self.assertEqual(step['if'], "inputs.split && steps.gate.outputs.proceed == 'true'")
         gate = next(step for step in steps if step.get('id') == 'gate')
-        self.assertEqual(gate['env'], {'GH_TOKEN': '${{ github.token }}', 'BOS_SPLIT': '${{ inputs.split }}',
-                                       'BOS_BUILD_PROCEED': '${{ needs.build.outputs.proceed }}'})
+        self.assertEqual(gate['env'], {'GH_TOKEN': '${{ github.token }}', 'BOS_BUILD_PROCEED': '${{ needs.build.outputs.proceed }}'})
         build_gate = next(step for step in jobs['build']['steps'] if step.get('id') == 'gate')
         self.assertEqual(build_gate['env'], {'GH_TOKEN': '${{ github.token }}'})
+        # Both issue jobs set BOS_SPLIT for the gate and prepare (verifier.chain_targets); pr_verify never does.
+        for name in ['build', 'verify']:
+            self.assertEqual(jobs[name]['env']['BOS_SPLIT'], '${{ inputs.split }}')
+        self.assertNotIn('BOS_SPLIT', jobs['pr_verify']['env'])
         # Without split, the steps are the steps of 255e338, and the report job is unchanged.
         plain = [r for r, step in zip(runs, steps) if 'inputs.split' not in str(step.get('if'))]
         self.assertEqual(plain, ['actions/checkout', 'actions/download-artifact', 'python3 scripts/submissions.py materialize',
