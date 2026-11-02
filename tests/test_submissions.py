@@ -182,6 +182,30 @@ class SubmissionTests(unittest.TestCase):
         self.assertIn('match the challenge: `the theorem`',compile_error_comment(forged))
         self.assertNotIn('@nmamano',compile_error_comment(forged))
 
+    def test_a_changed_definition_is_a_statement_mismatch(self):
+        # Lead, 2026-11-02: Snaky test run 41544953483 (issue #109) moved one cell of the Snaky shape in the statement copy.
+        # Comparator refused it at its compare step, before the axiom check; the reason was ambiguous_failure.
+        log=("warning: Submission.lean:8:8: declaration uses `sorry`\n"
+             "uncaught exception: Const does not match between challenge and target 'OAI.SnakyPrototype.snaky'\n")
+        outcome=kernel_outcome('lean',1,log,'exit-code')
+        self.assertEqual(outcome,{'status':'pending_review','reason':'statement_mismatch','theorem':'OAI.SnakyPrototype.snaky','mismatch':'definition'})
+        comment=compile_error_comment({'kernels':{'lean':outcome}})
+        self.assertIn("A definition that the theorem statement uses does not match the challenge: `OAI.SnakyPrototype.snaky`",comment)
+        self.assertNotIn('reduced fraction',comment)
+        self.assertEqual(comment.count('\n'),2)
+        # As for the theorem line: resource evidence wins, a zero exit is no mismatch, nanoda does not report it.
+        self.assertEqual(kernel_outcome('lean',1,log,'oom-kill')['status'],'incomplete')
+        self.assertEqual(kernel_outcome('lean',0,log)['reason'],'missing_acceptance')
+        self.assertEqual(kernel_outcome('nanoda',1,log)['reason'],'ambiguous_failure')
+        for bad in ["snaky`@x","a b",'x'*101]:
+            self.assertEqual(kernel_outcome('lean',1,log.replace('OAI.SnakyPrototype.snaky',bad))['reason'],'ambiguous_failure')
+        # The theorem line is still named as before when both appear.
+        both=log+"uncaught exception: Challenge and solution theorem statement do not match: 'Race.bound'\n"
+        self.assertEqual(kernel_outcome('lean',1,both),{'status':'pending_review','reason':'statement_mismatch','theorem':'Race.bound'})
+        forged={'kernels':{'lean':dict(outcome,theorem='`@nmamano [x](y)')}}
+        self.assertIn('match the challenge: `the theorem`',compile_error_comment(forged))
+        self.assertNotIn('@nmamano',compile_error_comment(forged))
+
     def test_bound_gate(self):
         for problem,current,better,worse in [('dft','1/1000','1/999','1/1001'),('3sum','2499/1250','1999/1000','2'),('apsp','149971/50000','2999/1000','3')]:
             record={'score':current,'score_relation':'attained','any_lean_verified_at_bound':False}

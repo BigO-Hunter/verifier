@@ -242,6 +242,15 @@ statement before it checks axioms, so:
   (`eca2430`), one symmetry dropped (`73041ba`), the freshness condition removed
   (`299e232`), and Breaker's reply legality for `k < N` (`9ddfaee`).
 
+Comparator refuses a changed theorem type with "Challenge and solution theorem
+statement do not match", and a changed definition that the theorem uses with
+"Const does not match between challenge and target '<name>'". Both are the
+compare step, and both give the reason `statement_mismatch` (a changed
+definition also has `mismatch: definition`). The runs of 2026-11-02 were made
+before the second message had this reason: their receipts say
+`ambiguous_failure`, so read their `lean.log` (Lead, 2026-11-02: those runs are
+accepted from the log line).
+
 They post nothing. Read the receipts.
 
 The Snaky smoke itself must pass: a test issue with the form of

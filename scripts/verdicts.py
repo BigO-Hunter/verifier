@@ -32,6 +32,11 @@ def kernel_outcome(kernel, code, output, systemd_result='', guard_stop=None):
     mismatch = re.search(r"^uncaught exception: Challenge and solution theorem statement do not match: '([A-Za-z_][A-Za-z0-9_.]{0,99})'$", output, re.M)
     if kernel == 'lean' and code != 0 and mismatch:
         return {'status': 'pending_review', 'reason': 'statement_mismatch', 'theorem': mismatch.group(1)}
+    # The same compare step refuses a definition that the theorem uses when it differs from the challenge's (Lead,
+    # 2026-11-02: Snaky test run 41544953483 moved one cell of OAI.SnakyPrototype.snaky in the statement copy).
+    changed = re.search(r"^uncaught exception: Const does not match between challenge and target '([A-Za-z_][A-Za-z0-9_.]{0,99})'$", output, re.M)
+    if kernel == 'lean' and code != 0 and changed:
+        return {'status': 'pending_review', 'reason': 'statement_mismatch', 'theorem': changed.group(1), 'mismatch': 'definition'}
     return {'status': 'pending_review', 'reason': 'ambiguous_failure' if code else 'missing_acceptance'}
 
 
@@ -69,6 +74,9 @@ def compile_error_comment(receipt):
         # The name was matched by kernel_outcome's pattern; check it again, as the receipt is read back from disk.
         name = str(lean.get('theorem', ''))
         name = name if re.fullmatch(r'[A-Za-z_][A-Za-z0-9_.]{0,99}', name) else 'the theorem'
+        if lean.get('mismatch') == 'definition':
+            return (f"\n\nA definition that the theorem statement uses does not match the challenge: `{name}`. Copy the"
+                    ' statement file of the challenge byte for byte, and do not change its definitions.')
         return (f"\n\nThe proof's theorem statement does not match the challenge: `{name}`. The statements are compared as"
                 ' written, so write the bound in the theorem as the same reduced fraction as in this submission.')
     if lean.get('status') != 'rejected' or lean.get('reason') != 'lean_compile_error':
