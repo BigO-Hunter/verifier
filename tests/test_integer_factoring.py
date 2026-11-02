@@ -118,7 +118,7 @@ class PrepareTests(unittest.TestCase):
             with patch.object(v, 'ART', root / 'artifacts'), patch.object(v, 'WORK', root / 'work'), \
                  patch.object(v, 'command'), patch.object(v, 'clone', side_effect=clone), \
                  patch.object(v.subprocess, 'check_output', side_effect=tree), \
-                 patch.dict(os.environ, GITHUB_EVENT_PATH=str(event), BOS_REQUEST_PATH=str(event)):
+                 patch.dict(os.environ, GITHUB_EVENT_PATH=str(event), BOS_REQUEST_PATH=str(event), BOS_SPLIT=''):
                 v.prepare()
                 hashes = json.loads((root / 'artifacts/source-sha256.json').read_text())
                 self.assertEqual(set(hashes), {'Solution.lean', 'Factoring_aux.lean', 'FactoringAux/Definitions.lean'})

@@ -199,7 +199,7 @@ class PrepareTests(unittest.TestCase):
                  patch.object(v, 'command'), patch.object(v, 'clone', side_effect=clone), \
                  patch.object(v, 'validate_request', return_value=(profile, [TARGET])), \
                  patch.object(v.subprocess, 'check_output', side_effect=tree), \
-                 patch.dict(os.environ, GITHUB_EVENT_PATH=str(event), BOS_REQUEST_PATH=str(event)):
+                 patch.dict(os.environ, GITHUB_EVENT_PATH=str(event), BOS_REQUEST_PATH=str(event), BOS_SPLIT=''):
                 v.prepare()
                 hashes = json.loads((root / 'artifacts/source-sha256.json').read_text())
                 self.assertEqual(set(hashes), {'HalfTheorem.lean', 'Bridge.lean', 'HalfPad.lean', 'Challenge.lean',

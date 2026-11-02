@@ -44,7 +44,10 @@ jobs:
         env:
           GH_TOKEN: ${{ github.token }}
         run: python3 scripts/submissions.py preflight
+      # The tests run without the job's BOS_SPLIT: a test that prepares a one-job profile must not read it.
       - if: steps.gate.outputs.proceed == 'true'
+        env:
+          BOS_SPLIT: ''
         run: python3 -m unittest discover -s tests -v
       - id: prepare
         if: steps.gate.outputs.proceed == 'true'
@@ -95,7 +98,10 @@ jobs:
           # A split run follows job 1's gate: a claimed-only end there uploads no build.
           BOS_BUILD_PROCEED: ${{ needs.build.outputs.proceed }}
         run: python3 scripts/submissions.py preflight
+      # The tests run without the job's BOS_SPLIT (see the build job).
       - if: steps.gate.outputs.proceed == 'true'
+        env:
+          BOS_SPLIT: ''
         run: python3 -m unittest discover -s tests -v
       - if: steps.gate.outputs.proceed == 'true'
         run: python3 scripts/verifier.py prepare

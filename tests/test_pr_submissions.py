@@ -86,7 +86,7 @@ class PRTests(unittest.TestCase):
         tree=(f'100644 blob {"a"*40}\t{self.folder}/Submission.lean\0'+f'100644 blob {"b"*40}\tSubmission.lean\0').encode()
         with tempfile.TemporaryDirectory() as tmp:
             root=Path(tmp);event=root/'request.json';event.write_text(json.dumps(selected))
-            with patch.object(v,'ART',root/'artifacts'),patch.object(v,'WORK',root/'work'),patch.object(v,'clone',side_effect=clone),patch.object(v.subprocess,'check_output',return_value=tree),patch.dict(os.environ,BOS_REQUEST_PATH=str(event),BOS_VERIFIER_COMMIT='b'*40):
+            with patch.object(v,'ART',root/'artifacts'),patch.object(v,'WORK',root/'work'),patch.object(v,'clone',side_effect=clone),patch.object(v.subprocess,'check_output',return_value=tree),patch.dict(os.environ,BOS_REQUEST_PATH=str(event),BOS_VERIFIER_COMMIT='b'*40,BOS_SPLIT=''):
                 v.prepare()
                 self.assertIn('theorem Race.bound',(root/'work/stage/Submission.lean').read_text())
                 self.assertEqual(v.receipt()['source_file_count'],1)

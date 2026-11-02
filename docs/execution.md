@@ -94,8 +94,9 @@ the maintainer smoke below passed (run 40497685416, issue #68). 3SUM issues run 
 since 2026-11-02: issue #99 compiled one module at a time for 5 h 16 min in one job
 and ran out of time (run 41393097953). Each job has the 350-minute job timeout and its
 own 320-minute deadline from its own `prepare`. Both issue jobs set `BOS_SPLIT`
-from the matrix entry. The PR route has no build job and never splits: a 3SUM PR
-runs as one job, as before, and keeps the chain build. A Catalan PR starts no job
+from the matrix entry; their unit-test steps clear it, and the suite also passes with
+`BOS_SPLIT=true` (rerun 41494392206 of #99 failed there). The PR route has no
+build job and never splits: a 3SUM PR runs as one job, as before, and keeps the chain build. A Catalan PR starts no job
 (the PR route admits only `dft`, `3sum` and `apsp` folders).
 
 1. Job `build` (`contents: read`, `issues: read`, no secrets) runs the same

@@ -7,6 +7,7 @@ import os
 from pathlib import Path
 import runpy
 import shutil
+import subprocess
 import sys
 import tarfile
 import tempfile
@@ -494,6 +495,10 @@ class WorkflowTests(unittest.TestCase):
         for name in ['build', 'verify']:
             self.assertEqual(jobs[name]['env']['BOS_SPLIT'], '${{ inputs.split }}')
         self.assertNotIn('BOS_SPLIT', jobs['pr_verify']['env'])
+        # The unit tests of both issue jobs run without it: #99's rerun 41494392206 failed there, 3 errors (2026-11-02).
+        for name in ['build', 'verify']:
+            tests = next(step for step in jobs[name]['steps'] if step.get('run') == 'python3 -m unittest discover -s tests -v')
+            self.assertEqual(tests['env'], {'BOS_SPLIT': ''})
         # Without split, the steps are the steps of 255e338, and the report job is unchanged.
         plain = [r for r, step in zip(runs, steps) if 'inputs.split' not in str(step.get('if'))]
         self.assertEqual(plain, ['actions/checkout', 'actions/download-artifact', 'python3 scripts/submissions.py materialize',
@@ -504,6 +509,16 @@ class WorkflowTests(unittest.TestCase):
                                  'python3 scripts/verifier.py finalize', 'actions/upload-artifact'])
         self.assertEqual((jobs['report']['needs'], jobs['report']['if']), ('verify', "always() && inputs.route == 'issue'"))
         self.assertNotIn('needs', jobs['pr_verify'])
+
+
+class SuiteUnderSplitTests(unittest.TestCase):
+    # The suite must pass with the split job's environment too, not only with the step's clear (run 41494392206).
+    @unittest.skipIf(os.environ.get('BOS_SUITE_UNDER_SPLIT') == '1', 'the inner run')
+    def test_the_suite_passes_with_bos_split_true(self):
+        env = dict(os.environ, BOS_SPLIT='true', BOS_SUITE_UNDER_SPLIT='1')
+        run = subprocess.run([sys.executable, '-m', 'unittest', 'discover', '-s', 'tests'], cwd=ROOT, env=env,
+                             capture_output=True, text=True, timeout=300)
+        self.assertEqual(run.returncode, 0, run.stderr[-4000:])
 
 
 if __name__ == '__main__':
