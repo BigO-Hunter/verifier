@@ -136,9 +136,27 @@ class GateTests(unittest.TestCase):
         self.assertEqual(s.range_end('heilbronn-triangle'), 0)
 
 
-class ClosedTests(unittest.TestCase):
-    def test_heilbronn_is_closed_until_its_smoke(self):
-        self.assertIn('heilbronn-triangle', s.CLOSED)
+class OpenTests(unittest.TestCase):
+    # Heilbronn opened on 2026-11-03 after its smoke (run 41571110767, issue #123) and the refused control and
+    # mutation runs.
+    def test_heilbronn_is_open(self):
+        self.assertNotIn('heilbronn-triangle', s.CLOSED)
+        self.assertEqual(s.board_line('heilbronn-triangle'), 'Heilbronn triangle board: https://bigospeedrun.com/other/heilbronn-triangle')
+        with self.assertRaises(ValueError) as error:
+            s.validate_submission({'schema_version': 1, 'problem': 'nope', 'bound': '1', 'repo_url': 'https://github.com/a/b',
+                                   'commit': 'a' * 40, 'authors': []})
+        self.assertIn('heilbronn-triangle', str(error.exception))
+        form = (ROOT / '.github/ISSUE_TEMPLATE/lean-submission.yml').read_text()
+        self.assertIn('options: [dft, 3sum, apsp, average-sensitivity, catalan, subset-sum, snaky, heilbronn-triangle]', form)
+        sub = {'schema_version': 1, 'problem': 'heilbronn-triangle', 'bound': '2/100866719', 'repo_url': 'https://github.com/a/b',
+               'commit': 'a' * 40, 'authors': []}
+        self.assertEqual(s.validate_submission(sub)['bound'], '2/100866719')
+        for bound in ['1', '6/7']:
+            with self.subTest(bound=bound), self.assertRaises(ValueError):
+                s.validate_submission(dict(sub, bound=bound))
+        # The open form still refuses 0; only the pinned maintainer smoke reads it.
+        with self.assertRaisesRegex(ValueError, 'must be positive'):
+            s.parse_body(body('0'))
 
 
 if __name__ == '__main__':

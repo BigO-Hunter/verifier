@@ -1,10 +1,10 @@
-# Heilbronn triangle: proposed trusted statement
+# Heilbronn triangle: trusted statement
 
-This proposes the missing trusted target for the
+This is the trusted target for the
 [Heilbronn triangle board](https://bigospeedrun.com/other/heilbronn-triangle).
-It follows [the statement contribution guide](../../docs/new-statements.md).
-This is a statement-review contribution. It is not a proof submission, and it
-does not claim that the public gate already accepts this problem.
+It came as a statement-review contribution, following
+[the statement contribution guide](../../docs/new-statements.md). It is not a proof
+submission. The issue route takes this problem since 2026-11-03 (verifier #105).
 
 ## Model and saving
 
@@ -38,8 +38,8 @@ This is a purely existential geometric statement. The board has no algorithm,
 operation count or uniformity condition. The bound must hold for **every**
 large `n`, not only along a subsequence.
 
-The controller should substitute a reduced nonnegative rational for `η`. The
-current Claimed board value `1/50893237` would give:
+The controller substitutes a reduced positive rational for `η`. For example, the
+saving `1/50893237` (one Claimed value on the board) gives:
 
 ```lean
 theorem Race.bound :
@@ -75,11 +75,10 @@ OpenAI's definitions, not its theorem statements.
 
 ## Verifier statement
 
-`VerifierStatement.lean` is the trusted statement of the future `heilbronn-triangle`
-profile. It is `OAI/Geometry/HeilbronnTriangle/Definitions.lean` byte for byte,
+`VerifierStatement.lean` is the trusted statement of the `heilbronn-triangle`
+profile (issue route, opened 2026-11-03). It is `OAI/Geometry/HeilbronnTriangle/Definitions.lean` byte for byte,
 followed by `Statement.lean` without its import line. Its only import is
-`import Mathlib`, the import of the frozen file. No verifier profile or submission
-route uses it yet.
+`import Mathlib`, the import of the frozen file.
 
 A submission copies this one file byte for byte below `Submission/` (for example
 as `Submission/HeilbronnStatement.lean`), imports it, and proves, for a reduced

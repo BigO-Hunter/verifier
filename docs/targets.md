@@ -136,6 +136,32 @@ compares every definition that the theorem uses, and a changed definition (for
 example a moved cell of the shape) is a statement mismatch. See
 [the statement README](../challenges/other-snaky/README.md) for the rules.
 
+## Heilbronn triangle
+
+Issue route only. Use Lean `leanprover/lean4:v4.34.1` and the Mathlib pin in
+`profiles/lake-manifest.json` (the DFT pin). The trusted statement is
+`challenges/heilbronn-triangle/VerifierStatement.lean`, namespace
+`BigOSpeedrun.HeilbronnTriangle`. It imports `Mathlib`. Copy it byte for byte into
+your sources (for example `Submission/HeilbronnStatement.lean`), and for a reduced
+saving `p/q` with `0 < p/q ≤ 5/6`, export:
+
+```lean
+import Submission.HeilbronnStatement
+
+theorem Race.bound : BigOSpeedrun.HeilbronnTriangle.Bound ((p : ℚ) / q) := by
+  -- Supply the proof.
+```
+
+`Bound η` says that there are a real `c > 0` and an `N` such that for every
+`n ≥ N`, some `n` distinct points in the closed unit square have every triangle
+(on three distinct points) of area at least `c n^(-2+η)`. A larger saving is
+better. The form refuses `0`: it is the classical bound, already proved. The
+verifier does not stage `OAI.Geometry.HeilbronnTriangle.Definitions`, so a port of
+OpenAI's proof tree must import the copied file. Do not change the copied file:
+Comparator compares every definition that the theorem uses, and a changed
+definition (for example the area of a triangle) is a statement mismatch. See
+[the statement README](../challenges/heilbronn-triangle/README.md).
+
 ## Integer factoring
 
 Closed to issues and PRs. A maintainer can rerun Isaac Rudich and Louis-Martin

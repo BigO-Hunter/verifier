@@ -263,7 +263,8 @@ profile builds with `autoImplicit = false`).
 
 ### Heilbronn triangle runs (maintainers only)
 
-Heilbronn opens only after these runs (`submissions.CLOSED`), all on our own
+Heilbronn opened on 2026-11-03 after these runs (smoke: issue #123, run
+41571110767), all on our own
 repository `https://github.com/bigospeedrun/verifier-smoke-heilbronn`, one test
 issue per entry, as for Snaky:
 

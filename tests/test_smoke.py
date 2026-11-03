@@ -332,7 +332,8 @@ class HeilbronnSmokeTests(SubsetSumSmokeTests):
                           'heilbronn-m3-square-27734ae-v1':('1/50893237','27734ae'),'heilbronn-m4-constant-6c77d88-v1':('1/50893237','6c77d88'),
                           'heilbronn-m5-distinct-9a86923-v1':('1/50893237','9a86923')})
         self.assertTrue(set(self.TAGS.items())<=set(smoke.SILENT.items()))
-        self.assertIn('heilbronn-triangle',s.CLOSED)
+        # Heilbronn opened on 2026-11-03 after these runs; the public form still refuses 0.
+        self.assertNotIn('heilbronn-triangle',s.CLOSED)
 
     def test_dispatch_selects_one_silent_issue_entry(self):
         for tag,pinned in self.TAGS.items():

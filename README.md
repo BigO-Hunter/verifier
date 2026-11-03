@@ -1,7 +1,7 @@
 # Big O Speedrun verifier
 
 Submit a Lean proof of a bound for Fourier transform, 3SUM, APSP, Subset Sum,
-average sensitivity, Catalan's constant, or Snaky.
+average sensitivity, Catalan's constant, Snaky, or the Heilbronn triangle problem.
 The verifier checks the proof against our fixed statement on GitHub Actions.
 A passing submission appears as **Lean Verified** on [bigospeedrun.com](https://bigospeedrun.com).
 An open submission without a passing check appears as **Claimed**.
@@ -24,8 +24,8 @@ Choose either route. Both use the same statement, record gate, and proof checks.
 
 See [the problem guide](docs/targets.md) for the exact target and Lean version.
 
-Use `dft`, `3sum`, `apsp`, `subset-sum`, `average-sensitivity`, `catalan` or `snaky`
-for `problem`. Use an exact nonnegative rational for `bound`. For DFT, the bound is the
+Use `dft`, `3sum`, `apsp`, `subset-sum`, `average-sensitivity`, `catalan`, `snaky` or
+`heilbronn-triangle` for `problem`. Use an exact nonnegative rational for `bound`. For DFT, the bound is the
 saving s in O(n (log n)^(1-s)); a larger saving is better. For 3SUM and APSP, it is
 the exponent r in O(n^r); smaller is better. For Subset Sum, it is the exponent α in
 O(2^(α n)); smaller is better, and only the issue route takes it. For average sensitivity (an Other bounds
@@ -34,9 +34,12 @@ issue route takes it. For Catalan's constant (an Other bounds row), it is an upp
 bound μ on the irrationality exponent of G; smaller is better, and only the issue
 route takes it. For Snaky (an Other bounds row), it is a whole number n of Maker moves
 that win on the infinite board; smaller is better, a fraction is refused, and only the
-issue route takes it. The ranges are 0 ≤ s ≤ 1, 0 ≤ r ≤ 2 for 3SUM, 0 ≤ r ≤ 3 for
-APSP, 0 ≤ α ≤ 1 for Subset Sum, 0 ≤ C ≤ 8 for average sensitivity, and
-0 ≤ μ ≤ 100000000 for Catalan, and 0 ≤ n ≤ 100 for Snaky.
+issue route takes it. For the Heilbronn triangle problem (an Other bounds row), it is the
+saving η in Δ(n) ≥ c n^(-2+η); a larger saving is better, 0 is refused (it is the
+classical bound), and only the issue route takes it. The ranges are 0 ≤ s ≤ 1,
+0 ≤ r ≤ 2 for 3SUM, 0 ≤ r ≤ 3 for APSP, 0 ≤ α ≤ 1 for Subset Sum, 0 ≤ C ≤ 8 for
+average sensitivity, 0 ≤ μ ≤ 100000000 for Catalan, 0 ≤ n ≤ 100 for Snaky, and
+0 < η ≤ 5/6 for Heilbronn.
 
 A Catalan proof is large, so it runs in two jobs: a build job, then the check job
 ([split build](docs/execution.md#split-build-for-large-proofs)). This has three

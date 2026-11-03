@@ -84,8 +84,10 @@ HIGHER = {'dft', 'heilbronn-triangle'}
 # after its smoke (run 41353572059, issue #98, darkhipo's 3/4 proof) passed. Snaky opened on 2026-11-03 after its
 # smoke (run 41548037272, issue #113, darkhipo's Bound 20 proof) passed and its control and five statement mutations
 # were refused (runs 41543423936, 41544268863, 41544953483, 41545742606, 41546502694, 41547277453). Heilbronn
-# (2026-11-03, verifier #105) waits for its smoke.
-CLOSED = {'heilbronn-triangle'}
+# opened on 2026-11-03 (verifier #105) after its smoke (run 41571110767, issue #123, our bound_zero proof at the
+# bound 0, which the public form refuses) passed and its control and five statement mutations were refused (runs
+# 41567042077, 41567693486, 41568314615, 41569037465, 41569722876, 41570365991).
+CLOSED = set()
 
 
 def form_error(body):
