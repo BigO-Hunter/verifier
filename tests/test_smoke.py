@@ -312,6 +312,56 @@ class SnakyMutationTests(SubsetSumSmokeTests):
         self.assertFalse(Path('requests').exists())
 
 
+class DirectedSsspSmokeTests(SubsetSumSmokeTests):
+    """The directed SSSP runs before that problem opens (Nil's GO, 2026-11-03): our own scratch repository, one branch per
+    case (Lead, 2026-11-03), on a maintainer test issue only, test_only, silent, no record gate."""
+    TAGS = {smoke.SSSP_TAG: smoke.SSSP_FIXTURE, **smoke.SSSP_MUTATIONS}
+
+    def issue(self,labels=('test',),tag=None,**fields):
+        from test_submissions import issue
+        problem,bound,repo,commit=self.TAGS[tag or smoke.SSSP_TAG]
+        item=issue(95,**{'problem':problem,'bound':bound,'commit':commit,**fields})
+        item['body']=item['body'].replace('https://github.com/example/proof',repo)
+        return dict(item,labels=[{'name':name} for name in labels])
+
+    def test_fixture(self):
+        repo='https://github.com/bigospeedrun/sssp-lean-scratch'
+        self.assertEqual({tag:(b,c[:7]) for tag,(p,b,r,c) in self.TAGS.items() if (p,r)==('directed-sssp',repo)},
+                         {'sssp-9891923-v1':('n log^3/4 ; n log^11/12','9891923'),
+                          'sssp-control-5238e61-v1':('n log^3/4 ; n log^11/12','5238e61'),
+                          'sssp-m1-cap-floor-9be59eb-v1':('n log^3/4 ; n log^11/12','9be59eb'),
+                          'sssp-m2-b-5238e61-v1':('n log^4/5 ; n log^11/12','5238e61'),
+                          'sssp-m3-time-5238e61-v1':('n log^3/4 ; n log^5/6','5238e61'),
+                          'sssp-m4-fallback-f06285b-v1':('n log^3/4 ; n log^11/12','f06285b'),
+                          'sssp-m5-exact-a922982-v1':('n log^3/4 ; n log^11/12','a922982')})
+        self.assertTrue(set(self.TAGS.items())<=set(smoke.SILENT.items()))
+        self.assertIn('directed-sssp',s.CLOSED)
+
+    def test_dispatch_selects_one_silent_issue_entry(self):
+        for tag,pinned in self.TAGS.items():
+            with self.subTest(tag=tag):
+                selected=self.dispatch(self.issue(tag=tag))
+                self.assertEqual(smoke.fixture(selected['submission']),pinned)
+                self.assertEqual((selected['test_only'],selected['live_smoke'],selected['lease_kind']),(True,tag,'smoke'))
+                self.assertTrue(selected['record_gate']['test_only'])
+                self.assertTrue(smoke.active(selected));self.assertTrue(smoke.silent(selected))
+                self.assertEqual(selected['inputs']['challenge_file'],'challenges/directed-sssp/VerifierStatement.lean')
+                for field,value in [('test_only',False),('live_smoke',smoke.SS_TAG),('route','pull_request'),
+                                    ('submission',dict(selected['submission'],bound='n ; n log'))]:
+                    with self.subTest(field=field,value=value):
+                        self.assertFalse(smoke.active(dict(selected,**{field:value})))
+
+    def test_only_a_maintainer_test_issue_with_the_fixture_form(self):
+        # Another bound or commit is no fixture: the smoke bound on another commit, or the control with another bound.
+        for item in [self.issue(labels=()),self.issue(bound='n ; n log'),self.issue(commit='b'*40),
+                     self.issue(tag='sssp-control-5238e61-v1',bound='n log^1/2 ; n log')]:
+            with self.subTest(body=item['body'],labels=item['labels']),self.assertRaises(ValueError):
+                self.dispatch(item)
+        with self.assertRaises(ValueError):
+            self.dispatch(self.issue(),actor='someone-else')
+        self.assertFalse(Path('requests').exists())
+
+
 class HeilbronnSmokeTests(SubsetSumSmokeTests):
     """The Heilbronn runs before that problem opens (Lead, 2026-11-03, verifier #105): our own repository, on a
     maintainer test issue only, test_only, silent, no record gate. The smoke has the bound 0, which the public form refuses."""

@@ -40,22 +40,84 @@ def bound_digits(problem):
     return BOUND_DIGITS.get(problem, 40)
 
 
+# Directed shortest paths (Nil, 2026-11-03): a row says "with at most D(n) edges, the time is O(T(n))". The bound
+# is "D ; T" with D = n^a log^b and T = n^a' log^b' loglog^c' (challenges/directed-sssp/README.md). Each exponent is
+# an integer or a reduced fraction, with at most 40 digits per integer. There is one normal form: the factors in the
+# order n, log, loglog, one space between them, a factor with exponent 0 left out, and exponent 1 written as the bare
+# name. D is n^a log^b with 1 <= a <= 2, b >= 0, at most n^2; T is at least D and at most n^3 (lex order of the
+# exponent tuples). Lead, 2026-11-03: a strict parser, one normal form, refuse everything else with a clear message.
+SSSP = 'directed-sssp'
+SSSP_EXAMPLE = 'n log^3/4 ; n log^11/12'
+SSSP_FACTOR = re.compile(r'(n|log|loglog)(?:\^(-?(?:0|[1-9][0-9]{0,39})(?:/[1-9][0-9]{0,39})?))?')
+SSSP_HELP = (f'the bound for {SSSP} must be "D ; T", for example "{SSSP_EXAMPLE}": D = n^a log^b, '
+             'T = n^a log^b loglog^c, exponents as integers or reduced fractions (3/4, -1/2), '
+             'the factors in this order, a factor with exponent 0 left out, and n instead of n^1')
+
+
+def sssp_side(text, names):
+    exponents = dict.fromkeys(names, Fraction(0))
+    order = list(names)
+    for token in text.split(' '):
+        match = SSSP_FACTOR.fullmatch(token)
+        if not match or match.group(1) not in order:
+            raise ValueError(SSSP_HELP)
+        name, raw = match.groups()
+        order = order[order.index(name) + 1:]
+        if raw is None:
+            exponents[name] = Fraction(1)
+            continue
+        value = Fraction(raw)
+        if str(value) != raw or value in (0, 1):
+            raise ValueError(SSSP_HELP)
+        exponents[name] = value
+    return tuple(exponents[name] for name in names)
+
+
+def sssp_text(exponents, names):
+    return ' '.join(name if e == 1 else f'{name}^{e}' for name, e in zip(names, exponents) if e != 0)
+
+
+def parse_sssp(text):
+    """The exponents (a, b, a', b', c') of a normal-form directed-sssp bound, or ValueError."""
+    if not isinstance(text, str) or text.count(' ; ') != 1:
+        raise ValueError(SSSP_HELP)
+    d_text, t_text = text.split(' ; ')
+    if not d_text or not t_text:
+        raise ValueError(SSSP_HELP)
+    d = sssp_side(d_text, ('n', 'log'))
+    t = sssp_side(t_text, ('n', 'log', 'loglog'))
+    if sssp_text(d, ('n', 'log')) != d_text or sssp_text(t, ('n', 'log', 'loglog')) != t_text:
+        raise ValueError(SSSP_HELP)
+    a, b = d
+    if not 1 <= a <= 2 or b < 0 or (a == 2 and b != 0):
+        raise ValueError(f'the edge bound D of {SSSP} must be between n and n^2: n^a log^b with 1 <= a <= 2 and b >= 0')
+    if t < (a, b, Fraction(0)) or t > (Fraction(3), Fraction(0), Fraction(0)):
+        raise ValueError(f'the time T of {SSSP} must be at least the edge bound D and at most n^3')
+    return d + t
+
+
 def validate_submission(value):
     if not isinstance(value, dict) or not FIELDS <= set(value) or set(value) - FIELDS - {'entrypoint', 'source_subdir'} or type(value['schema_version']) is not int or value['schema_version'] != 1:
         raise ValueError('Expected schema_version, problem, bound, repo_url, commit, authors only')
     profiles = json.loads((ROOT / 'profiles/direct.json').read_text())
     if not isinstance(value['problem'], str) or value['problem'] not in profiles:
         raise ValueError('Supported problems: ' + ', '.join(p for p in profiles if p not in CLOSED))
-    # A digit limit per integer of the bound (bound_digits).
-    digits = bound_digits(value['problem'])
-    if not isinstance(value['bound'], str) or not re.fullmatch(rf'(?:0|[1-9][0-9]{{0,{digits - 1}}})(?:/[1-9][0-9]{{0,{digits - 1}}})?', value['bound']):
-        raise ValueError(f"bound must be an integer or a fraction p/q (no decimals), with at most {digits} digits in each for {value['problem']}")
-    bound = Fraction(value['bound'])
-    if not 0 <= bound <= Fraction(profiles[value['problem']]['maximum']):
-        raise ValueError('bound is outside the problem range')
-    # A Snaky bound counts Maker moves (Lead, 2026-11-02, verifier #106): a whole number, no fraction.
-    if value['problem'] == 'snaky' and bound.denominator != 1:
-        raise ValueError('bound must be a whole number of Maker moves for snaky')
+    if value['problem'] == SSSP:
+        # Two functions, not one rational (parse_sssp); the text is already the normal form.
+        parse_sssp(value['bound'])
+        bound, bound_text = None, value['bound']
+    else:
+        # A digit limit per integer of the bound (bound_digits).
+        digits = bound_digits(value['problem'])
+        if not isinstance(value['bound'], str) or not re.fullmatch(rf'(?:0|[1-9][0-9]{{0,{digits - 1}}})(?:/[1-9][0-9]{{0,{digits - 1}}})?', value['bound']):
+            raise ValueError(f"bound must be an integer or a fraction p/q (no decimals), with at most {digits} digits in each for {value['problem']}")
+        bound = Fraction(value['bound'])
+        if not 0 <= bound <= Fraction(profiles[value['problem']]['maximum']):
+            raise ValueError('bound is outside the problem range')
+        # A Snaky bound counts Maker moves (Lead, 2026-11-02, verifier #106): a whole number, no fraction.
+        if value['problem'] == 'snaky' and bound.denominator != 1:
+            raise ValueError('bound must be a whole number of Maker moves for snaky')
+        bound_text = str(bound)
     if not isinstance(value['repo_url'], str) or not re.fullmatch(r'https://github\.com/[A-Za-z0-9][A-Za-z0-9_.-]{0,99}/[A-Za-z0-9][A-Za-z0-9_.-]{0,99}', value['repo_url']):
         raise ValueError('repo_url must be a public GitHub repository URL without query or credentials')
     if not isinstance(value['commit'], str) or not re.fullmatch('[0-9a-f]{40}', value['commit']):
@@ -72,7 +134,7 @@ def validate_submission(value):
     authors = value['authors']
     if not isinstance(authors, list) or not 0 <= len(authors) <= 30 or any(not isinstance(x, str) or not x.strip() or len(x) > 120 or any(ord(c) < 32 for c in x) for x in authors):
         raise ValueError('authors must contain 1 to 30 names, at most 120 characters each')
-    result = dict(value, bound=str(bound))
+    result = dict(value, bound=bound_text)
     if entrypoint == 'Race.bound':
         result.pop('entrypoint', None)
     return result
@@ -82,7 +144,8 @@ FORM_FIELDS = ['Problem', 'Repository URL', 'Commit SHA', 'Bound']
 MODEL_IDS = {'dft': 'exact-dft/uniform-exact-arithmetic', '3sum': '3sum/word-ram', 'apsp': 'apsp/word-ram',
              'average-sensitivity': 'other/average-sensitivity', 'catalan': 'other/catalan',
              'subset-sum': 'subset-sum/randomized-word-ram', 'snaky': 'other/snaky',
-             'heilbronn-triangle': 'other/heilbronn-triangle'}
+             'heilbronn-triangle': 'other/heilbronn-triangle',
+             'directed-sssp': 'directed-sssp/comparison-addition-sparse'}
 # Other bounds rows with a trusted statement: the record gate reads the row, not a board file.
 OTHER = {'average-sensitivity', 'catalan', 'snaky', 'heilbronn-triangle'}
 # Problems where a larger bound is better (a saving): the gate takes the largest Lean Verified bound, and the weakest
@@ -98,7 +161,10 @@ HIGHER = {'dft', 'heilbronn-triangle'}
 # opened on 2026-11-03 (verifier #105) after its smoke (run 41571110767, issue #123, our bound_zero proof at the
 # bound 0, which the public form refuses) passed and its control and five statement mutations were refused (runs
 # 41567042077, 41567693486, 41568314615, 41569037465, 41569722876, 41570365991).
-CLOSED = set()
+# Directed SSSP stays closed until its smoke (the C-HD proof with our bridge) passes and its control and statement
+# mutations are refused (Nil's GO, 2026-11-03; challenges/directed-sssp/README.md). Its record gate compares (D, T)
+# tuples, not one rational, and comes with the site half.
+CLOSED = {SSSP}
 
 
 def form_error(body):
@@ -206,6 +272,10 @@ def challenge_source(submission):
     base = (ROOT / profile['challenge_file']).read_text()
     if submission.get('entrypoint') == 'dft233':
         return base
+    if submission['problem'] == SSSP:
+        args = ' '.join(f'(({e.numerator} : ℚ) / {e.denominator})' for e in parse_sssp(submission['bound']))
+        target = f'theorem Race.bound : BigOSpeedrun.DirectedSSSP.Bound {args} := by\n  sorry\n'
+        return base + '\n-- Big O Speedrun exact-bound target; generated from validated integers.\n' + target
     n, d = Fraction(submission['bound']).as_integer_ratio()
     if submission['problem'] == 'dft':
         target = f'''open OAI.PowerSaving Filter Asymptotics
@@ -515,7 +585,8 @@ def qualifies_for_run(submission, record):
 BOARDS = {'dft': ('Exact discrete Fourier transform', 'exact-dft'), '3sum': ('3SUM', '3sum'),
           'apsp': ('All-pairs shortest paths', 'apsp'), 'average-sensitivity': ('Average sensitivity', 'other/average-sensitivity'),
           'catalan': ("Catalan's constant", 'other/catalan'), 'subset-sum': ('Subset Sum', 'subset-sum'),
-          'snaky': ('Snaky', 'other/snaky'), 'heilbronn-triangle': ('Heilbronn triangle', 'other/heilbronn-triangle')}
+          'snaky': ('Snaky', 'other/snaky'), 'heilbronn-triangle': ('Heilbronn triangle', 'other/heilbronn-triangle'),
+          'directed-sssp': ('Directed shortest paths', 'directed-sssp')}
 
 
 def board_line(problem):

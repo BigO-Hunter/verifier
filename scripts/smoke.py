@@ -66,9 +66,28 @@ HB_MUTATIONS = {
     'heilbronn-m4-constant-6c77d88-v1': ('heilbronn-triangle', '1/50893237', HB_REPO, '6c77d88ec092c7e4d8e4e3d1c31ac67758da341f'),
     'heilbronn-m5-distinct-9a86923-v1': ('heilbronn-triangle', '1/50893237', HB_REPO, '9a8692368d3de6ec205c0eac37192a51b253a7d0'),
 }
+# The directed SSSP runs before that problem opens (Nil's GO, 2026-11-03), all on our own repository
+# bigospeedrun/sssp-lean-scratch, one branch per case (Lead, 2026-11-03). The smoke must PASS: Race.bound for the C-HD
+# row from the fork's chd_exact_within (staged as the pinned solution dependency) and our bridge. The control (an exact
+# statement copy, Race.bound by sorry) must fail on sorryAx. Each mutation must fail at Comparator's compare step
+# (statement_mismatch): the edge exponent b = 4/5 or the time exponent 5/6 for the theorem about 3/4 and 11/12, the cap
+# without its outer floor, the fallback only above the cap, P.Exact removed.
+SSSP_REPO = 'https://github.com/bigospeedrun/sssp-lean-scratch'
+SSSP_BOUND = 'n log^3/4 ; n log^11/12'
+SSSP_CONTROL = '5238e61d93dc750d8407a24264840fdad387f78c'
+SSSP_FIXTURE = ('directed-sssp', SSSP_BOUND, SSSP_REPO, '98919233966fa6196cf67639c1eee2b2496d26b6')
+SSSP_TAG = 'sssp-9891923-v1'
+SSSP_MUTATIONS = {
+    'sssp-control-5238e61-v1': ('directed-sssp', SSSP_BOUND, SSSP_REPO, SSSP_CONTROL),
+    'sssp-m1-cap-floor-9be59eb-v1': ('directed-sssp', SSSP_BOUND, SSSP_REPO, '9be59eb30eb3751de724b85f9da985d4bcf841f2'),
+    'sssp-m2-b-5238e61-v1': ('directed-sssp', 'n log^4/5 ; n log^11/12', SSSP_REPO, SSSP_CONTROL),
+    'sssp-m3-time-5238e61-v1': ('directed-sssp', 'n log^3/4 ; n log^5/6', SSSP_REPO, SSSP_CONTROL),
+    'sssp-m4-fallback-f06285b-v1': ('directed-sssp', SSSP_BOUND, SSSP_REPO, 'f06285b90fc64b33cf0cc9541cc7d066c9cf5e62'),
+    'sssp-m5-exact-a922982-v1': ('directed-sssp', SSSP_BOUND, SSSP_REPO, 'a9229827f0a9327e8aec8bf61e3dc343481818e4'),
+}
 # Smokes that post nothing and run only on a maintainer test issue.
 SILENT = {CATALAN_TAG: CATALAN_FIXTURE, SS_TAG: SS_FIXTURE, SNAKY_TAG: SNAKY_FIXTURE, **SNAKY_MUTATIONS,
-          HB_TAG: HB_FIXTURE, **HB_MUTATIONS}
+          HB_TAG: HB_FIXTURE, **HB_MUTATIONS, SSSP_TAG: SSSP_FIXTURE, **SSSP_MUTATIONS}
 
 
 def fixture(sub):

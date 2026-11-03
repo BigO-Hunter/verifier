@@ -164,6 +164,41 @@ Comparator compares every definition that the theorem uses, and a changed
 definition (for example the area of a triangle) is a statement mismatch. See
 [the statement README](../challenges/heilbronn-triangle/README.md).
 
+## Directed shortest paths
+
+Not open yet (`submissions.CLOSED`). Issue route only. Use Lean
+`leanprover/lean4:v4.34.1` and the pins in `profiles/lake-manifest.json`. The
+trusted statement is `challenges/directed-sssp/VerifierStatement.lean`, namespace
+`BigOSpeedrun.DirectedSSSP`. It imports `Frontier.CostModel` from
+[bigospeedrun/c-hd-proof](https://github.com/bigospeedrun/c-hd-proof) (directory
+`formal/lean`) at the commit pinned in `profiles/direct.json`. The verifier stages
+that fork's `Frontier` modules for every run, so your sources can import any of
+them (for example `Frontier.CHD.Final`), but must not contain a `Frontier` root.
+Copy the statement byte for byte into your sources (for example
+`Submission/SsspStatement.lean`), and for the exponents of your row export:
+
+```lean
+import Submission.SsspStatement
+
+theorem Race.bound : BigOSpeedrun.DirectedSSSP.Bound ((a : ℚ) / 1) ((b₁ : ℚ) / b₂) ... := by
+  -- Supply the proof.
+```
+
+The verifier writes five reduced rationals `((p : ℚ) / q)`, in the order `a`, `b`,
+`a'`, `b'`, `c'` (with `/ 1` for an integer). A row says "with at most D(n)
+edges, the time is O(T(n))", with `D(n) = n^a·⌊⌊log₂ n⌋^b⌋` and
+`T(n) = n^a'·(ln n)^b'·(ln ln n)^c'`. The Bound field of the form is `D ; T` in
+one normal form, for example `n log^3/4 ; n log^11/12`; see
+[the statement README](../challenges/directed-sssp/README.md) for the grammar and
+the ranges.
+
+Comparison. For these functions, `f = O(g)` exactly when the exponent tuple of
+`f` is at most that of `g` in lexicographic order. `D` is compared by `(a, b)`
+and `T` by `(a', b', c')`. A row is a record when its `T` is
+strictly below the best `T` among the listed rows whose `D` is at least as dense.
+The statement's `Validation.lean` proves the two facts that this rule uses
+(`weaker_time`, `cover_sparser`).
+
 ## Integer factoring
 
 Closed to issues and PRs. A maintainer can rerun Isaac Rudich and Louis-Martin

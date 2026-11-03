@@ -136,5 +136,31 @@
     "bound_kind": "saving",
     "maximum": "5/6",
     "upstream_commit": "1581d4cbdd69a0faf34b2089614fe2a814316a6a"
+  },
+  "directed-sssp": {
+    "challenge_file": "challenges/directed-sssp/VerifierStatement.lean",
+    "challenge_sha256": "cf5752049bcffcdbd9f2368cac10a57fc392881d2754a5fa60e7741519d2a6ca",
+    "lean_toolchain": "leanprover/lean4:v4.34.1",
+    "manifest_file": "profiles/lake-manifest.json",
+    "tools_file": "profiles/tools.json",
+    "solution_module": "Submission",
+    "source_roots": [
+      "Submission"
+    ],
+    "theorem_names": [
+      "Race.bound"
+    ],
+    "bound_kind": "density-time",
+    "upstream_commit": "98c53accb47a505482a1781597ae14bf67e81cec",
+    "solution_dependencies": [
+      {
+        "repo_url": "https://github.com/bigospeedrun/c-hd-proof",
+        "commit": "98c53accb47a505482a1781597ae14bf67e81cec",
+        "source_subdir": "formal/lean",
+        "source_roots": [
+          "Frontier"
+        ]
+      }
+    ]
   }
 }
