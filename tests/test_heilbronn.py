@@ -78,9 +78,17 @@ class ProfileTests(unittest.TestCase):
         self.assertTrue(s.challenge_source(dict(sub, bound='2/100866719')).endswith('Bound ((2 : ℚ) / 100866719) := by\n  sorry\n'))
         for good in ['1/50893237', '5/6', '1/' + '9' * 40, '1/2']:
             self.assertEqual(s.validate_submission(dict(sub, bound=good))['bound'], good)
-        # eta = 0 is refused (Lead, 2026-11-03): the vacuous classical bound. Above 5/6 is false (out of range).
+        # eta = 0 is a form error (Lead, 2026-11-03): the vacuous classical bound. Only a maintainer smoke reads it
+        # (smoke=True; smoke.issue_submission then admits only the pinned fixture). Above 5/6 is false (out of range).
         with self.assertRaisesRegex(ValueError, 'must be positive for heilbronn-triangle'):
-            s.validate_submission(dict(sub, bound='0'))
+            s.parse_body(body('0'))
+        issue = {'state': 'open', 'title': s.TITLE + ' x', 'body': body('0')}
+        with self.assertRaisesRegex(ValueError, 'must be positive'):
+            s.issue_input(issue)
+        self.assertEqual(s.parse_body(body('0'), smoke=True)['bound'], '0')
+        self.assertTrue(s.challenge_source(s.parse_body(body('0'), smoke=True)).endswith('Bound ((0 : ℚ) / 1) := by\n  sorry\n'))
+        # Other problems keep 0 in range.
+        self.assertEqual(s.parse_body(body('0').replace('heilbronn-triangle', 'catalan'))['bound'], '0')
         for bad in ['6/7', '1', '1/' + '1' + '0' * 40, '0.5', '-1/2']:
             with self.subTest(bound=bad), self.assertRaises(ValueError):
                 s.validate_submission(dict(sub, bound=bad))

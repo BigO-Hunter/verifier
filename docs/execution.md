@@ -261,6 +261,26 @@ clones the author's repository (verifier issue #106, Apache-2.0). It posts
 nothing. Read the artifacts, and check the log for `autoImplicit` errors (the
 profile builds with `autoImplicit = false`).
 
+### Heilbronn triangle runs (maintainers only)
+
+Heilbronn opens only after these runs (`submissions.CLOSED`), all on our own
+repository `https://github.com/bigospeedrun/verifier-smoke-heilbronn`, one test
+issue per entry, as for Snaky:
+
+- the smoke (`smoke.HB_FIXTURE`, commit `42a4e7a`, bound `0`) must pass: the
+  classical saving from `bound_zero` of `challenges/heilbronn-triangle/Validation.lean`.
+  The public form refuses `0` (`submissions.ZERO_REFUSED`); only this pinned
+  smoke reads it, and its result is `test_only` and never imported;
+- the control (`c471bc6`, bound `1/50893237`, an exact statement copy and
+  `sorry`) must fail on the axiom check (`sorryAx`);
+- each mutation (`smoke.HB_MUTATIONS`) must end with the Lean reason
+  `statement_mismatch`: the bound `1/50893238` for the theorem about
+  `1/50893237` (`c471bc6`), the area divided by 3 (`c869f25`), the square
+  `[0,1] x [0,2]` (`27734ae`), the condition `0 < c` removed (`6c77d88`), and the
+  distinctness `q ≠ r` removed (`9a86923`).
+
+They post nothing. Read the receipts.
+
 ### Known limits
 
 - The Lean checkpoint watcher (`live_publish.watch`, 330 minutes) cannot see the

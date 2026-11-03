@@ -49,8 +49,9 @@ def publish_issue(run, artifact):
         if name not in files or p.digest(files[name])!=expected:
             raise ValueError('Early receipt log hash mismatch')
     issue=p.api(f'issues/{number}')
-    expected=s.issue_input(issue)
-    if __import__('smoke').active(selected):
+    smoke_test=__import__('smoke').active(selected)
+    expected=s.issue_input(issue,smoke=smoke_test)
+    if smoke_test:
         expected=__import__('smoke').issue_submission(expected)
     if issue['state']!='open' or expected!=selected['submission'] or s.body_hash(issue['body'])!=selected['issue_body_sha256'] or issue['user']['login']!=selected['issue_submitter_login']:
         return

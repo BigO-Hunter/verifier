@@ -45,10 +45,6 @@ def validate_submission(value):
     # A Snaky bound counts Maker moves (Lead, 2026-11-02, verifier #106): a whole number, no fraction.
     if value['problem'] == 'snaky' and bound.denominator != 1:
         raise ValueError('bound must be a whole number of Maker moves for snaky')
-    # A Heilbronn saving must be positive (Lead, 2026-11-03, verifier #105): 0 is the vacuous classical bound, which
-    # the statement's own Validation.lean proves (bound_zero).
-    if value['problem'] == 'heilbronn-triangle' and bound == 0:
-        raise ValueError('bound must be positive for heilbronn-triangle: 0 is the classical bound, already proved')
     if not isinstance(value['repo_url'], str) or not re.fullmatch(r'https://github\.com/[A-Za-z0-9][A-Za-z0-9_.-]{0,99}/[A-Za-z0-9][A-Za-z0-9_.-]{0,99}', value['repo_url']):
         raise ValueError('repo_url must be a public GitHub repository URL without query or credentials')
     if not isinstance(value['commit'], str) or not re.fullmatch('[0-9a-f]{40}', value['commit']):
@@ -114,7 +110,13 @@ def form_error(body):
     return 'the form does not have one blank line between each heading and its value'
 
 
-def parse_body(body):
+# A Heilbronn saving must be positive (Lead, 2026-11-03, verifier #105): 0 is the vacuous classical bound, which the
+# statement's own Validation.lean proves (bound_zero). It is a form error. Only the pinned maintainer smoke
+# (smoke.HB_FIXTURE, test_only, never imported) reads a form with 0: its callers pass smoke=True.
+ZERO_REFUSED = {'heilbronn-triangle'}
+
+
+def parse_body(body, smoke=False):
     """Exact GitHub issue form headings and one-line values; no prose or JSON."""
     if not isinstance(body, str) or len(body.encode('utf-8')) > 4096:
         raise ValueError('Expected the four structured issue form fields')
@@ -128,6 +130,8 @@ def parse_body(body):
                                  'commit': commit, 'bound': bound, 'authors': []})
     if value['bound'] != bound:
         raise ValueError('Bound must be a reduced exact rational string')
+    if value['problem'] in ZERO_REFUSED and value['bound'] == '0' and not smoke:
+        raise ValueError(f"bound must be positive for {value['problem']}: 0 is the classical bound, already proved")
     return value
 
 
@@ -328,10 +332,10 @@ def drop_newer_copy(number, key, posted_id, call):
             pass  # 204 No Content: the delete succeeded; there is no JSON body to read.
 
 
-def issue_input(issue):
+def issue_input(issue, smoke=False):
     if 'pull_request' in issue or issue.get('state') != 'open' or not issue.get('title', '').startswith(TITLE):
         return None
-    return parse_body(issue.get('body'))
+    return parse_body(issue.get('body'), smoke=smoke)
 
 
 def issue_request(issue, submission):
@@ -846,10 +850,9 @@ def preflight():
     queue_lease.assert_owner(queue_lease.SMOKE_REF if smoke_test and selected.get('lease_kind') == 'smoke' else queue_lease.REF)
     current = api(f"issues/{selected['issue_number']}")
     try:
-        candidate = issue_input(current)
+        candidate = issue_input(current, smoke=smoke_test)
     except ValueError:
         candidate = None
-    smoke_test = __import__('smoke').active(selected)
     if smoke_test and candidate is not None:
         candidate = __import__('smoke').issue_submission(candidate)
     proceed = candidate == selected['submission'] and body_hash(current['body']) == selected['issue_body_sha256']
@@ -937,9 +940,10 @@ def receipt_artifact():
 
 
 def report_submission(current, selected):
-    sub = issue_input(current)
     import smoke
-    if smoke.active(selected):
+    active = smoke.active(selected)
+    sub = issue_input(current, smoke=active)
+    if active:
         sub = smoke.issue_submission(sub)
     return sub
 

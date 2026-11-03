@@ -310,3 +310,70 @@ class SnakyMutationTests(SubsetSumSmokeTests):
         with self.assertRaises(ValueError):
             self.dispatch(self.issue(),actor='someone-else')
         self.assertFalse(Path('requests').exists())
+
+
+class HeilbronnSmokeTests(SubsetSumSmokeTests):
+    """The Heilbronn runs before that problem opens (Lead, 2026-11-03, verifier #105): our own repository, on a
+    maintainer test issue only, test_only, silent, no record gate. The smoke has the bound 0, which the public form refuses."""
+    TAGS = {smoke.HB_TAG: smoke.HB_FIXTURE, **smoke.HB_MUTATIONS}
+
+    def issue(self,labels=('test',),tag=None,**fields):
+        from test_submissions import issue
+        problem,bound,repo,commit=self.TAGS[tag or smoke.HB_TAG]
+        item=issue(95,**{'problem':problem,'bound':bound,'commit':commit,**fields})
+        item['body']=item['body'].replace('https://github.com/example/proof',repo)
+        return dict(item,labels=[{'name':name} for name in labels])
+
+    def test_fixture(self):
+        repo='https://github.com/bigospeedrun/verifier-smoke-heilbronn'
+        self.assertEqual({tag:(b,c[:7]) for tag,(p,b,r,c) in self.TAGS.items() if (p,r)==('heilbronn-triangle',repo)},
+                         {'heilbronn-42a4e7a-v1':('0','42a4e7a'),'heilbronn-control-c471bc6-v1':('1/50893237','c471bc6'),
+                          'heilbronn-m1-bound-c471bc6-v1':('1/50893238','c471bc6'),'heilbronn-m2-area-c869f25-v1':('1/50893237','c869f25'),
+                          'heilbronn-m3-square-27734ae-v1':('1/50893237','27734ae'),'heilbronn-m4-constant-6c77d88-v1':('1/50893237','6c77d88'),
+                          'heilbronn-m5-distinct-9a86923-v1':('1/50893237','9a86923')})
+        self.assertTrue(set(self.TAGS.items())<=set(smoke.SILENT.items()))
+        self.assertIn('heilbronn-triangle',s.CLOSED)
+
+    def test_dispatch_selects_one_silent_issue_entry(self):
+        for tag,pinned in self.TAGS.items():
+            with self.subTest(tag=tag):
+                selected=self.dispatch(self.issue(tag=tag))
+                self.assertEqual(smoke.fixture(selected['submission']),pinned)
+                self.assertEqual((selected['test_only'],selected['live_smoke'],selected['lease_kind']),(True,tag,'smoke'))
+                self.assertTrue(selected['record_gate']['test_only'])
+                self.assertTrue(smoke.active(selected));self.assertTrue(smoke.silent(selected))
+                self.assertEqual(selected['inputs']['challenge_file'],'challenges/heilbronn-triangle/VerifierStatement.lean')
+                for field,value in [('test_only',False),('live_smoke',smoke.SS_TAG),('route','pull_request'),
+                                    ('submission',dict(selected['submission'],bound='1/7'))]:
+                    with self.subTest(field=field,value=value):
+                        self.assertFalse(smoke.active(dict(selected,**{field:value})))
+        # The smoke's own form passes the report and preflight readers only for the active smoke.
+        selected=self.dispatch(self.issue())
+        self.assertEqual(s.report_submission(dict(self.issue(),state='open'),selected)['bound'],'0')
+        with self.assertRaisesRegex(ValueError,'must be positive'):
+            s.report_submission(dict(self.issue(),state='open'),dict(selected,test_only=False))
+
+    def test_only_a_maintainer_test_issue_with_the_fixture_form(self):
+        # Another bound or commit is no fixture: the bound 0 on another commit, or the smoke commit with another bound.
+        for item in [self.issue(labels=()),self.issue(bound='1/7'),self.issue(commit='b'*40),
+                     self.issue(tag='heilbronn-control-c471bc6-v1',bound='0')]:
+            with self.subTest(body=item['body'],labels=item['labels']),self.assertRaises(ValueError):
+                self.dispatch(item)
+        with self.assertRaises(ValueError):
+            self.dispatch(self.issue(),actor='someone-else')
+        self.assertFalse(Path('requests').exists())
+        # The public scan reads the same form as a form error.
+        with self.assertRaisesRegex(ValueError,'must be positive for heilbronn-triangle'):
+            s.issue_input(dict(self.issue(),state='open'))
+
+    def test_preflight_reads_the_smoke_form_with_bound_0(self):
+        import queue_lease
+        item=dict(self.issue(),state='open')
+        selected=self.dispatch(item)
+        Path('request').mkdir(exist_ok=True);Path('request/request.json').write_text(s.canonical(selected))
+        with patch.dict(os.environ,GITHUB_OUTPUT=str(self.tmp/'output')),patch.object(queue_lease,'assert_owner'),\
+             patch.object(s,'api',return_value=item),patch.object(s,'current_record') as record:
+            (self.tmp/'output').write_text('');s.preflight()
+            record.assert_not_called()
+            self.assertEqual((self.tmp/'output').read_text(),'proceed=true\n')
+

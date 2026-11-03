@@ -48,8 +48,27 @@ SNAKY_MUTATIONS = {
 # only. Its Submission/SnakyStatement.lean is a byte copy of the challenge (sha256 49e630b3).
 SNAKY_FIXTURE = ('snaky', '20', 'https://github.com/darkhipo/snaky-twenty', 'f6248dc39a05a6c5665240d860d2dbb95db707d9')
 SNAKY_TAG = 'snaky-f6248dc-v1'
+# The Heilbronn runs before that problem opens (Lead, 2026-11-03, verifier #105), all on our own repository. The smoke
+# must PASS: the classical saving 0 from bound_zero of challenges/heilbronn-triangle/Validation.lean. The public form
+# refuses 0 (submissions.ZERO_REFUSED); only this pinned smoke reads it. The control (an exact statement copy, the
+# saving 1/50893237 by sorry) must fail on sorryAx; each mutation must fail at Comparator's compare step
+# (statement_mismatch): the bound 1/50893238 for the theorem about 1/50893237, the area divided by 3, the square
+# [0,1] x [0,2], the condition 0 < c removed, the distinctness q != r removed.
+HB_REPO = 'https://github.com/bigospeedrun/verifier-smoke-heilbronn'
+HB_CONTROL = 'c471bc6115390c4513a6e8e74379d5aedc08bb88'
+HB_FIXTURE = ('heilbronn-triangle', '0', HB_REPO, '42a4e7a05939129ed8802f1d2030ca110ca2ffb5')
+HB_TAG = 'heilbronn-42a4e7a-v1'
+HB_MUTATIONS = {
+    'heilbronn-control-c471bc6-v1': ('heilbronn-triangle', '1/50893237', HB_REPO, HB_CONTROL),
+    'heilbronn-m1-bound-c471bc6-v1': ('heilbronn-triangle', '1/50893238', HB_REPO, HB_CONTROL),
+    'heilbronn-m2-area-c869f25-v1': ('heilbronn-triangle', '1/50893237', HB_REPO, 'c869f250b78b0460cee8e3744115ba053f052aac'),
+    'heilbronn-m3-square-27734ae-v1': ('heilbronn-triangle', '1/50893237', HB_REPO, '27734ae9bad1351ca0acbfa81c2d0906815c94f0'),
+    'heilbronn-m4-constant-6c77d88-v1': ('heilbronn-triangle', '1/50893237', HB_REPO, '6c77d88ec092c7e4d8e4e3d1c31ac67758da341f'),
+    'heilbronn-m5-distinct-9a86923-v1': ('heilbronn-triangle', '1/50893237', HB_REPO, '9a8692368d3de6ec205c0eac37192a51b253a7d0'),
+}
 # Smokes that post nothing and run only on a maintainer test issue.
-SILENT = {CATALAN_TAG: CATALAN_FIXTURE, SS_TAG: SS_FIXTURE, SNAKY_TAG: SNAKY_FIXTURE, **SNAKY_MUTATIONS}
+SILENT = {CATALAN_TAG: CATALAN_FIXTURE, SS_TAG: SS_FIXTURE, SNAKY_TAG: SNAKY_FIXTURE, **SNAKY_MUTATIONS,
+          HB_TAG: HB_FIXTURE, **HB_MUTATIONS}
 
 
 def fixture(sub):
@@ -80,7 +99,7 @@ def issue_submission(sub):
 
 
 def silent(selected):
-    """The Catalan, Subset Sum and Snaky smokes: no result comment, no Lean checkpoint comment, no label."""
+    """The Catalan, Subset Sum, Snaky and Heilbronn smokes: no result comment, no Lean checkpoint comment, no label."""
     return active(selected) and selected.get('live_smoke') in SILENT
 
 
@@ -103,7 +122,8 @@ def dispatch(lease):
     tag = TAG
     if route == 'issue':
         issue = s.api(f'issues/{number}')
-        sub = issue_submission(s.issue_input(issue))
+        # smoke=True: only a pinned fixture passes issue_submission, so a bound of 0 elsewhere is still refused there.
+        sub = issue_submission(s.issue_input(issue, smoke=True))
         selected = s.issue_request(issue, sub)
         login = selected['issue_submitter_login']
     else:
