@@ -45,6 +45,10 @@ def validate_submission(value):
     # A Snaky bound counts Maker moves (Lead, 2026-11-02, verifier #106): a whole number, no fraction.
     if value['problem'] == 'snaky' and bound.denominator != 1:
         raise ValueError('bound must be a whole number of Maker moves for snaky')
+    # A Heilbronn saving must be positive (Lead, 2026-11-03, verifier #105): 0 is the vacuous classical bound, which
+    # the statement's own Validation.lean proves (bound_zero).
+    if value['problem'] == 'heilbronn-triangle' and bound == 0:
+        raise ValueError('bound must be positive for heilbronn-triangle: 0 is the classical bound, already proved')
     if not isinstance(value['repo_url'], str) or not re.fullmatch(r'https://github\.com/[A-Za-z0-9][A-Za-z0-9_.-]{0,99}/[A-Za-z0-9][A-Za-z0-9_.-]{0,99}', value['repo_url']):
         raise ValueError('repo_url must be a public GitHub repository URL without query or credentials')
     if not isinstance(value['commit'], str) or not re.fullmatch('[0-9a-f]{40}', value['commit']):
@@ -70,17 +74,22 @@ def validate_submission(value):
 FORM_FIELDS = ['Problem', 'Repository URL', 'Commit SHA', 'Bound']
 MODEL_IDS = {'dft': 'exact-dft/uniform-exact-arithmetic', '3sum': '3sum/word-ram', 'apsp': 'apsp/word-ram',
              'average-sensitivity': 'other/average-sensitivity', 'catalan': 'other/catalan',
-             'subset-sum': 'subset-sum/randomized-word-ram', 'snaky': 'other/snaky'}
+             'subset-sum': 'subset-sum/randomized-word-ram', 'snaky': 'other/snaky',
+             'heilbronn-triangle': 'other/heilbronn-triangle'}
 # Other bounds rows with a trusted statement: the record gate reads the row, not a board file.
-OTHER = {'average-sensitivity', 'catalan', 'snaky'}
+OTHER = {'average-sensitivity', 'catalan', 'snaky', 'heilbronn-triangle'}
+# Problems where a larger bound is better (a saving): the gate takes the largest Lean Verified bound, and the weakest
+# bound of the range is 0. On the other problems a smaller bound is better.
+HIGHER = {'dft', 'heilbronn-triangle'}
 # A profile whose proof route is not open yet: selection skips it, and only the maintainer smoke runs
 # it (smoke.py). Opening is a reviewed change that removes the problem from this set. Average
 # sensitivity opened on 2026-10-23 after its smoke (run 39943626205, issue #48) passed. Catalan opened on
 # 2026-10-27 after its split-build smoke (run 40497685416, issue #68) passed. Subset Sum opened on 2026-11-01
 # after its smoke (run 41353572059, issue #98, darkhipo's 3/4 proof) passed. Snaky opened on 2026-11-03 after its
 # smoke (run 41548037272, issue #113, darkhipo's Bound 20 proof) passed and its control and five statement mutations
-# were refused (runs 41543423936, 41544268863, 41544953483, 41545742606, 41546502694, 41547277453).
-CLOSED = set()
+# were refused (runs 41543423936, 41544268863, 41544953483, 41545742606, 41546502694, 41547277453). Heilbronn
+# (2026-11-03, verifier #105) waits for its smoke.
+CLOSED = {'heilbronn-triangle'}
 
 
 def form_error(body):
@@ -199,6 +208,8 @@ theorem Race.bound : ∃ order solve W, DFTProgram order solve W ∧
         if d != 1:
             raise ValueError('bound must be a whole number of Maker moves for snaky')
         target = f'theorem Race.bound : BigOSpeedrun.Snaky.Bound {n} := by\n  sorry\n'
+    elif submission['problem'] == 'heilbronn-triangle':
+        target = f'theorem Race.bound : BigOSpeedrun.HeilbronnTriangle.Bound (({n} : ℚ) / {d}) := by\n  sorry\n'
     else:
         problem = 'ThreeSum' if submission['problem'] == '3sum' else 'APSP'
         target = f'theorem Race.bound : EndStatement.{problem}.SolvedInTime (({n} : Rat) / {d}) := by\n  sorry\n'
@@ -353,9 +364,9 @@ def site_snapshot(problem):
 
 
 def open_rank(problem):
-    """Second key of an open endpoint: below an attained score on dft (max wins), above it
+    """Second key of an open endpoint: below an attained score where a larger bound is better (max wins), above it
     on the exponent boards (min wins), so an attained tie always leads."""
-    return -1 if problem == 'dft' else 1
+    return -1 if problem in HIGHER else 1
 
 
 def site_files(paths):
@@ -393,19 +404,20 @@ def exact_value(text):
 def range_end(problem):
     """The weakest bound of a problem's profile range: the gate while its board has no Lean Verified row (Nil ruling
     2026-11-02, issue #94: the best Lean Verified bound is listed even when it is worse than the classic bound, as a
-    stepping stone). The profile maximum, or 0 on dft, where a higher saving is better."""
-    if problem == 'dft':
+    stepping stone). The profile maximum, or 0 where a higher saving is better (HIGHER)."""
+    if problem in HIGHER:
         return Fraction(0)
     return Fraction(json.loads((ROOT / 'profiles/direct.json').read_text())[problem]['maximum'])
 
 
 def other_record(problem, issue_url):
     """The gate of an Other bounds row: its best Lean Verified claim (hand-listed, prove2.me or a direct
-    submission), else the end of the profile range. A lower coefficient is better on these rows."""
+    submission), else the end of the profile range. A lower bound is better on these rows, a higher one on the
+    HIGHER rows (the Heilbronn saving)."""
     rows, direct, prove2me = 'src/lib/other-bounds.json', 'data/direct-other.json', 'data/prove2me.json'
     sha, files = site_files([rows, direct, prove2me])
     family = next(f for f in json.loads(files[rows])['families'] if f['slug'] == problem)
-    if family['direction'] != 'lower':
+    if family['direction'] != ('higher' if problem in HIGHER else 'lower'):
         raise ValueError('Other bounds direction mismatch')
     claims = list(family['claims'])
     for extra in [direct, prove2me]:
@@ -415,7 +427,7 @@ def other_record(problem, issue_url):
                 if c.get('evidence') == 'lean-verified' and c.get('url') != issue_url]
     verified = [(v, h) for v, h in verified if v is not None]
     if verified:
-        best = min(v for v, _ in verified)
+        best = (max if problem in HIGHER else min)(v for v, _ in verified)
         leaders, any_lean = sorted(str(h) for v, h in verified if v == best), True
     else:
         # No Lean Verified claim: every bound in the profile's range runs (Nil ruling 2026-11-02).
@@ -458,7 +470,7 @@ def current_record(problem, issue_url):
     # Mirrors the site comparison (site data/direct_import.py open_rank): exact score
     # first, and an open endpoint is weaker than an attained value at the same score.
     key = lambda r: (Fraction(r['score']), open_rank(problem) if r.get('score_relation') == 'strict-upper-bound' else 0)
-    best = (max if problem == 'dft' else min)(records, key=key)
+    best = (max if problem in HIGHER else min)(records, key=key)
     leaders = [r for r in records if key(r) == key(best)]
     return {'schema_version': 1, 'score': str(Fraction(best['score'])),
             'score_relation': best.get('score_relation', 'attained'),
@@ -477,7 +489,7 @@ def qualifies_for_run(submission, record):
         # Verified row yet) does. Missing evidence metadata cannot authorize a costly run.
         # Never relabel another author's record.
         return record.get('any_lean_verified_at_bound') is False
-    return candidate > current if submission['problem'] == 'dft' else candidate < current
+    return candidate > current if submission['problem'] in HIGHER else candidate < current
 
 
 # The race page of each problem on bigospeedrun.com (Lead, 2026-10-25, BOS Growth: GitHub visitors rarely reach the
@@ -485,7 +497,7 @@ def qualifies_for_run(submission, record):
 BOARDS = {'dft': ('Exact discrete Fourier transform', 'exact-dft'), '3sum': ('3SUM', '3sum'),
           'apsp': ('All-pairs shortest paths', 'apsp'), 'average-sensitivity': ('Average sensitivity', 'other/average-sensitivity'),
           'catalan': ("Catalan's constant", 'other/catalan'), 'subset-sum': ('Subset Sum', 'subset-sum'),
-          'snaky': ('Snaky', 'other/snaky')}
+          'snaky': ('Snaky', 'other/snaky'), 'heilbronn-triangle': ('Heilbronn triangle', 'other/heilbronn-triangle')}
 
 
 def board_line(problem):
