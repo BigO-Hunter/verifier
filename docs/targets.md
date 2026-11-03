@@ -155,7 +155,9 @@ theorem Race.bound : BigOSpeedrun.HeilbronnTriangle.Bound ((p : ℚ) / q) := by
 `Bound η` says that there are a real `c > 0` and an `N` such that for every
 `n ≥ N`, some `n` distinct points in the closed unit square have every triangle
 (on three distinct points) of area at least `c n^(-2+η)`. A larger saving is
-better. The form refuses `0`: it is the classical bound, already proved. The
+better. The form refuses `0`: it is the classical bound, already proved. Each
+integer of the bound can have up to 300 digits (40 on the other problems), so a
+saving such as `1/(100000·K)` with its 237-digit denominator can be filed. The
 verifier does not stage `OAI.Geometry.HeilbronnTriangle.Definitions`, so a port of
 OpenAI's proof tree must import the copied file. Do not change the copied file:
 Comparator compares every definition that the theorem uses, and a changed

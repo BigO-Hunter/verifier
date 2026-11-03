@@ -89,9 +89,30 @@ class ProfileTests(unittest.TestCase):
         self.assertTrue(s.challenge_source(s.parse_body(body('0'), smoke=True)).endswith('Bound ((0 : ℚ) / 1) := by\n  sorry\n'))
         # Other problems keep 0 in range.
         self.assertEqual(s.parse_body(body('0').replace('heilbronn-triangle', 'catalan'))['bound'], '0')
-        for bad in ['6/7', '1', '1/' + '1' + '0' * 40, '0.5', '-1/2']:
+        for bad in ['6/7', '1', '0.5', '-1/2']:
             with self.subTest(bound=bad), self.assertRaises(ValueError):
                 s.validate_submission(dict(sub, bound=bad))
+
+    def test_a_heilbronn_bound_has_up_to_300_digits_per_integer(self):
+        # Lead, 2026-11-03 (verifier #105): a proved saving can be very small; every other problem keeps 40 digits.
+        from math import comb
+        K = comb(comb(163, 41), 3) ** 2 + 1
+        eta0 = f'1/{100000 * K}'  # the comparator exponent 1/(100000 K): a 237-digit denominator
+        self.assertEqual(len(str(100000 * K)), 237)
+        sub = s.parse_body(body(eta0))
+        self.assertEqual(sub['bound'], eta0)
+        self.assertTrue(s.challenge_source(sub).endswith(f'Bound ((1 : ℚ) / {100000 * K}) := by\n  sorry\n'))
+        self.assertEqual(s.bound_digits('heilbronn-triangle'), 300)
+        for good in ['1/1' + '0' * 299, '1/' + '9' * 300]:
+            self.assertEqual(s.validate_submission(dict(sub, bound=good))['bound'], good)
+        with self.assertRaisesRegex(ValueError, 'at most 300 digits in each for heilbronn-triangle'):
+            s.validate_submission(dict(sub, bound='1/1' + '0' * 300))
+        # Another problem: 40 digits pass, 41 do not.
+        catalan = dict(sub, problem='catalan')
+        self.assertEqual(s.bound_digits('catalan'), 40)
+        self.assertEqual(s.validate_submission(dict(catalan, bound='1/' + '9' * 40))['bound'], '1/' + '9' * 40)
+        with self.assertRaisesRegex(ValueError, 'at most 40 digits in each for catalan'):
+            s.validate_submission(dict(catalan, bound='1/1' + '0' * 40))
 
 
 class GateTests(unittest.TestCase):
@@ -123,6 +144,13 @@ class GateTests(unittest.TestCase):
         self.assertFalse(self.run_for('1/1000', record))
         self.assertTrue(self.run_for('1/999', record))
         self.assertFalse(self.run_for('1/1001', record))
+        # A Lean Verified saving with a 237-digit denominator gates too (300 digits on this row; 40 elsewhere).
+        tiny = '1/' + '7' * 237
+        record = self.gate(claimed, direct=[{'handle': 'direct-issue-123', 'value': tiny, 'evidence': 'lean-verified', 'url': 'z'}])
+        self.assertEqual((record['score'], record['leader_ids'], record['any_lean_verified_at_bound']), (tiny, ['direct-issue-123'], True))
+        self.assertFalse(self.run_for(tiny, record))
+        self.assertTrue(self.run_for('1/50893237', record))
+        self.assertIsNone(s.exact_value(tiny))
         # The site row must say that a higher saving is better.
         with self.assertRaisesRegex(ValueError, 'direction mismatch'):
             self.gate(claimed, direction='lower')

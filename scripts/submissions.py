@@ -30,15 +30,26 @@ def submission_hash(value):
     return hashlib.sha256(canonical(validate_submission(value)).encode()).hexdigest()
 
 
+# At most 40 digits per integer of a bound (Lead decision, 2026-10-21, issue #35: a reduced 3SUM bound needed 19).
+# A Heilbronn saving with a full proof can be very small (the comparator exponent 1/(100000 K) has a 237-digit
+# denominator), so that problem allows 300 (Lead, 2026-11-03, verifier #105).
+BOUND_DIGITS = {'heilbronn-triangle': 300}
+
+
+def bound_digits(problem):
+    return BOUND_DIGITS.get(problem, 40)
+
+
 def validate_submission(value):
     if not isinstance(value, dict) or not FIELDS <= set(value) or set(value) - FIELDS - {'entrypoint', 'source_subdir'} or type(value['schema_version']) is not int or value['schema_version'] != 1:
         raise ValueError('Expected schema_version, problem, bound, repo_url, commit, authors only')
     profiles = json.loads((ROOT / 'profiles/direct.json').read_text())
     if not isinstance(value['problem'], str) or value['problem'] not in profiles:
         raise ValueError('Supported problems: ' + ', '.join(p for p in profiles if p not in CLOSED))
-    # At most 40 digits per integer (Nil, 2026-10-21: a reduced 3SUM bound needed 19, issue #35).
-    if not isinstance(value['bound'], str) or not re.fullmatch(r'(?:0|[1-9][0-9]{0,39})(?:/[1-9][0-9]{0,39})?', value['bound']):
-        raise ValueError('bound must be an integer or a fraction p/q (no decimals), with at most 40 digits in each')
+    # A digit limit per integer of the bound (bound_digits).
+    digits = bound_digits(value['problem'])
+    if not isinstance(value['bound'], str) or not re.fullmatch(rf'(?:0|[1-9][0-9]{{0,{digits - 1}}})(?:/[1-9][0-9]{{0,{digits - 1}}})?', value['bound']):
+        raise ValueError(f"bound must be an integer or a fraction p/q (no decimals), with at most {digits} digits in each for {value['problem']}")
     bound = Fraction(value['bound'])
     if not 0 <= bound <= Fraction(profiles[value['problem']]['maximum']):
         raise ValueError('bound is outside the problem range')
@@ -401,8 +412,9 @@ def site_files(paths):
     return sha, found
 
 
-def exact_value(text):
-    if not isinstance(text, str) or not re.fullmatch(r'(?:0|[1-9][0-9]{0,39})(?:/[1-9][0-9]{0,39}|\.[0-9]{1,40})?', text):
+def exact_value(text, digits=40):
+    """An exact rational or decimal claim value, with at most `digits` digits per integer (bound_digits); else None."""
+    if not isinstance(text, str) or not re.fullmatch(rf'(?:0|[1-9][0-9]{{0,{digits - 1}}})(?:/[1-9][0-9]{{0,{digits - 1}}}|\.[0-9]{{1,{digits}}})?', text):
         return None
     return Fraction(text)
 
@@ -429,7 +441,7 @@ def other_record(problem, issue_url):
     for extra in [direct, prove2me]:
         if files[extra] is not None:
             claims += json.loads(files[extra]).get('boards', {}).get('other-' + problem, {}).get('claims', [])
-    verified = [(exact_value(c.get('value')), c.get('handle')) for c in claims
+    verified = [(exact_value(c.get('value'), bound_digits(problem)), c.get('handle')) for c in claims
                 if c.get('evidence') == 'lean-verified' and c.get('url') != issue_url]
     verified = [(v, h) for v, h in verified if v is not None]
     if verified:

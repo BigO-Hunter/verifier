@@ -517,7 +517,7 @@ class SubmissionTests(unittest.TestCase):
 
 
 class BoundDigitsTests(unittest.TestCase):
-    """At most 40 digits per integer (Nil, 2026-10-21; issue #35 needed 19)."""
+    """At most 40 digits per integer (Lead decision, 2026-10-21; issue #35 needed 19); heilbronn-triangle allows 300 (test_heilbronn)."""
     def sub(self, problem, bound):
         return {'schema_version': 1, 'problem': problem, 'bound': bound, 'repo_url': 'https://github.com/a/b', 'commit': 'a' * 40, 'authors': []}
 

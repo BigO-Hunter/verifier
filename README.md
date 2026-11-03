@@ -25,7 +25,8 @@ Choose either route. Both use the same statement, record gate, and proof checks.
 See [the problem guide](docs/targets.md) for the exact target and Lean version.
 
 Use `dft`, `3sum`, `apsp`, `subset-sum`, `average-sensitivity`, `catalan`, `snaky` or
-`heilbronn-triangle` for `problem`. Use an exact nonnegative rational for `bound`. For DFT, the bound is the
+`heilbronn-triangle` for `problem`. Use an exact nonnegative rational for `bound`, with at most 40 digits in
+each integer (300 for `heilbronn-triangle`). For DFT, the bound is the
 saving s in O(n (log n)^(1-s)); a larger saving is better. For 3SUM and APSP, it is
 the exponent r in O(n^r); smaller is better. For Subset Sum, it is the exponent α in
 O(2^(α n)); smaller is better, and only the issue route takes it. For average sensitivity (an Other bounds
