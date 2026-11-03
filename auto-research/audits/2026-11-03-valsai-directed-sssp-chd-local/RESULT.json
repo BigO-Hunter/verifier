@@ -1,0 +1,34 @@
+{
+  "track": "audits",
+  "status": "audit",
+  "problem": "Exact directed single-source shortest paths, nonnegative real weights, one uniform deterministic deep-embedded word-RAM program (Frontier.RAM.Program), verifier trusted statement challenges/directed-sssp",
+  "bound": "D = n log^3/4 ; T = n log^11/12  (parse_sssp -> (1, 3/4, 1, 11/12, 0)); score_relation: attained",
+  "row": "directed-sssp-2026 (C-HD, Vals AI), Lean Verified / Agent breakthrough",
+  "evidence_before": "maintainer run 41661841785 (Lean kernel + nanoda passed), smoke #127, scratch CI 41619823671 (pins=bos, chd=true)",
+  "base_commit": "b0c848f5d2268cf7b9676d4ad4910947d8b2ca86",
+  "pins": {
+    "verifier": "b0c848f5d2268cf7b9676d4ad4910947d8b2ca86",
+    "sssp-lean-scratch": "98919233966fa6196cf67639c1eee2b2496d26b6",
+    "c-hd-proof": "98c53accb47a505482a1781597ae14bf67e81cec"
+  },
+  "verdict": "PASS \u2014 all six checks; no row-invalidating discrepancy; three documentation-precision findings (F1 tasking-typo, F2 README run-citation precision, F3 receipt predates verifier HEAD with byte-identical SSSP files)",
+  "axioms": [
+    "propext",
+    "Classical.choice",
+    "Quot.sound"
+  ],
+  "axiom_sources": [
+    "scratch CI 41619823671",
+    "maintainer run 41661841785",
+    "upstream OPERATOR_AXIOM_CHECK.json (266-const closure)",
+    "local replay (this audit)"
+  ],
+  "local_build": {
+    "jobs": 2531,
+    "seconds": 329,
+    "rc": 0,
+    "toolchain": "leanprover/lean4:v4.34.1",
+    "mathlib": "d13f23b723b8a846827a245b89c10fc7d3f11612"
+  },
+  "reproduce": "python3 auto-research/audits/2026-11-03-valsai-directed-sssp-chd-local/verify.py   (add --build for the full local lake replay; see evidence/replay.sh)"
+}

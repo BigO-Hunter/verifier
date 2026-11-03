@@ -1,0 +1,64 @@
+=== START 2026-11-03T23:06:43Z ===
+toolchain: leanprover/lean4:v4.34.1
+--- STEP build SsspStatement+Validation ---
+✔ [2254/2257] Built Frontier.Spec (6.6s)
+✔ [2255/2257] Built Frontier.CostModel (5.2s)
+✔ [2256/2257] Built Submission.SsspStatement (1.8s)
+✔ [2257/2257] Built Submission.Validation (3.5s)
+Build completed successfully (2257 jobs).
+BUILD_RC=0 elapsed=19s
+--- STEP axioms (Axioms.lean) ---
+'BigOSpeedrun.DirectedSSSP.Bound' depends on axioms: [propext, Classical.choice, Quot.sound]
+'BigOSpeedrun.DirectedSSSP.Validation.weaker_time' depends on axioms: [propext, Classical.choice, Quot.sound]
+'BigOSpeedrun.DirectedSSSP.Validation.cover_sparser' depends on axioms: [propext, Classical.choice, Quot.sound]
+'BigOSpeedrun.DirectedSSSP.Validation.cap_ge_self' depends on axioms: [propext, Classical.choice, Quot.sound]
+'BigOSpeedrun.DirectedSSSP.Validation.time_pos' depends on axioms: [propext, Classical.choice, Quot.sound]
+AXIOMS_RC=0
+--- STEP build Submission (C-HD proof, heavy) ---
+  LReg.ws
+
+Hint: Omit it from the simp argument list.
+  [apply] simp [K24] at ha ⊢
+
+Note: This linter can be disabled with `set_option linter.unusedSimpArgs false`
+warning: Frontier/CHD/RamBodyFin.lean:461:10: `if_pos` has been deprecated: Use `ite_eq_left` instead
+warning: Frontier/CHD/RamBodyFin.lean:461:20: `if_pos` has been deprecated: Use `ite_eq_left` instead
+warning: Frontier/CHD/RamBodyFin.lean:462:10: `if_neg` has been deprecated: Use `ite_eq_right` instead
+warning: Frontier/CHD/RamBodyFin.lean:462:20: `if_neg` has been deprecated: Use `ite_eq_right` instead
+warning: Frontier/CHD/RamBodyFin.lean:871:26: `if_neg` has been deprecated: Use `ite_eq_right` instead
+warning: Frontier/CHD/RamBodyFin.lean:897:19: `if_neg` has been deprecated: Use `ite_eq_right` instead
+warning: Frontier/CHD/RamBodyFin.lean:904:19: `if_neg` has been deprecated: Use `ite_eq_right` instead
+warning: Frontier/CHD/RamBodyFin.lean:454:15: This simp argument is unused:
+  Fin.val_mk
+
+Hint: Omit it from the simp argument list.
+  [apply] simp only at this
+
+Note: This linter can be disabled with `set_option linter.unusedSimpArgs false`
+⚠ [2528/2531] Built Frontier.CHD.Final (49s)
+warning: Frontier/CHD/Final.lean:40:59: Variable name `cn` is not explicitly referenced.
+
+Hint: The binding can be removed (if unused) or named `_` (if used implicitly). Alternatively, prefix the name with `_` to silence this warning:
+  [apply] _cn
+
+Note: This linter can be disabled with `set_option linter.unusedVariables false`
+warning: Frontier/CHD/Final.lean:40:62: Variable name `cm` is not explicitly referenced.
+
+Hint: The binding can be removed (if unused) or named `_` (if used implicitly). Alternatively, prefix the name with `_` to silence this warning:
+  [apply] _cm
+
+Note: This linter can be disabled with `set_option linter.unusedVariables false`
+info: Frontier/CHD/Final.lean:158:0: 'Frontier.CHD.Final.chd_exact_within' depends on axioms: [propext, Classical.choice, Quot.sound]
+info: Frontier/CHD/Final.lean:159:0: 'Frontier.CHD.Final.chd_CHDTarget' depends on axioms: [propext, Classical.choice, Quot.sound]
+info: Frontier/CHD/Final.lean:160:0: 'Frontier.CHD.Final.chd_gateC' depends on axioms: [propext, Classical.choice, Quot.sound]
+⚠ [2529/2531] Built Submission.Bridge (4.9s)
+warning: Submission/Bridge.lean:271:12: `ite_cond_eq_true` has been deprecated: Use `ite_eq_left_of_eq_true` instead
+✔ [2530/2531] Built Submission (1.6s)
+Build completed successfully (2531 jobs).
+CHD_RC=0 elapsed=329s
+--- STEP chd axioms (AxiomsCHD.lean) ---
+'Frontier.CHD.Final.chd_exact_within' depends on axioms: [propext, Classical.choice, Quot.sound]
+'BigOSpeedrun.DirectedSSSP.Bridge.chd_bound' depends on axioms: [propext, Classical.choice, Quot.sound]
+'Race.bound' depends on axioms: [propext, Classical.choice, Quot.sound]
+CHDAXIOMS_RC=0
+=== DONE 2026-11-03T23:12:38Z ===

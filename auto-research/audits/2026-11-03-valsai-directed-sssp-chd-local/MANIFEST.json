@@ -1,0 +1,15 @@
+{
+  "algorithm": "sha256",
+  "sha256": {
+    "NOTICE.md": "c9f5442be37f130d8c0e5f6227cd026ca15ac844e6feb2d88cf689fcaf8491b7",
+    "README.md": "02def4701728795dc3d4d662b24d7c0d7114f4013821c9db456ae98bc5db9ad7",
+    "RESULT.json": "fdc40020ecf1011bc030b072bb834ecc1fa2f739fc03e498a229b263cdc8867b",
+    "data/source.json": "69aab63d419ba20b08ddc81727f7db19bdeb12db73d14a12b5cda1b8be585f9d",
+    "evidence/lake-update.log": "60a6f443e51acf3f0b93e8ae51147c65dc059daf160368064df212a6e13a4cd8",
+    "evidence/local-build.log": "5beab3f40d27e9864246ff156714513ff04fa4cbb407c25950150bfb53a6450e",
+    "evidence/local-run.json": "f246a51848ec9b20a9253d86b5580e4aa2e021da055c575b992060639ed3fd97",
+    "evidence/maintainer-artifact.zip": "582967693f3bb0a228e670fad68f76e8f9e63987a674ade313f7565eb104d907",
+    "evidence/replay.sh": "4f090fad2052a2b8b688d36225cc9a7e6e617f4e26508f5af2eaed21888bd61d",
+    "verify.py": "303b8ddcf45fd613df9a3a51faca1cdeaeed0874c7ad433a0f22c142cb08a20e"
+  }
+}

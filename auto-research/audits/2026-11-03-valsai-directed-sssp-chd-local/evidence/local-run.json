@@ -1,0 +1,23 @@
+{
+  "jobs": 2531,
+  "seconds": 329,
+  "rc": 0,
+  "axioms_Race.bound": [
+    "propext",
+    "Classical.choice",
+    "Quot.sound"
+  ],
+  "axioms_chd_exact_within": [
+    "propext",
+    "Classical.choice",
+    "Quot.sound"
+  ],
+  "axioms_Bridge.chd_bound": [
+    "propext",
+    "Classical.choice",
+    "Quot.sound"
+  ],
+  "nanoda": "not re-run locally; maintainer receipt 41661841785 'nanoda: passed'",
+  "parse_sssp_control": "(1, 3/4, 1, 11/12, 0)",
+  "verifier_sssp_suite": "21 passed / 180 subtests at b0c848f5"
+}

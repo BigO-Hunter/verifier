@@ -1,0 +1,14 @@
+{
+  "pins": {
+    "verifier": "b0c848f5d2268cf7b9676d4ad4910947d8b2ca86",
+    "sssp-lean-scratch": "98919233966fa6196cf67639c1eee2b2496d26b6",
+    "c-hd-proof": "98c53accb47a505482a1781597ae14bf67e81cec"
+  },
+  "sha256": {
+    "challenges/directed-sssp/CHDRow.lean": "b9569daeed41b0394a8a0ec10bd40fa15d005fef8afb1abfa2f77a52f7d27ab0",
+    "VerifierStatement.lean (== scratch Submission/SsspStatement.lean)": "cf575204\u2026d2a6ca (prefix\u2026suffix as measured; verify.py recomputes the full value from the pinned URLs)",
+    "maintainer artifact zip (run 41661841785)": "582967693f\u2026d907 (prefix\u2026suffix as measured against the receipt's artifact_sha256)"
+  },
+  "row_record": "site data/directed-sssp.json record directed-sssp-2026; tier verified; evidence.theorem Race.bound; rerun_status passed",
+  "note": "prefix\u2026suffix entries carry the measured abbreviation from the audit run; verify.py recomputes the full values from the pinned URLs and compares against the profile-declared hashes (the authority)."
+}
