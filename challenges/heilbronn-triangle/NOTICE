@@ -12,3 +12,13 @@ Statement.lean
   Licensed under the Apache License, Version 2.0 (LICENSE).
   Prepared with assistance from Claude (Anthropic). It does not modify the
   OpenAI definitions, and OpenAI did not author the parameterization.
+
+VerifierStatement.lean
+  The one self-contained file that the verifier copies into a submission
+  (2026-11-03): Definitions.lean byte for byte, followed by Statement.lean
+  without its import line. Licensed under the Apache License, Version 2.0.
+
+Validation.lean
+  Checks of the statement, not part of the trusted target. Ported from the
+  statement evidence of PR #20 (VacuityCheck.lean); only its header and import
+  changed. Licensed under the Apache License, Version 2.0.

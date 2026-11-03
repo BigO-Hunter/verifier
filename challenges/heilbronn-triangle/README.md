@@ -73,6 +73,34 @@ notes this too: "The original upstream Lean comparator uses a different
 exponent and a subsequence statement." The adapter therefore reuses only
 OpenAI's definitions, not its theorem statements.
 
+## Verifier statement
+
+`VerifierStatement.lean` is the trusted statement of the future `heilbronn-triangle`
+profile. It is `OAI/Geometry/HeilbronnTriangle/Definitions.lean` byte for byte,
+followed by `Statement.lean` without its import line. Its only import is
+`import Mathlib`, the import of the frozen file. No verifier profile or submission
+route uses it yet.
+
+A submission copies this one file byte for byte below `Submission/` (for example
+as `Submission/HeilbronnStatement.lean`), imports it, and proves, for a reduced
+saving `p/q` with `0 < p/q ≤ 5/6`:
+
+```lean
+theorem Race.bound : BigOSpeedrun.HeilbronnTriangle.Bound ((p : ℚ) / q) := by
+  -- proof supplied by a contributor
+```
+
+The verifier does not stage `OAI.Geometry.HeilbronnTriangle.Definitions` next to a
+submission, so a port of OpenAI's proof tree must import the copied file instead.
+Comparator compares `Bound` and every definition that it uses, so the copy must
+not change. `η = 0` is refused: it is the vacuous classical bound, which
+`Validation.lean` proves (Lead, 2026-11-03, verifier #105).
+
+`Validation.lean` (not trusted) imports `VerifierStatement.lean` and proves
+`bound_mono`, `bound_zero`, `not_bound_of_two_lt` and `nonvacuous` with only the
+axioms `propext`, `Classical.choice` and `Quot.sound` (Lean `v4.34.1`, Mathlib
+`d13f23b`).
+
 ## Toolchain and layout
 
 - Lean: `leanprover/lean4:v4.34.1`.
