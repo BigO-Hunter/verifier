@@ -1,0 +1,36 @@
+{
+  "machine": "Apple M4 Max, 16 cores, 128 GB RAM, macOS 26.6.2",
+  "lean": "leanprover/lean4:v4.33.1 (elan toolchain)",
+  "lake": "/opt/homebrew/bin/lake",
+  "mathlib": "0df444a360eaa60ab8c11dca51a86af692955474 (restored from a warm local cache of the same pins, all nine dependency revisions of the submission's lake-manifest.json matching; the submission's own manifest pins the same mathlib revision as profiles/anthropic-lake-manifest.json, which verify.py asserts before building)",
+  "build_targets": [
+    "VerifierAudit",
+    "VerifierChallenge"
+  ],
+  "build_jobs_total_schedule": 5022,
+  "build_wall_seconds": 2256,
+  "build_result": "exit 0, no errors; 930 warning lines in the recorded verify.py run: 789 style/unused-variable linter warnings originating in submission modules plus 137 of their Hint/Note continuation lines, 3 Lake notices about the warm package clones, and the one expected `declaration uses 'sorry'` on the verifier-generated target at VerifierChallenge.lean:142:8. No sorry warning originates in a submission module.",
+  "submission_modules_built_from_source": 1568,
+  "axioms_Race_bound": [
+    "Classical.choice",
+    "Quot.sound",
+    "propext"
+  ],
+  "axioms_optimized_solvedInTime_384055881637_200000000000": [
+    "Classical.choice",
+    "Quot.sound",
+    "propext"
+  ],
+  "axioms_opaque_reading_theorem": [
+    "Classical.choice",
+    "Quot.sound",
+    "propext"
+  ],
+  "embedded_self_checks": "63 'depends on axioms' outputs appear in the recorded build log -- the development's own 62 embedded #print axioms self-checks (44 at issue #92's commit) plus the audit module's -- and every one reports [propext, Classical.choice, Quot.sound]",
+  "scope_probe": "exit 0: verifier-generated target at 384055881637/200000000000 discharged verbatim by Race.bound; gcd 384055881637 200000000000 = 1 so r.den/r.num are the integers BigO uses; bound < 2, < 9996/5000, < 96013971/50000000 (the previously verified bound, issue #92), and < 4800698571997281331/2500000000000000000 (the prior record); ThreeSum.yes and ThreeSum.output restated by Iff.rfl; SolvedInTime restated by rfl in full all-kappa word-RAM form; the development's WeightedGlobalParameters.targetExponent equals the bound by rfl, and its all_costs_lt_target and certificate_lt_target instantiate as proofs that all six costLedger entries and certificateExponent 2400349260231/1250000000000 sit strictly below the bound",
+  "opaque_control": "exit 0: an opaque whose body is sorry reports sorryAx under #print axioms (controlViaOpaque and controlDirect), so the axiom probe traverses opaque bodies and cannot miss a hidden sorry; the two sorry warnings the control arm emits are the control itself",
+  "statement_bytes": "tracked blob b2e03ddc... at HEAD:Submission/EndStatement.lean is 7255 bytes with zero CR bytes and sha256 4291e3f0..., equal to the profiles/direct.json challenge_sha256 and to the trusted file in bigospeedrun/verifier. A core.autocrlf=true host checks the same blob out as CRLF (7394 bytes, sha256 141b77e2...); the audit compares the blob and stages with core.autocrlf=false",
+  "generated_target_fidelity": "scripts/submissions.py:challenge_source on bound 384055881637/200000000000 reproduces the staged VerifierChallenge.lean byte for byte (sha256 72c158d7...), re-run against a blob-bytes root because the verifier's own resolve_request refuses an autocrlf-rewritten working tree with 'Trusted statement bytes changed' -- the false alarm PR #102 documents",
+  "certificate_recomputation": "independent exact-rational recomputation outside the build: gcd(384055881637, 200000000000) = 1; certificateExponent 2400349260231/1250000000000 < bound 384055881637/200000000000 by a gap of 2e-13; bound < 96013971/50000000 < 4800698571997281331/2500000000000000000 < 9996/5000 < 2",
+  "end_to_end": "the recorded verify.py run on a clean workdir printed AUDIT PASS: git fetch of the pinned SHA with a rev-parse assertion, blob-level statement check, staged build (5022 jobs, exit 0 in 2256s), only-expected-sorry True, zero stray sorries, axioms within the permitted set, and both probes exit 0"
+}

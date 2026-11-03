@@ -1,0 +1,26 @@
+{
+  "repo": "https://github.com/Wang-jiong-han/3sum-weighted-cache.git",
+  "commit": "e1ae71db2231f172c6541820e2ce0a54aa14fc64",
+  "submission_dir": "",
+  "submission_lean_files": 1568,
+  "submission_lean_bytes": 31233560,
+  "largest_lean_file_bytes": 287594,
+  "largest_lean_file": "Submission/Optimality/Data/Complete.lean",
+  "repo_tracked_files_at_sha": 1597,
+  "key_files_sha256": {
+    "Submission.lean": "d81ad1d735cbd122e0dfe16ee5a1d36432d56e4d623b000be7b88acd143417c9",
+    "Submission/EndStatement.lean": "4291e3f05781cea42f9d672ff73ceac1f6d1a0c3021038e94372fa8f7e1ad987",
+    "Submission/Weighted.lean": "5d29c7f57885db9a7c265936aaed4f34f8f25eb2d5f35e6a3464e5a7b2451644",
+    "Audit.lean": "aa26ee9d87d576fb27d0d133953e947cd5370e4bd216ddb8523e4305e00ca5ba",
+    "README.md": "26b5ed85779d2aeb5dfcb8163b2b7bf0e7e65b1ca9e49b98f74692841a6f20e8"
+  },
+  "challenge_file": "challenges/3sum-apsp/EndStatement.lean",
+  "challenge_sha256": "4291e3f05781cea42f9d672ff73ceac1f6d1a0c3021038e94372fa8f7e1ad987",
+  "statement_git_blob": "b2e03ddc7dc78c273aa5a1edda073fd2274d87de",
+  "statement_blob_sha256": "4291e3f05781cea42f9d672ff73ceac1f6d1a0c3021038e94372fa8f7e1ad987",
+  "statement_blob_bytes": 7255,
+  "generated_challenge_sha256": "72c158d7acac8f7a3acc2a9d59bb9ce9623b5a960e5817ca35928569072689ec",
+  "lean_toolchain": "leanprover/lean4:v4.33.1",
+  "mathlib_rev": "0df444a360eaa60ab8c11dca51a86af692955474",
+  "challenge_note": "challenge_sha256 is the trusted bytes pinned by profiles/direct.json for the 3sum profile, re-verified unchanged at bigospeedrun/verifier main 34dda832 when this package was assembled. The submission's tracked blob at HEAD:Submission/EndStatement.lean hashes to the same value with zero CR bytes, i.e. it is byte-identical, not a normalized copy, and is the same git blob (b2e03ddc...) that the 2026-11-01 audit of issue #92 recorded. A working-tree checkout on a host with core.autocrlf=true rewrites it to CRLF (7394 bytes, sha256 141b77e26f906faf0ebe8a55fd6a67980d8b01218fe3ea386564913276540de0); that is a local git setting, not a property of the submission."
+}
