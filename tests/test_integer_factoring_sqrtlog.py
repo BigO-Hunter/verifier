@@ -151,6 +151,9 @@ class LeanOptionsTests(unittest.TestCase):
         for p in profiles:
             if not isinstance(p, dict) or 'challenge_file' not in p or p is PROFILE or p == PROFILE:
                 continue
+            # directed-sssp gives its fork root Lean's default autoImplicit = true (test_directed_sssp checks it).
+            if p['challenge_file'] == 'challenges/directed-sssp/VerifierStatement.lean':
+                continue
             deps = p.get('solution_dependencies', [])
             self.assertFalse(any('lean_options' in d for d in deps), p['challenge_file'])
             roots = p.get('source_roots', ['Submission']) + [r for d in deps for r in d['source_roots']]

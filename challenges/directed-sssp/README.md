@@ -89,7 +89,13 @@ least `n`, so clause 1 is not empty) and `time_pos`.
 Lean `leanprover/lean4:v4.34.1`, Mathlib
 `d13f23b723b8a846827a245b89c10fc7d3f11612` and the other revisions in
 `profiles/lake-manifest.json`. The fork itself pins Lean v4.34.0 and Mathlib
-`5ed2965`; its `formal/lean` tree builds unchanged on our pins.
+`5ed2965`; its `formal/lean` tree builds unchanged on our pins. That tree sets no
+Lean options, so its own build keeps Lean's default `autoImplicit = true`, and
+`Frontier/CHD/MergeSort.lean` uses an auto-bound name. The profile gives only the
+`Frontier` root that option (`lean_options` of the solution dependency); the
+submission, the challenge and the audit keep `autoImplicit = false`. The option
+acts only where a name is otherwise unknown, so `Frontier.Spec` and
+`Frontier.CostModel` mean the same under either setting.
 
 The statement and `Validation.lean` were built on GitHub Actions in
 [bigospeedrun/sssp-lean-scratch](https://github.com/bigospeedrun/sssp-lean-scratch)

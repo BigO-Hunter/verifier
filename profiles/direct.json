@@ -159,7 +159,10 @@
         "source_subdir": "formal/lean",
         "source_roots": [
           "Frontier"
-        ]
+        ],
+        "lean_options": {
+          "autoImplicit": true
+        }
       }
     ]
   }

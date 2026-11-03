@@ -51,9 +51,19 @@ class StatementTests(unittest.TestCase):
         self.assertEqual((profile['theorem_names'], profile['source_roots'], profile['upstream_commit']),
                          (['Race.bound'], ['Submission'], PIN))
         # The fork is cloned at its pin and staged as the Frontier root; no file of it is in this repository, and no
-        # patch changes it (Lead, 2026-11-03).
+        # patch changes it (Lead, 2026-11-03). Its own build keeps Lean's default autoImplicit = true (formal/lean has
+        # no leanOptions), and Frontier/CHD/MergeSort.lean uses an auto-bound name (smoke run 41631927522 failed with
+        # autoImplicit = false), so only the Frontier root gets that option; Submission and the challenge keep false.
         self.assertEqual(profile['solution_dependencies'],
-                         [{'repo_url': FORK, 'commit': PIN, 'source_subdir': 'formal/lean', 'source_roots': ['Frontier']}])
+                         [{'repo_url': FORK, 'commit': PIN, 'source_subdir': 'formal/lean', 'source_roots': ['Frontier'],
+                           'lean_options': {'autoImplicit': True}}])
+        sys.path.insert(0, str(ROOT / 'scripts'))
+        import verifier
+        lake = verifier.lakefile(['Submission', 'Frontier', 'VerifierChallenge', 'VerifierAudit'], root_options=
+                                 verifier.dependency_root_options(profile['solution_dependencies'], profile['source_roots']))
+        self.assertIn('[leanOptions]\nautoImplicit = false\n', lake)
+        self.assertIn('\n[[lean_lib]]\nname = "Frontier"\n[lean_lib.leanOptions]\nautoImplicit = true\n', lake)
+        self.assertEqual(lake.count('autoImplicit = true'), 1)
         self.assertFalse((CHALLENGE / 'Frontier').exists())
         self.assertNotIn('runner', profile)
 
