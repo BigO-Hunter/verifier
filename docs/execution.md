@@ -228,8 +228,8 @@ no license. It posts nothing. Read the artifacts.
 
 ### Snaky statement-mismatch runs (maintainers only)
 
-Snaky opens only after these runs and the Snaky smoke with a real proof
-(`submissions.CLOSED`). They run the same way as the Subset Sum smoke, one test
+Snaky opened on 2026-11-03 after these runs and the Snaky smoke with a real proof
+(issue #113, run 41548037272). They run the same way as the Subset Sum smoke, one test
 issue per entry of `smoke.SNAKY_MUTATIONS`, on the repository
 `https://github.com/bigospeedrun/verifier-smoke-snaky` (our own files; the
 proofs are `sorry`). Every run must be refused. Comparator compares the

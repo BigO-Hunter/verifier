@@ -2,8 +2,8 @@
 
 Board: https://bigospeedrun.com/other/snaky
 
-`VerifierStatement.lean` is the trusted statement of the future `snaky` profile. It is not a
-proof of a move bound. No verifier profile or submission route uses it yet.
+`VerifierStatement.lean` is the trusted statement of the `snaky` profile (issue route, opened
+2026-11-03). It is not a proof of a move bound.
 
 For a whole number `n`, the race target is:
 

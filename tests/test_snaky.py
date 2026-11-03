@@ -112,10 +112,22 @@ class GateTests(unittest.TestCase):
         self.assertTrue(s.qualifies_for_run({'problem': 'snaky', 'bound': '19'}, record))
 
 
-class ClosedTests(unittest.TestCase):
-    def test_snaky_is_closed_until_its_smoke(self):
-        self.assertIn('snaky', s.CLOSED)
+class OpenTests(unittest.TestCase):
+    # Snaky opened on 2026-11-03 after its smoke (run 41548037272, issue #113) and the refused mutation runs.
+    def test_snaky_is_open(self):
+        self.assertNotIn('snaky', s.CLOSED)
         self.assertEqual(s.board_line('snaky'), 'Snaky board: https://bigospeedrun.com/other/snaky')
+        with self.assertRaises(ValueError) as error:
+            s.validate_submission({'schema_version': 1, 'problem': 'nope', 'bound': '1', 'repo_url': 'https://github.com/a/b',
+                                   'commit': 'a' * 40, 'authors': []})
+        self.assertIn('snaky', str(error.exception))
+        form = (ROOT / '.github/ISSUE_TEMPLATE/lean-submission.yml').read_text()
+        self.assertIn('options: [dft, 3sum, apsp, average-sensitivity, catalan, subset-sum, snaky]', form)
+        sub = {'schema_version': 1, 'problem': 'snaky', 'bound': '20', 'repo_url': 'https://github.com/a/b', 'commit': 'a' * 40, 'authors': []}
+        self.assertEqual(s.validate_submission(sub)['bound'], '20')
+        for bound in ['19/2', '101']:
+            with self.subTest(bound=bound), self.assertRaises(ValueError):
+                s.validate_submission(dict(sub, bound=bound))
 
 
 if __name__ == '__main__':

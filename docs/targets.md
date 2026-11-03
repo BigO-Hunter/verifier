@@ -113,6 +113,29 @@ posted. Nanoda can end incomplete (time or memory limit); that does not prevent 
 to move an existing proof (for example, Sean Litsey's Catalan repository) into the
 layout that the verifier reads.
 
+## Snaky
+
+Issue route only. Use Lean `leanprover/lean4:v4.34.1` and the Mathlib pin in
+`profiles/lake-manifest.json` (the DFT pin). The trusted statement is
+`challenges/other-snaky/VerifierStatement.lean`, namespace `BigOSpeedrun.Snaky`. It
+imports only four Mathlib modules. Copy it byte for byte into your sources (for
+example `Submission/SnakyStatement.lean`), and for a whole number `n`, export:
+
+```lean
+import Submission.SnakyStatement
+
+theorem Race.bound : BigOSpeedrun.Snaky.Bound n := by
+  -- Supply the proof.
+```
+
+`Bound n` says that one Maker policy wins Snaky on the infinite board `ℤ × ℤ` within
+`n` own moves, the winning move included, against every legal Breaker sequence. The
+policy must give a fresh cell on every state. A smaller `n` is better. The bound is a
+whole number: the form refuses a fraction. Do not change the copied file: Comparator
+compares every definition that the theorem uses, and a changed definition (for
+example a moved cell of the shape) is a statement mismatch. See
+[the statement README](../challenges/other-snaky/README.md) for the rules.
+
 ## Integer factoring
 
 Closed to issues and PRs. A maintainer can rerun Isaac Rudich and Louis-Martin

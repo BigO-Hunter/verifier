@@ -246,7 +246,7 @@ class SnakySmokeTests(SubsetSumSmokeTests):
         self.assertEqual((smoke.SNAKY_FIXTURE,smoke.SNAKY_TAG),(('snaky','20','https://github.com/darkhipo/snaky-twenty',
                                                                  'f6248dc39a05a6c5665240d860d2dbb95db707d9'),'snaky-f6248dc-v1'))
         self.assertEqual(smoke.SILENT[smoke.SNAKY_TAG],smoke.SNAKY_FIXTURE)
-        self.assertIn('snaky',s.CLOSED)
+        self.assertNotIn('snaky',s.CLOSED)
 
     def test_dispatch_selects_one_silent_issue_entry(self):
         selected=self.dispatch(self.issue())
@@ -285,8 +285,8 @@ class SnakyMutationTests(SubsetSumSmokeTests):
                          {'snaky-control-c89f809-v1':('20','c89f809'),'snaky-m1-bound19-c89f809-v1':('19','c89f809'),
                           'snaky-m2-cell-eca2430-v1':('20','eca2430'),'snaky-m3-symmetry-73041ba-v1':('20','73041ba'),
                           'snaky-m4-freshness-299e232-v1':('20','299e232'),'snaky-m5-legality-9ddfaee-v1':('20','9ddfaee')})
-        # Snaky stays closed: only these maintainer runs reach it.
-        self.assertIn('snaky',s.CLOSED)
+        # Snaky opened on 2026-11-03 after these runs.
+        self.assertNotIn('snaky',s.CLOSED)
 
     def test_dispatch_selects_one_silent_issue_entry(self):
         for tag,pinned in smoke.SNAKY_MUTATIONS.items():

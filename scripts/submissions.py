@@ -77,9 +77,10 @@ OTHER = {'average-sensitivity', 'catalan', 'snaky'}
 # it (smoke.py). Opening is a reviewed change that removes the problem from this set. Average
 # sensitivity opened on 2026-10-23 after its smoke (run 39943626205, issue #48) passed. Catalan opened on
 # 2026-10-27 after its split-build smoke (run 40497685416, issue #68) passed. Subset Sum opened on 2026-11-01
-# after its smoke (run 41353572059, issue #98, darkhipo's 3/4 proof) passed. Snaky (2026-11-02, verifier #106)
-# waits for a proof on its profile to smoke with.
-CLOSED = {'snaky'}
+# after its smoke (run 41353572059, issue #98, darkhipo's 3/4 proof) passed. Snaky opened on 2026-11-03 after its
+# smoke (run 41548037272, issue #113, darkhipo's Bound 20 proof) passed and its control and five statement mutations
+# were refused (runs 41543423936, 41544268863, 41544953483, 41545742606, 41546502694, 41547277453).
+CLOSED = set()
 
 
 def form_error(body):
