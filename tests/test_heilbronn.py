@@ -175,7 +175,7 @@ class OpenTests(unittest.TestCase):
                                    'commit': 'a' * 40, 'authors': []})
         self.assertIn('heilbronn-triangle', str(error.exception))
         form = (ROOT / '.github/ISSUE_TEMPLATE/lean-submission.yml').read_text()
-        self.assertIn('options: [dft, 3sum, apsp, average-sensitivity, catalan, subset-sum, snaky, heilbronn-triangle]', form)
+        self.assertIn('options: [dft, 3sum, apsp, average-sensitivity, catalan, subset-sum, snaky, heilbronn-triangle, directed-sssp]', form)
         sub = {'schema_version': 1, 'problem': 'heilbronn-triangle', 'bound': '2/100866719', 'repo_url': 'https://github.com/a/b',
                'commit': 'a' * 40, 'authors': []}
         self.assertEqual(s.validate_submission(sub)['bound'], '2/100866719')

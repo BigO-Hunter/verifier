@@ -80,7 +80,7 @@ class OpenTests(unittest.TestCase):
         self.assertIn('catalan', str(error.exception))
         self.assertEqual(s.board_line('catalan'), "Catalan's constant board: https://bigospeedrun.com/other/catalan")
         form = (ROOT / '.github/ISSUE_TEMPLATE/lean-submission.yml').read_text()
-        self.assertIn('options: [dft, 3sum, apsp, average-sensitivity, catalan, subset-sum, snaky, heilbronn-triangle]', form)
+        self.assertIn('options: [dft, 3sum, apsp, average-sensitivity, catalan, subset-sum, snaky, heilbronn-triangle, directed-sssp]', form)
 
     def select(self, item):
         import queue_lease

@@ -9,7 +9,7 @@ body:
     id: problem
     attributes:
       label: Problem
-      options: [dft, 3sum, apsp, average-sensitivity, catalan, subset-sum, snaky, heilbronn-triangle]
+      options: [dft, 3sum, apsp, average-sensitivity, catalan, subset-sum, snaky, heilbronn-triangle, directed-sssp]
     validations:
       required: true
   - type: input
@@ -30,6 +30,6 @@ body:
     id: bound
     attributes:
       label: Bound
-      placeholder: Reduced exact rational, such as 1999/1000
+      placeholder: Reduced exact rational, such as 1999/1000 (directed-sssp: D ; T, such as n log^3/4 ; n log^11/12)
     validations:
       required: true

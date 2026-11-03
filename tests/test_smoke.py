@@ -335,7 +335,7 @@ class DirectedSsspSmokeTests(SubsetSumSmokeTests):
                           'sssp-m4-fallback-f06285b-v1':('n log^3/4 ; n log^11/12','f06285b'),
                           'sssp-m5-exact-a922982-v1':('n log^3/4 ; n log^11/12','a922982')})
         self.assertTrue(set(self.TAGS.items())<=set(smoke.SILENT.items()))
-        self.assertIn('directed-sssp',s.CLOSED)
+        self.assertNotIn('directed-sssp',s.CLOSED)
 
     def test_dispatch_selects_one_silent_issue_entry(self):
         for tag,pinned in self.TAGS.items():

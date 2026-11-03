@@ -52,6 +52,9 @@ SSSP_FACTOR = re.compile(r'(n|log|loglog)(?:\^(-?(?:0|[1-9][0-9]{0,39})(?:/[1-9]
 SSSP_HELP = (f'the bound for {SSSP} must be "D ; T", for example "{SSSP_EXAMPLE}": D = n^a log^b, '
              'T = n^a log^b loglog^c, exponents as integers or reduced fractions (3/4, -1/2), '
              'the factors in this order, a factor with exponent 0 left out, and n instead of n^1')
+# Lead, 2026-11-03 (verifier #134): the second clause of Bound gives every program C(n+1)(m+1), so a row with
+# T >= n·D says nothing new. The form refuses it; this is the statement's own bound, not the classical one.
+SSSP_FREE = (f'the time T of {SSSP} must be below n·D: the statement already gives every program C(n+1)(m+1)')
 
 
 def sssp_side(text, names):
@@ -93,7 +96,57 @@ def parse_sssp(text):
         raise ValueError(f'the edge bound D of {SSSP} must be between n and n^2: n^a log^b with 1 <= a <= 2 and b >= 0')
     if t < (a, b, Fraction(0)) or t > (Fraction(3), Fraction(0), Fraction(0)):
         raise ValueError(f'the time T of {SSSP} must be at least the edge bound D and at most n^3')
+    if t >= (a + 1, b, Fraction(0)):
+        raise ValueError(SSSP_FREE)
     return d + t
+
+
+def sssp_density(text):
+    """(a, b) of a normal-form density D = n^a log^b between n and n^2, as in parse_sssp, or ValueError."""
+    d = sssp_side(text, ('n', 'log')) if isinstance(text, str) else None
+    if d is None or sssp_text(d, ('n', 'log')) != text or not 1 <= d[0] <= 2 or d[1] < 0 or (d[0] == 2 and d[1] != 0):
+        raise ValueError('bad density: ' + str(text))
+    return d
+
+
+# A function line is terms joined by ' + ', each term its factors in the order m n log loglog logratio, with the
+# exponent style of the bound (logratio is log(2 + m/n)); the site's data/sssp.py has the same parser.
+SSSP_KEYS = ('m', 'n', 'log', 'loglog', 'logratio')
+SSSP_TERM = re.compile(r'(m|n|loglog|logratio|log)(?:\^(-?(?:0|[1-9][0-9]{0,39})(?:/[1-9][0-9]{0,39})?))?')
+
+
+def sssp_function(text):
+    """The terms of a function line in normal form, as tuples of exponents of SSSP_KEYS, or ValueError."""
+    if not isinstance(text, str) or not text:
+        raise ValueError('a function line is terms joined by " + "')
+    terms = []
+    for part in text.split(' + '):
+        exponents = {}
+        for token in part.split(' '):
+            match = SSSP_TERM.fullmatch(token)
+            if not match or match.group(1) in exponents:
+                raise ValueError('bad function line term: ' + part)
+            exponents[match.group(1)] = Fraction(match.group(2) or '1')
+        terms.append(tuple(exponents.get(k, Fraction(0)) for k in SSSP_KEYS))
+    normal = ' + '.join(' '.join(k if e == 1 else f'{k}^{e}' for k, e in zip(SSSP_KEYS, t) if e != 0) or '1' for t in terms)
+    if normal != text:
+        raise ValueError('a function line must be in normal form: ' + text)
+    return terms
+
+
+def sssp_time_at(terms, d):
+    """T(D) of a function line at D = (a, b): the lex largest term. At m = n^a log^b, log(2 + m/n) is Theta(log n)
+    when a > 1, Theta(log log n) when a = 1 and b > 0, and Theta(1) when m = n."""
+    a, b = d
+    ratio = (0, 1, 0) if a > 1 else (0, 0, 1) if b > 0 else (0, 0, 0)
+    return max((p * a + q + k * ratio[0], p * b + r + k * ratio[1], s + k * ratio[2]) for p, q, r, s, k in terms)
+
+
+def sssp_best(d, points, lines):
+    """The gate at density D: the lex smallest T of a Lean Verified point row (a, b, a', b', c') with a density at or
+    above D, and of a Lean Verified function line (terms, cap) at D when D <= cap; None if there is none."""
+    times = [p[2:] for p in points if p[:2] >= d] + [sssp_time_at(terms, d) for terms, cap in lines if d <= cap]
+    return min(times) if times else None
 
 
 def validate_submission(value):
@@ -161,10 +214,10 @@ HIGHER = {'dft', 'heilbronn-triangle'}
 # opened on 2026-11-03 (verifier #105) after its smoke (run 41571110767, issue #123, our bound_zero proof at the
 # bound 0, which the public form refuses) passed and its control and five statement mutations were refused (runs
 # 41567042077, 41567693486, 41568314615, 41569037465, 41569722876, 41570365991).
-# Directed SSSP stays closed until its smoke (the C-HD proof with our bridge) passes and its control and statement
-# mutations are refused (Nil's GO, 2026-11-03; challenges/directed-sssp/README.md). Its record gate compares (D, T)
-# tuples, not one rational, and comes with the site half.
-CLOSED = {SSSP}
+# Directed SSSP opened on 2026-11-03 after its smoke (run 41641134677, issue #127, the C-HD proof with our bridge)
+# passed and its control and five statement mutations were refused (issues #128 to #133). Its record gate compares
+# (D, T) tuples, not one rational (sssp_record).
+CLOSED = set()
 
 
 def form_error(body):
@@ -537,6 +590,8 @@ def current_record(problem, issue_url):
     proof of exactly 1/2 runs too and ties the baseline."""
     if problem in OTHER:
         return other_record(problem, issue_url)
+    if problem == SSSP:
+        return sssp_record(issue_url)
     sha, raw = site_snapshot(problem)
     data = json.loads(raw)
     if data['problem_id'] != MODEL_IDS[problem]:
@@ -569,7 +624,47 @@ def current_record(problem, issue_url):
             'checked_at': datetime.now(timezone.utc).isoformat().replace('+00:00', 'Z')}
 
 
+def sssp_record(issue_url):
+    """The directed-sssp gate set: its Lean Verified point rows "D ; T" and their proven function lines (a chart line
+    of a Lean Verified row, up to its cap). Only Vals AI's line Tchd is one (Lead, 2026-11-03, verifier #134: below n
+    log^3/4 n a new row must beat it at its density). Claimed rows, the paper function rows and the classical bound
+    never gate (Nil rulings 2026-10-20 and 2026-11-02). sssp_qualifies compares a candidate at its own D."""
+    sha, raw = site_snapshot(SSSP)
+    data = json.loads(raw)
+    if data['problem_id'] != MODEL_IDS[SSSP]:
+        raise ValueError('Current record model mismatch')
+    def lean_verified(row):
+        metadata = data['record_metadata'].get(row['id'], {})
+        rerun = row.get('rerun_status') or {}
+        return metadata.get('site_tier') == 'verified' and rerun.get('state') == 'passed' and bool(rerun.get('receipt_path'))
+    rows = [r for r in data['records'] if r.get('submission_url') != issue_url and r['id'] != 'classical-baseline'
+            and not data['record_metadata'].get(r['id'], {}).get('reproduction_of') and lean_verified(r)]
+    points = sorted((r['id'], r['score']) for r in rows if ' ; ' in r['score'])
+    for _, score in points:
+        parse_sssp(score)
+    ids = {r['id'] for r in rows}
+    lines = sorted((l['id'], l['row'], l['function'], l['up_to']) for l in data.get('chart', {}).get('lines', []) if l['row'] in ids)
+    for _, _, function, up_to in lines:
+        sssp_function(function), sssp_density(up_to)
+    return {'schema_version': 1, 'problem_id': data['problem_id'],
+            'lean_verified': [{'id': i, 'score': score} for i, score in points],
+            'lean_lines': [{'id': i, 'row': row, 'function': f, 'up_to': u} for i, row, f, u in lines],
+            'site_commit': sha, 'data_sha256': hashlib.sha256(raw).hexdigest(),
+            'checked_at': datetime.now(timezone.utc).isoformat().replace('+00:00', 'Z')}
+
+
+def sssp_qualifies(candidate, record):
+    """A candidate (a, b, a', b', c') runs when its T is below the gate at its D. A tie starts no run: every gate
+    value is Lean Verified. With no gate value at D, every bound of the form runs."""
+    points = [parse_sssp(p['score']) for p in record['lean_verified']]
+    lines = [(sssp_function(l['function']), sssp_density(l['up_to'])) for l in record['lean_lines']]
+    current = sssp_best(candidate[:2], points, lines)
+    return current is None or candidate[2:] < current
+
+
 def qualifies_for_run(submission, record):
+    if submission['problem'] == SSSP:
+        return sssp_qualifies(parse_sssp(submission['bound']), record)
     candidate = (Fraction(submission['bound']), 0)
     current = (Fraction(record['score']), open_rank(submission['problem']) if record['score_relation'] == 'strict-upper-bound' else 0)
     if candidate == current:

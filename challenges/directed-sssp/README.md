@@ -2,7 +2,7 @@
 
 This is the trusted target for the
 [directed shortest paths board](https://bigospeedrun.com/directed-sssp).
-The issue route does not take this problem yet (`submissions.CLOSED`).
+The issue route takes this problem; the gate is in [docs/targets.md](../../docs/targets.md#directed-shortest-paths).
 
 ## Model
 
@@ -62,7 +62,8 @@ The issue form takes the bound as `D ; T` in one normal form, for example
 - a factor with exponent 0 is left out, and exponent 1 is the bare name (`n`,
   not `n^1`);
 - `1 ≤ a ≤ 2`, `b ≥ 0`, and `D` is at most `n^2`;
-- `T` is at least `D` and at most `n^3`.
+- `T` is at least `D` and below `n·D` (so at most `n^3`): clause 2 already gives
+  `C·(n+1)(m+1)` for every graph, so a row with `T ≥ n·D` adds nothing.
 
 `submissions.parse_sssp` refuses every other text with a message that shows the
 example.
@@ -73,9 +74,9 @@ For these functions, `f = O(g)` exactly when the exponent tuple of `f` is at
 most that of `g` in lexicographic order. The verifier and the site compare the
 rational tuples `(a, b)` for `D` and `(a', b', c')` for `T`; they use no reals.
 
-A row is a record when its `T` is strictly below the best `T` among the listed
-rows whose `D` is at least as dense. `Validation.lean` proves the two facts
-that this rule uses:
+A submission runs when its `T` is strictly below the best Lean Verified `T` at
+its `D` ([docs/targets.md](../../docs/targets.md#directed-shortest-paths)).
+`Validation.lean` proves the two facts that this rule uses:
 
 - `weaker_time`: a row also proves every slower time at the same density;
 - `cover_sparser`: with `b₀, b ≥ 0`, a row also proves its time at every sparser

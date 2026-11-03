@@ -3,7 +3,10 @@ import json
 from fractions import Fraction as F
 from pathlib import Path
 import sys
+import os
+import tempfile
 import unittest
+from unittest.mock import Mock, patch
 
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT / 'scripts'))
@@ -67,8 +70,11 @@ class StatementTests(unittest.TestCase):
         self.assertFalse((CHALLENGE / 'Frontier').exists())
         self.assertNotIn('runner', profile)
 
-    def test_the_problem_is_closed(self):
-        self.assertIn('directed-sssp', s.CLOSED)
+    def test_the_problem_is_open(self):
+        self.assertNotIn('directed-sssp', s.CLOSED)
+        form = (ROOT / '.github/ISSUE_TEMPLATE/lean-submission.yml').read_text()
+        self.assertIn('snaky, heilbronn-triangle, directed-sssp]', form)
+        self.assertIn('(directed-sssp: D ; T, such as n log^3/4 ; n log^11/12)', form)
         self.assertEqual((s.MODEL_IDS['directed-sssp'], s.board_line('directed-sssp')),
                          ('directed-sssp/comparison-addition-sparse',
                           'Directed shortest paths board: https://bigospeedrun.com/directed-sssp'))
@@ -91,7 +97,6 @@ class CHDRowTests(unittest.TestCase):
         self.assertEqual((profile['bound'], profile['score_relation'], profile['model']),
                          ('n log^3/4 ; n log^11/12', 'attained', s.MODEL_IDS['directed-sssp']))
         self.assertEqual(set(profile['permitted_axioms']), {'propext', 'Quot.sound', 'Classical.choice'})
-        self.assertIn('directed-sssp', s.CLOSED)
 
     def test_verify_resolves_only_this_profile_for_the_row(self):
         sys.path.insert(0, str(ROOT / 'scripts'))
@@ -115,7 +120,8 @@ class GrammarTests(unittest.TestCase):
             'n ; n log^1/2 loglog^1/2': (1, 0, 1, F(1, 2), F(1, 2)),
             'n ; n log': (1, 0, 1, 1, 0),
             'n^2 ; n^2': (2, 0, 2, 0, 0),
-            'n ; n^3': (1, 0, 3, 0, 0),
+            'n ; n^2 loglog^-1': (1, 0, 2, 0, -1),
+            'n^2 ; n^3 loglog^-1': (2, 0, 3, 0, -1),
             'n log^3/4 ; n log^11/12 loglog^-1/3': (1, F(3, 4), 1, F(11, 12), F(-1, 3)),
             'n^3/2 log^2 ; n^3/2 log^2 loglog': (F(3, 2), 2, F(3, 2), 2, 1),
             'n log ; n log^2 loglog^-7': (1, 1, 1, 2, -7),
@@ -143,6 +149,15 @@ class GrammarTests(unittest.TestCase):
             with self.subTest(text=text), self.assertRaisesRegex(ValueError, 'at least the edge bound D and at most n\\^3'):
                 s.parse_sssp(text)
 
+    def test_the_statement_bound_is_refused(self):
+        # Lead, 2026-11-03 (verifier #134): the second clause of Bound gives every program C(n+1)(m+1), so a row with
+        # T >= n·D adds nothing and the form refuses it.
+        for text in ['n^2 ; n^3', 'n ; n^3', 'n ; n^2', 'n log^3/4 ; n^2 log^3/4', 'n log ; n^2 log loglog']:
+            with self.subTest(text=text), self.assertRaisesRegex(ValueError, 'below n·D: the statement already gives'):
+                s.parse_sssp(text)
+            with self.subTest(text=text), self.assertRaisesRegex(ValueError, 'below n·D'):
+                s.parse_body(body(text))
+
     def test_up_to_40_digits_per_integer(self):
         self.assertEqual(s.parse_sssp('n ; n log^1/' + '9' * 40)[3], F(1, int('9' * 40)))
         with self.assertRaises(ValueError):
@@ -168,6 +183,111 @@ class GrammarTests(unittest.TestCase):
         self.assertEqual(s.parse_body(body('1/2').replace('directed-sssp', 'catalan'))['bound'], '1/2')
         with self.assertRaises(ValueError):
             s.parse_body(body('n ; n').replace('directed-sssp', 'catalan'))
+
+
+CASES = json.loads((ROOT / 'tests/fixtures/sssp-cases.json').read_text())
+
+
+class SharedCaseTests(unittest.TestCase):
+    """tests/fixtures/sssp-cases.json is a byte copy of the site's data/direct-fixtures/sssp-cases.json: the site's
+    data/sssp.py and src/lib/sssp.ts check the same cases, and the site's trust file pins its sha256."""
+    def test_parse_and_refuse(self):
+        for case in CASES['parse']:
+            with self.subTest(text=case['text']):
+                self.assertEqual([str(x) for x in s.parse_sssp(case['text'])], case['exponents'])
+        for text in CASES['refuse']:
+            with self.subTest(text=text), self.assertRaises(ValueError):
+                s.parse_sssp(text)
+
+    def test_function_lines(self):
+        for row in CASES['functions']:
+            terms = s.sssp_function(row['text'])
+            for d, t in row['at'].items():
+                with self.subTest(row=row['name'], d=d):
+                    self.assertEqual(s.sssp_text(s.sssp_time_at(terms, s.sssp_density(d)), ('n', 'log', 'loglog')), t)
+        for bad in ['m^1 + n', 'm  + n', 'm log log', 'm^2/4', '', 'n + log m']:
+            with self.subTest(bad=bad), self.assertRaises(ValueError):
+                s.sssp_function(bad)
+
+    def test_gate(self):
+        for case in CASES['gate']:
+            record = {'lean_verified': [{'id': f'r{i}', 'score': p} for i, p in enumerate(case['lean_verified'])],
+                      'lean_lines': [dict(l, id='chd-lean-cost', row='r0') for l in case['lean_lines']]}
+            with self.subTest(candidate=case['candidate'], lines=len(case['lean_lines'])):
+                candidate = s.parse_sssp(case['candidate'])
+                lines = [(s.sssp_function(l['function']), s.sssp_density(l['up_to'])) for l in case['lean_lines']]
+                best = s.sssp_best(candidate[:2], [s.parse_sssp(p) for p in case['lean_verified']], lines)
+                self.assertEqual(None if best is None else s.sssp_text(best, ('n', 'log', 'loglog')), case['best'])
+                self.assertEqual(s.qualifies_for_run({'problem': s.SSSP, 'bound': case['candidate']}, record), case['runs'])
+
+
+def board(tier='verified'):
+    """A directed-sssp board in the site's shape: the classic, a Claimed paper row, the Vals AI row and its line."""
+    vals = {'id': 'directed-sssp-2026', 'score': 'n log^3/4 ; n log^11/12',
+            'rerun_status': {'state': 'passed', 'receipt_path': 'sources/x.json'} if tier == 'verified' else None}
+    return {'problem_id': 'directed-sssp/comparison-addition-sparse',
+            'records': [{'id': 'classical-baseline', 'score': 'm + n log'},
+                        {'id': 'directed-sssp-stoc-2025', 'score': 'm log^2/3 + n'}, vals],
+            'record_metadata': {'classical-baseline': {'site_tier': 'verified'}, 'directed-sssp-stoc-2025': {'site_tier': 'claimed'},
+                                'directed-sssp-2026': {'site_tier': tier}},
+            'chart': {'lines': [{'id': 'chd-lean-cost', 'function': 'n + m + m logratio + m^1/3 n^2/3 log^2/3',
+                                 'up_to': 'n log^3/4', 'row': 'directed-sssp-2026'}]}}
+
+
+class RecordGateTests(unittest.TestCase):
+    def record(self, data, issue='https://github.com/bigospeedrun/verifier/issues/200'):
+        with patch.object(s, 'site_snapshot', return_value=('c' * 40, json.dumps(data).encode())):
+            return s.current_record(s.SSSP, issue)
+
+    def runs(self, bound, record):
+        return s.qualifies_for_run({'problem': s.SSSP, 'bound': bound}, record)
+
+    def test_the_lean_verified_row_and_its_line_gate(self):
+        record = self.record(board())
+        self.assertEqual((record['lean_verified'], [l['id'] for l in record['lean_lines']], record['site_commit']),
+                         ([{'id': 'directed-sssp-2026', 'score': 'n log^3/4 ; n log^11/12'}], ['chd-lean-cost'], 'c' * 40))
+        # The Lead's cases (2026-11-03): Tchd(n) = n log^2/3 ties, a better time runs; above the cap the line is silent.
+        for bound, runs in [('n ; n log^2/3', False), ('n ; n log^1/2', True), ('n log^3/4 ; n log^11/12', False),
+                            ('n log^1/2 ; n log^5/6', False), ('n log^1/2 ; n log^4/5', True), ('n log ; n log^2', True)]:
+            with self.subTest(bound=bound):
+                self.assertEqual(self.runs(bound, record), runs)
+
+    def test_claimed_rows_the_papers_and_the_classic_never_gate(self):
+        record = self.record(board('claimed'))
+        self.assertEqual((record['lean_verified'], record['lean_lines']), ([], []))
+        for bound in ['n ; n log^2/3', 'n log^3/4 ; n log^11/12', 'n^2 ; n^3 loglog^-1']:
+            with self.subTest(bound=bound):
+                self.assertTrue(self.runs(bound, record))
+
+    def test_the_own_row_does_not_gate_its_rerun(self):
+        data = board()
+        data['records'][2]['submission_url'] = 'https://github.com/bigospeedrun/verifier/issues/200'
+        self.assertEqual((self.record(data)['lean_verified'], self.record(data)['lean_lines']), ([], []))
+
+    def test_an_sssp_issue_goes_through_the_selection_pass(self):
+        # verifier #134: Fraction('n^2 ; n^3') stopped the pass; now the gate reads the (D, T) tuples.
+        import queue_lease
+        import derivation
+        for data in [board('claimed'), board()]:
+            lease = Mock(state={'page': 1, 'offset': 0}, admitted=Mock(return_value=False))
+            item = {'number': 200, 'state': 'open', 'title': '[Lean submission] test', 'body': body('n ; n log^1/2'),
+                    'user': {'login': 'submitter'}, 'created_at': '2026-11-03T12:00:00Z', 'updated_at': '2026-11-03T12:00:00Z'}
+            with tempfile.TemporaryDirectory() as tmp:
+                old = Path.cwd(); os.chdir(tmp)
+                try:
+                    with patch.dict(os.environ, GITHUB_OUTPUT=str(Path(tmp) / 'output')), \
+                         patch.object(queue_lease, 'acquire', return_value=lease), \
+                         patch.object(s, 'api', side_effect=lambda p, data=None: [item] if p.startswith('issues?') else []), \
+                         patch.object(s, 'acknowledge'), patch.object(s, 'release'), \
+                         patch.object(s, 'site_snapshot', return_value=('c' * 40, json.dumps(data).encode())), \
+                         patch.object(derivation.Reader, 'get', side_effect=derivation.NotComputed('offline')):
+                        s.select()
+                    request = json.loads(Path('requests/200.json').read_text())
+                    self.assertEqual((request['submission']['bound'], request['inputs']['challenge_file']),
+                                     ('n ; n log^1/2', 'challenges/directed-sssp/VerifierStatement.lean'))
+                    self.assertEqual(len(request['record_gate']['lean_lines']), 0 if data == board('claimed') else 1)
+                finally:
+                    os.chdir(old)
 
 
 if __name__ == '__main__':

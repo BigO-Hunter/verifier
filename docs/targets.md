@@ -166,7 +166,7 @@ definition (for example the area of a triangle) is a statement mismatch. See
 
 ## Directed shortest paths
 
-Not open yet (`submissions.CLOSED`). Issue route only. Use Lean
+Issue route only. Use Lean
 `leanprover/lean4:v4.34.1` and the pins in `profiles/lake-manifest.json`. The
 trusted statement is `challenges/directed-sssp/VerifierStatement.lean`, namespace
 `BigOSpeedrun.DirectedSSSP`. It imports `Frontier.CostModel` from
@@ -194,10 +194,30 @@ the ranges.
 
 Comparison. For these functions, `f = O(g)` exactly when the exponent tuple of
 `f` is at most that of `g` in lexicographic order. `D` is compared by `(a, b)`
-and `T` by `(a', b', c')`. A row is a record when its `T` is
-strictly below the best `T` among the listed rows whose `D` is at least as dense.
-The statement's `Validation.lean` proves the two facts that this rule uses
-(`weaker_time`, `cover_sparser`).
+and `T` by `(a', b', c')`. The statement's `Validation.lean` proves the two facts
+that the gate uses (`weaker_time`, `cover_sparser`).
+
+`T` must be below `n·D`: the second clause of `Bound` already gives
+`C·(n+1)(m+1)` for every graph, so a row with `T ≥ n·D` adds nothing, and the
+form refuses it (verifier #134).
+
+Gate. A submission runs when its `T` is strictly below the best Lean Verified
+`T` at its `D`: the best `T` of the Lean Verified rows whose `D` is at least as
+dense, and, at or below n log^(3/4) n, the time of Vals AI's proven line at that
+`D`. So at or below n log^(3/4) n, a new row must beat Vals AI's proven line at its
+density. That row's Lean theorem bounds the time by
+`Tchd = n + m + m·log(2 + m/n) + m^(1/3)·(n log n)^(2/3)` (up to constant factors)
+for every `m` up to that cap; the line is a chart line of the Vals AI row
+(`chart.lines` in the site's board data). A tie starts no run. With no Lean
+Verified bound at `D`, every bound of the form runs. Claimed rows, the paper rows
+(functions of `m` and `n`) and the classical bound never gate (Nil rulings
+2026-10-20 and 2026-11-02).
+
+The classical bound, Dijkstra with Fibonacci heaps, is `O(m + n log n)`, that is
+`T_classic(D) = max(D, n log n)`. It is a line on the board only.
+
+SSSP runs use about 14 GB of the 15 GB runner memory; import only the fork modules
+your proof needs. A run that hits the memory limit is a failed run, not a verdict.
 
 ## Integer factoring
 
@@ -213,4 +233,3 @@ one appended theorem, in `challenges/integer-factoring-sqrtlog/Challenge.lean`, 
 There is no `Race.bound` target for other scores yet.
 
 Integer multiplication has no trusted statement in this gate.
-SSSP is outside the site submission scope.
