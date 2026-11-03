@@ -74,6 +74,40 @@ class StatementTests(unittest.TestCase):
                           'Directed shortest paths board: https://bigospeedrun.com/directed-sssp'))
 
 
+class CHDRowTests(unittest.TestCase):
+    """The maintainer profile for the Vals AI row (Lead, 2026-11-03: a maintainer binding, as for matrix-nine-fourths).
+    verify.yml checks one fixed target, the C-HD row; the public issue route never reads this profile."""
+    def test_the_fixed_target_is_the_generated_c_hd_row(self):
+        profile = json.loads((ROOT / 'profiles/sssp-chd.json').read_text())
+        direct = json.loads((ROOT / 'profiles/direct.json').read_text())['directed-sssp']
+        target = (ROOT / profile['challenge_file']).read_text()
+        sub = dict(s.parse_body(body()), bound='n log^3/4 ; n log^11/12')
+        self.assertEqual(target, s.challenge_source(sub))
+        self.assertEqual(profile['challenge_sha256'], hashlib.sha256(target.encode()).hexdigest())
+        self.assertEqual(profile['challenge_sha256'], 'b9569daeed41b0394a8a0ec10bd40fa15d005fef8afb1abfa2f77a52f7d27ab0')
+        for key in ['lean_toolchain', 'manifest_file', 'tools_file', 'solution_module', 'theorem_names', 'source_roots',
+                    'upstream_commit', 'solution_dependencies']:
+            self.assertEqual(profile[key], direct[key], key)
+        self.assertEqual((profile['bound'], profile['score_relation'], profile['model']),
+                         ('n log^3/4 ; n log^11/12', 'attained', s.MODEL_IDS['directed-sssp']))
+        self.assertEqual(set(profile['permitted_axioms']), {'propext', 'Quot.sound', 'Classical.choice'})
+        self.assertIn('directed-sssp', s.CLOSED)
+
+    def test_verify_resolves_only_this_profile_for_the_row(self):
+        sys.path.insert(0, str(ROOT / 'scripts'))
+        import verifier
+        request = {'repo_url': 'https://github.com/bigospeedrun/sssp-lean-scratch',
+                   'commit': '98919233966fa6196cf67639c1eee2b2496d26b6',
+                   'challenge_file': 'challenges/directed-sssp/CHDRow.lean', 'theorem_names': 'Race.bound',
+                   'lean_toolchain': 'leanprover/lean4:v4.34.1'}
+        profile, names = verifier.validate_request(request)
+        self.assertEqual((profile['challenge_file'], names), ('challenges/directed-sssp/CHDRow.lean', ['Race.bound']))
+        for field, value in [('theorem_names', 'BigOSpeedrun.DirectedSSSP.Bound'), ('lean_toolchain', 'leanprover/lean4:v4.34.0'),
+                             ('challenge_file', 'challenges/directed-sssp/VerifierStatement.lean')]:
+            with self.subTest(field=field), self.assertRaises(ValueError):
+                verifier.validate_request(dict(request, **{field: value}))
+
+
 class GrammarTests(unittest.TestCase):
     def test_normal_forms_parse_to_exponent_tuples(self):
         cases = {

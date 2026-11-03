@@ -102,3 +102,15 @@ The statement and `Validation.lean` were built on GitHub Actions in
 (runs 41609770176 and 41609775031, on our pins and on the fork's pins, with the
 full C-HD proof). `#print axioms` shows only `propext`, `Classical.choice` and
 `Quot.sound`. Builds that import the C-HD model run on GitHub Actions only.
+
+## The C-HD row (maintainer profile)
+
+`profiles/sssp-chd.json` is a maintainer profile for `verify.yml`, as
+`profiles/matrix-nine-fourths.json` is for the matrix row. Its fixed challenge
+`CHDRow.lean` is byte for byte what `challenge_source` writes for
+`n log^3/4 ; n log^11/12`. The checked proof is the Vals AI result
+`Frontier.CHD.Final.chd_exact_within` of the pinned fork, unchanged, with the Big O
+Speedrun statement adapter `Submission/Bridge.lean` of
+[bigospeedrun/sssp-lean-scratch](https://github.com/bigospeedrun/sssp-lean-scratch)
+at `98919233966fa6196cf67639c1eee2b2496d26b6` (the smoke of verifier issue #127).
+The site binds the receipt of that run to the Vals AI row.

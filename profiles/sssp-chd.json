@@ -1,0 +1,36 @@
+{
+ "lean_toolchain": "leanprover/lean4:v4.34.1",
+ "challenge_file": "challenges/directed-sssp/CHDRow.lean",
+ "challenge_sha256": "b9569daeed41b0394a8a0ec10bd40fa15d005fef8afb1abfa2f77a52f7d27ab0",
+ "manifest_file": "profiles/lake-manifest.json",
+ "tools_file": "profiles/tools.json",
+ "solution_module": "Submission",
+ "theorem_names": [
+  "Race.bound"
+ ],
+ "source_roots": [
+  "Submission"
+ ],
+ "permitted_axioms": [
+  "propext",
+  "Quot.sound",
+  "Classical.choice"
+ ],
+ "bound": "n log^3/4 ; n log^11/12",
+ "score_relation": "attained",
+ "model": "directed-sssp/comparison-addition-sparse",
+ "upstream_commit": "98c53accb47a505482a1781597ae14bf67e81cec",
+ "solution_dependencies": [
+  {
+   "repo_url": "https://github.com/bigospeedrun/c-hd-proof",
+   "commit": "98c53accb47a505482a1781597ae14bf67e81cec",
+   "source_subdir": "formal/lean",
+   "source_roots": [
+    "Frontier"
+   ],
+   "lean_options": {
+    "autoImplicit": true
+   }
+  }
+ ]
+}
