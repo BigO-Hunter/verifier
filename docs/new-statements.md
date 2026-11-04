@@ -1,5 +1,7 @@
 # Contribute a trusted Lean statement
 
+Ask for a route in an issue first; open a statement pull request only when a maintainer asks for one.
+
 A problem needs a trusted statement before the verifier can accept direct proof
 submissions. Contributors can propose that statement in a normal review PR.
 Maintainers review statement PRs; the proof-submission bot does not merge them.

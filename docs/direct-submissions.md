@@ -182,3 +182,29 @@ axiom sets, resource evidence, nanoda policy, stale issues, and fixture rejectio
 Workflow lint passes. No new GitHub workflow or generic profile has run. Hosted
 end-to-end validation still requires publication approval. Nothing was pushed,
 no public issue was opened, and no Lean ran on the office box.
+
+## Routes for Other bounds boards
+
+A route lets the verifier check Lean proofs for one board. Each route needs a trusted
+statement in `challenges/`, a profile, and a smoke test.
+
+1. **Ask first.** To ask for a route, open an issue. Do not open a statement pull request
+   until a maintainer asks for one. We close statement pull requests that nobody asked for.
+2. **Maintainers decide.** Maintainers decide which boards get a route, and in which order.
+   We review one route at a time. We may open our own route first, for example to rerun a
+   Lean proof that a row already has.
+3. **We open a route when** all of these are true:
+   - The board has no review repository. On a board with a review repository (for example
+     GTimG/QuasiRiemannTracker), that repository gives the evidence levels.
+   - A faithful statement exists: preferably a pinned upstream statement, byte for byte,
+     with no hypothesis that a submission adds (see #140).
+   - The statement is not vacuous, and a bound that is too strong cannot be proved.
+   - The pins are those of an existing profile, or a maintainer approves new pins.
+   - A proof fits the limits of the GitHub Actions runner.
+   - A Lean Verified row adds information to the board.
+4. **The verifier owns `challenges/`.** Maintainers write or adopt each trusted statement
+   and merge it. A statement does not give credit or priority to the person who proposed it.
+5. **Credit follows the public record.** A proof that reuses another author's construction
+   or Lean proof names that author first on the row. The person who files it is credited
+   for the Lean package (as in #142). A rerun at the same value as an existing row is
+   listed with the authors of that row.
