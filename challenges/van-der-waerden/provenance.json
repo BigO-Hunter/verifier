@@ -1,0 +1,28 @@
+{
+  "source_repository": "https://github.com/openai/math",
+  "source_commit": "1581d4cbdd69a0faf34b2089614fe2a814316a6a",
+  "original_path": "lean/ComparatorChallenges/QuantitativeVanDerWaerden.lean",
+  "original_git_blob": "bee3f5a820455ead2a00f8fdc08d4ae5276cba2a",
+  "original_sha256": "1caa563bbf7a5602adb8cdbbc06aaf1e3d4d5fe27ed4bebf2bf44cf2937a6593",
+  "extracted_region": "whole file (the challenge statement is the entire file; the scored theorem is `OAI.QuantitativeVanDerWaerden.uniform_lower_bound`, lines 26-29, from the theorem line through the ':= by' line)",
+  "local_path": "Statement.lean",
+  "local_lines": "1-33 (whole file, byte-identical to the corpus file)",
+  "descriptor_path": "lean/ComparatorChallenges/QuantitativeVanDerWaerden.json",
+  "descriptor_git_blob": "10b1770000baae70cfe28b4890143ff9960273af",
+  "source_author": "OpenAI",
+  "git_author": "Anonymous <anonymous@computer.local> (introducing commit adc7f1241b42e322a6451854ab7e4b4c146bf78a)",
+  "license": "Apache-2.0",
+  "solution_credit": {
+    "note": "The proof is an ASSEMBLY of the cataloged, sorry-free corpus solution, not new mathematics. Full credit to the openai/math authors for the construction and its formalization.",
+    "solution_module": "OAI.Combinatorics.ProgressionColoring.Main",
+    "solution_tree": "lean/OAI/Combinatorics/ProgressionColoring/ (117 files at source_commit adc7f1241b42e322a6451854ab7e4b4c146bf78a; cataloged complete in lean/formalization.yaml)",
+    "closing_theorem": "OAI.QuantitativeVanDerWaerden.uniform_lower_bound",
+    "closing_line": "exact uniform_lower_of_cyclicLowerBound exists_cyclic_coloring",
+    "main_lean_git_blob": "d8ca9d7ce4f064bf9573aefb9e1e136063d2d991",
+    "parameters_lean_git_blob": "b446c24a7733c5d29bfda19cc559df6376927b52",
+    "permitted_axioms": ["propext", "Quot.sound", "Classical.choice"]
+  },
+  "adapter_author": "darkhipo / MultiAgency swarm (Target.lean c-parameter adapter); parameterization follows challenges/average-sensitivity/Statement.lean (Bound (p/q)) and challenges/other-snaky/Statement.lean",
+  "lean": "leanprover/lean4:v4.34.1",
+  "mathlib": "d13f23b723b8a846827a245b89c10fc7d3f11612"
+}
