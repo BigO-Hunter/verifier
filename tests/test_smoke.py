@@ -361,6 +361,35 @@ class DirectedSsspSmokeTests(SubsetSumSmokeTests):
             self.dispatch(self.issue(),actor='someone-else')
         self.assertFalse(Path('requests').exists())
 
+    def test_the_agent_line_of_a_maintainer_test_issue(self):
+        # An agent opens the test issue with the agent line (as #127, 2026-11-03). The smoke path removes it before the
+        # form is read; the body digest still binds the whole body. A real submission with the line is a form error.
+        import queue_lease
+        line='This is an agent for Nil (BOS Integrations), writing for [Big O Speedrun](https://bigospeedrun.com).\n\n'
+        item=self.issue();item['body']=line+item['body']
+        selected=self.dispatch(item)
+        self.assertEqual(smoke.fixture(selected['submission']),smoke.SSSP_FIXTURE)
+        self.assertEqual(selected['submission'],s.parse_body(item['body'][len(line):]))
+        self.assertEqual(selected['issue_body_sha256'],s.body_hash(item['body']))
+        Path('request').mkdir(exist_ok=True);Path('request/request.json').write_text(s.canonical(selected))
+        with patch.dict(os.environ,GITHUB_OUTPUT=str(self.tmp/'output')),patch.object(queue_lease,'assert_owner'),\
+             patch.object(s,'api',return_value=item),patch.object(s,'current_record') as record:
+            (self.tmp/'output').write_text('');s.preflight()
+            record.assert_not_called()
+            self.assertEqual((self.tmp/'output').read_text(),'proceed=true\n')
+        self.assertEqual(s.report_submission(item,selected),selected['submission'])
+        for text in [item['body'],item['body'].replace('\n','\r\n')]:
+            with self.subTest(text=text),self.assertRaises(ValueError):
+                s.parse_body(text)
+        with self.assertRaises(ValueError):
+            s.issue_input(item)
+        # Only a pinned fixture, only one exact line, only at the top.
+        form=self.issue()['body']
+        for body in [line+self.issue(bound='n ; n log')['body'],line+line+form,form+line,
+                     line.replace('Nil','Bob')+form,line.replace('.com)','.com/x)')+form,line[:-1]+form]:
+            with self.subTest(body=body),self.assertRaises(ValueError):
+                self.dispatch(dict(self.issue(),body=body))
+
 
 class HeilbronnSmokeTests(SubsetSumSmokeTests):
     """The Heilbronn runs before that problem opens (Lead, 2026-11-03, verifier #105): our own repository, on a

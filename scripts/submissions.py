@@ -246,17 +246,25 @@ def form_error(body):
 # statement's own Validation.lean proves (bound_zero). It is a form error. Only the pinned maintainer smoke
 # (smoke.HB_FIXTURE, test_only, never imported) reads a form with 0: its callers pass smoke=True.
 ZERO_REFUSED = {'heilbronn-triangle'}
+# A maintainer test issue that an agent opens starts with the agent line that every public comment of an agent of
+# Nil needs (Lead, 2026-11-02). Only the smoke path (smoke=True, then smoke.issue_submission admits only a pinned
+# fixture) removes it; a real submission with this line is still a form error.
+AGENT_LINE = re.compile(r'\AThis is an agent for Nil \([A-Za-z0-9 ]{1,60}\), writing for '
+                        r'\[Big O Speedrun\]\(https://bigospeedrun\.com\)\.\n\n')
 
 
 def parse_body(body, smoke=False):
     """Exact GitHub issue form headings and one-line values; no prose or JSON."""
     if not isinstance(body, str) or len(body.encode('utf-8')) > 4096:
         raise ValueError('Expected the four structured issue form fields')
+    text = body.replace('\r\n', '\n')
+    if smoke:
+        text = AGENT_LINE.sub('', text, count=1)
     # Blank lines after the last field are allowed (issue #94, 2026-11-01: an edited form ended with '\n\n').
     pattern = r'\A### Problem\n\n([^\n]+)\n\n### Repository URL\n\n([^\n]+)\n\n### Commit SHA\n\n([^\n]+)\n\n### Bound\n\n([^\n]+)\n*\Z'
-    match = re.fullmatch(pattern, body.replace('\r\n', '\n'))
+    match = re.fullmatch(pattern, text)
     if not match:
-        raise ValueError(form_error(body.replace('\r\n', '\n')))
+        raise ValueError(form_error(text))
     problem, repo, commit, bound = match.groups()
     value = validate_submission({'schema_version': 1, 'problem': problem, 'repo_url': repo,
                                  'commit': commit, 'bound': bound, 'authors': []})
