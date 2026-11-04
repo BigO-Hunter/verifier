@@ -1,0 +1,18 @@
+{
+  "source_repository": "https://github.com/openai/math",
+  "source_commit": "1581d4cbdd69a0faf34b2089614fe2a814316a6a",
+  "original_path": "lean/ComparatorChallenges/SnakyConditional.lean",
+  "original_git_blob": "2a96224d351fbb48555ae55bd8f92589f8d2dc3e",
+  "original_sha256": "3ab27d66779b557d0efcc3cfcf8317c40511e3cc655da29e61e95ba3f34d45ea",
+  "extracted_lines": "44-53",
+  "extracted_region": "theorem declaration snaky_winning_strategy_with_legal_states, from the theorem line through the ':= by' line",
+  "extracted_sha256": "8251a147ac18d65d2b71a45abffc8703dc7e324cd4f5e9e7047eee574b1313ad",
+  "local_path": "Statement.lean",
+  "local_lines": "1-56 (whole file, byte-identical to the corpus file)",
+  "source_author": "OpenAI",
+  "git_author": "Anonymous <anonymous@computer.local> (introducing commit adc7f1241b42e322a6451854ab7e4b4c146bf78a)",
+  "license": "Apache-2.0",
+  "adapter_author": "darkhipo (Target.lean); parameterization follows challenges/other-snaky/Statement.lean (verifier PR #65)",
+  "lean": "leanprover/lean4:v4.34.1",
+  "mathlib": "d13f23b723b8a846827a245b89c10fc7d3f11612"
+}
