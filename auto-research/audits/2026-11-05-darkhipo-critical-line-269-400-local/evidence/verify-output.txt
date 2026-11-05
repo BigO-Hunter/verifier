@@ -1,0 +1,27 @@
+[PASS] A_part == 4-term partial of sin(u)/u series
+[PASS] B_part == 4-term partial of cos(u) series
+[PASS] A_err == first omitted A term
+[PASS] B_err == first omitted B term
+[PASS] margin == 821/5806080  -- 821/5806080
+[PASS] margin > 0  -- 1.414035e-04
+[PASS] flipped orientation == 8683/5806080  -- 8683/5806080
+[PASS] flipped/true ratio == 10.576...  -- 10.576127
+[PASS] 821/5806080 arises only from (A-A_err, B+B_err)
+[PASS] 8683/5806080 arises only from (A+A_err, B-B_err)
+[PASS] sin(u)^2 + cos(u)^2 == 1 (series self-consistency)  -- |sum-1| = 0E-59
+[PASS] s == u*sin(u)/cos(u) == A/(2B)  -- |diff| = 2E-60
+[PASS] sin(u) matches mpmath.sin(1/sqrt2)
+[PASS] cos(u) matches mpmath.cos(1/sqrt2)
+[PASS] s matches mpmath u*tan(u)
+[PASS] 331A - 400B > 0  -- 0.000258595251092405161755366953282002133822424150719018843
+[PASS] s > 200/331  -- 5.13817880473967933942003390323736786998362525311671653E-7
+[PASS] cMT > 400/531  -- 3.99306164839175153366499482861203460840508835273408682E-7
+[PASS] H - 269/400 > 0  -- 7.0367941164573437979080329518859340302862626407892959E-7
+[PASS] H == 2 - 1/cMT
+[PASS] 2 - 531/400 == 269/400 exactly
+
+cMT = 0.753296067856070677216584628269727682295739559906198738568757
+H   = 0.67250070367941164573437979080329518859340302862626407892959
+H - 269/400 = 7.0367941164573437979080329518859340302862626407892959E-7
+
+ALL CHECKS PASSED

@@ -1,0 +1,117 @@
+total lines: 247
+=== LAST 45 LINES (verbatim) ===
+203:   
+204:   The `ring` tactic failed to close the goal. Use `ring_nf` to obtain a normal form.
+205:     
+206:   Note that `ring` works primarily in *commutative* rings. If you have a noncommutative ring, abelian group or module, consider using `noncomm_ring`, `abel` or `module` instead.
+207: info: Zeta23/ThmE/GammaFactsChiProof.lean:272:17: Try this:
+208:   [apply] ring_nf
+209:   
+210:   The `ring` tactic failed to close the goal. Use `ring_nf` to obtain a normal form.
+211:     
+212:   Note that `ring` works primarily in *commutative* rings. If you have a noncommutative ring, abelian group or module, consider using `noncomm_ring`, `abel` or `module` instead.
+213: ⚠ [8864/8880] Replayed Zeta23.ThmE.Main
+214: warning: Zeta23/ThmE/Main.lean:190:0: automatically included section variable(s) unused in theorem `Zeta23.ThmE.eventually_GzGpChi`:
+215:   [NeZero q]
+216: consider restructuring your `variable` declarations so that the variables are not in scope or explicitly omit them:
+217:   omit [NeZero q] in theorem ...
+218: 
+219: Note: This linter can be disabled with `set_option linter.unusedSectionVars false`
+220: ⚠ [8867/8880] Replayed Zeta23.ThmE.ContourChi
+221: warning: Zeta23/ThmE/ContourChi.lean:74:15: `Set.mem_setOf_eq` has been deprecated: Use `Set.mem_ofPred_eq` instead
+222: ⚠ [8870/8880] Replayed Zeta23.ThmE.EFLitChi
+223: warning: Zeta23/ThmE/EFLitChi.lean:130:24: Variable name `q` is not explicitly referenced.
+224: 
+225: Hint: The binding can be removed (if unused) or named `_` (if used implicitly). Alternatively, prefix the name with `_` to silence this warning:
+226:   [apply] _q
+227: 
+228: Note: This linter can be disabled with `set_option linter.unusedVariables false`
+229: ℹ [8889/8890] Built Scratch.HGe269 (32s)
+230: info: Scratch/HGe269.lean:245:0: 'H269.u_sq' depends on axioms: [propext, Classical.choice, Quot.sound]
+231: info: Scratch/HGe269.lean:246:0: 'H269.sqrt2_eq_two_mul_u' depends on axioms: [propext, Classical.choice, Quot.sound]
+232: info: Scratch/HGe269.lean:247:0: 'H269.sin_pos' depends on axioms: [propext, Classical.choice, Quot.sound]
+233: info: Scratch/HGe269.lean:248:0: 'H269.cos_pos' depends on axioms: [propext, Classical.choice, Quot.sound]
+234: info: Scratch/HGe269.lean:249:0: 'H269.margin' depends on axioms: [propext, Classical.choice, Quot.sound]
+235: info: Scratch/HGe269.lean:250:0: 'H269.margin_exact' depends on axioms: [propext, Classical.choice, Quot.sound]
+236: info: Scratch/HGe269.lean:251:0: 'H269.key_ineq' depends on axioms: [propext, Classical.choice, Quot.sound]
+237: info: Scratch/HGe269.lean:252:0: 'H269.s_ge' depends on axioms: [propext, Classical.choice, Quot.sound]
+238: info: Scratch/HGe269.lean:253:0: 'H269.cMT_eq' depends on axioms: [propext, Classical.choice, Quot.sound]
+239: info: Scratch/HGe269.lean:254:0: 'H269.cMT_ge' depends on axioms: [propext, Classical.choice, Quot.sound]
+240: info: Scratch/HGe269.lean:255:0: 'H269.u_cot_eq' depends on axioms: [propext, Classical.choice, Quot.sound]
+241: info: Scratch/HGe269.lean:256:0: 'H269.H_eq' depends on axioms: [propext, Classical.choice, Quot.sound]
+242: info: Scratch/HGe269.lean:257:0: 'H269.H_cMT_ge' depends on axioms: [propext, Classical.choice, Quot.sound]
+243: info: Scratch/HGe269.lean:258:0: 'H269.h_ge_269_400' depends on axioms: [propext, Classical.choice, Quot.sound]
+244: ℹ [8890/8890] Built Scratch.Bridge269 (7.9s)
+245: info: Scratch/Bridge269.lean:64:0: 'Race.bound_269_400' depends on axioms: [propext, Classical.choice, Quot.sound]
+246: info: Scratch/Bridge269.lean:65:0: 'Race.bound_269_400_zeta23' depends on axioms: [propext, Classical.choice, Quot.sound]
+247: Build completed successfully (8890 jobs).
+
+=== ANY 'depends on axioms' ===
+count=20
+info: Scratch/adapter/RaceBound.lean:60:0: 'Race.bound_two_thirds' depends on axioms: [propext, Classical.choice, Quot.sound]
+info: Scratch/P2Plugs.lean:159:0: 'P2Feas.A_bound_N4' depends on axioms: [propext, Classical.choice, Quot.sound]
+info: Scratch/P2Plugs.lean:160:0: 'P2Feas.cos_bound_N4' depends on axioms: [propext, Classical.choice, Quot.sound]
+info: Scratch/P2Plugs.lean:161:0: 'P2Feas.target_331_A_ge_400_B' depends on axioms: [propext, Classical.choice, Quot.sound]
+info: Scratch/HGe269.lean:245:0: 'H269.u_sq' depends on axioms: [propext, Classical.choice, Quot.sound]
+info: Scratch/HGe269.lean:246:0: 'H269.sqrt2_eq_two_mul_u' depends on axioms: [propext, Classical.choice, Quot.sound]
+info: Scratch/HGe269.lean:247:0: 'H269.sin_pos' depends on axioms: [propext, Classical.choice, Quot.sound]
+info: Scratch/HGe269.lean:248:0: 'H269.cos_pos' depends on axioms: [propext, Classical.choice, Quot.sound]
+info: Scratch/HGe269.lean:249:0: 'H269.margin' depends on axioms: [propext, Classical.choice, Quot.sound]
+info: Scratch/HGe269.lean:250:0: 'H269.margin_exact' depends on axioms: [propext, Classical.choice, Quot.sound]
+info: Scratch/HGe269.lean:251:0: 'H269.key_ineq' depends on axioms: [propext, Classical.choice, Quot.sound]
+info: Scratch/HGe269.lean:252:0: 'H269.s_ge' depends on axioms: [propext, Classical.choice, Quot.sound]
+info: Scratch/HGe269.lean:253:0: 'H269.cMT_eq' depends on axioms: [propext, Classical.choice, Quot.sound]
+info: Scratch/HGe269.lean:254:0: 'H269.cMT_ge' depends on axioms: [propext, Classical.choice, Quot.sound]
+info: Scratch/HGe269.lean:255:0: 'H269.u_cot_eq' depends on axioms: [propext, Classical.choice, Quot.sound]
+info: Scratch/HGe269.lean:256:0: 'H269.H_eq' depends on axioms: [propext, Classical.choice, Quot.sound]
+info: Scratch/HGe269.lean:257:0: 'H269.H_cMT_ge' depends on axioms: [propext, Classical.choice, Quot.sound]
+info: Scratch/HGe269.lean:258:0: 'H269.h_ge_269_400' depends on axioms: [propext, Classical.choice, Quot.sound]
+info: Scratch/Bridge269.lean:64:0: 'Race.bound_269_400' depends on axioms: [propext, Classical.choice, Quot.sound]
+info: Scratch/Bridge269.lean:65:0: 'Race.bound_269_400_zeta23' depends on axioms: [propext, Classical.choice, Quot.sound]
+
+=== ANY 'sorry' (case-insensitive) ===
+count=0
+
+=== ANY 'error' ===
+count=0
+
+=== job progress markers: first/last ===
+count=35
+FIRST: ⚠ [8700/8728] Replayed Zeta23.Statement
+LAST:  ℹ [8890/8890] Built Scratch.Bridge269 (7.9s)
+
+=== lines mentioning Scratch / Bridge269 / H269 / P2 / Race ===
+ℹ [8834/8880] Built Scratch.adapter.RaceBound (48s)
+info: Scratch/adapter/RaceBound.lean:60:0: 'Race.bound_two_thirds' depends on axioms: [propext, Classical.choice, Quot.sound]
+ℹ [8835/8880] Built Scratch.P2Plugs (48s)
+info: Scratch/P2Plugs.lean:156:0: P2Feas.A_bound_N4 : |Real.sin P2Feas.U / P2Feas.U - 37043 / 40320| ≤ 1 / 5806080
+info: Scratch/P2Plugs.lean:157:0: P2Feas.cos_bound_N4 : |Real.cos P2Feas.U - 4379 / 5760| ≤ 1 / 645120
+info: Scratch/P2Plugs.lean:158:0: P2Feas.target_331_A_ge_400_B : 400 * Real.cos P2Feas.U ≤ 331 * (Real.sin P2Feas.U / P2Feas.U)
+info: Scratch/P2Plugs.lean:159:0: 'P2Feas.A_bound_N4' depends on axioms: [propext, Classical.choice, Quot.sound]
+info: Scratch/P2Plugs.lean:160:0: 'P2Feas.cos_bound_N4' depends on axioms: [propext, Classical.choice, Quot.sound]
+info: Scratch/P2Plugs.lean:161:0: 'P2Feas.target_331_A_ge_400_B' depends on axioms: [propext, Classical.choice, Quot.sound]
+ℹ [8889/8890] Built Scratch.HGe269 (32s)
+info: Scratch/HGe269.lean:245:0: 'H269.u_sq' depends on axioms: [propext, Classical.choice, Quot.sound]
+info: Scratch/HGe269.lean:246:0: 'H269.sqrt2_eq_two_mul_u' depends on axioms: [propext, Classical.choice, Quot.sound]
+info: Scratch/HGe269.lean:247:0: 'H269.sin_pos' depends on axioms: [propext, Classical.choice, Quot.sound]
+info: Scratch/HGe269.lean:248:0: 'H269.cos_pos' depends on axioms: [propext, Classical.choice, Quot.sound]
+info: Scratch/HGe269.lean:249:0: 'H269.margin' depends on axioms: [propext, Classical.choice, Quot.sound]
+info: Scratch/HGe269.lean:250:0: 'H269.margin_exact' depends on axioms: [propext, Classical.choice, Quot.sound]
+info: Scratch/HGe269.lean:251:0: 'H269.key_ineq' depends on axioms: [propext, Classical.choice, Quot.sound]
+info: Scratch/HGe269.lean:252:0: 'H269.s_ge' depends on axioms: [propext, Classical.choice, Quot.sound]
+info: Scratch/HGe269.lean:253:0: 'H269.cMT_eq' depends on axioms: [propext, Classical.choice, Quot.sound]
+info: Scratch/HGe269.lean:254:0: 'H269.cMT_ge' depends on axioms: [propext, Classical.choice, Quot.sound]
+info: Scratch/HGe269.lean:255:0: 'H269.u_cot_eq' depends on axioms: [propext, Classical.choice, Quot.sound]
+info: Scratch/HGe269.lean:256:0: 'H269.H_eq' depends on axioms: [propext, Classical.choice, Quot.sound]
+info: Scratch/HGe269.lean:257:0: 'H269.H_cMT_ge' depends on axioms: [propext, Classical.choice, Quot.sound]
+info: Scratch/HGe269.lean:258:0: 'H269.h_ge_269_400' depends on axioms: [propext, Classical.choice, Quot.sound]
+ℹ [8890/8890] Built Scratch.Bridge269 (7.9s)
+info: Scratch/Bridge269.lean:64:0: 'Race.bound_269_400' depends on axioms: [propext, Classical.choice, Quot.sound]
+info: Scratch/Bridge269.lean:65:0: 'Race.bound_269_400_zeta23' depends on axioms: [propext, Classical.choice, Quot.sound]
+
+=== tail 5 raw repr ===
+"info: Scratch/HGe269.lean:258:0: 'H269.h_ge_269_400' depends on axioms: [propext, Classical.choice, Quot.sound]"
+'ℹ [8890/8890] Built Scratch.Bridge269 (7.9s)'
+"info: Scratch/Bridge269.lean:64:0: 'Race.bound_269_400' depends on axioms: [propext, Classical.choice, Quot.sound]"
+"info: Scratch/Bridge269.lean:65:0: 'Race.bound_269_400_zeta23' depends on axioms: [propext, Classical.choice, Quot.sound]"
+'Build completed successfully (8890 jobs).'

@@ -1,0 +1,41 @@
+{
+  "audited_package": {
+    "repo": "darkhipo/critical-line-269-400",
+    "commit": "ac06cb570f",
+    "published_at": "2026-11-05T00:13:01Z",
+    "files": {
+      "lean/HGe269.lean": "f2069375b84571760513f84761d4cac09675609d2f0371ee3df01e0471ceed94",
+      "lean/Bridge269.lean": "1a12497d09aebf143e7566b70fe29e61800e85219f57f566e2dea22d9a008410",
+      "lean/P2Plugs.lean": "7fb821c4383da1d85bee8aa5da037312c4ef2da8d54a5fd268868455bd1da763",
+      "lean/adapter/RaceBound.lean": "1d98d747f01f98b49ef37a1681c8a4f845099c871eedf2b8f2871b3bf0b42ad4"
+    }
+  },
+  "upstream": {
+    "anthropics/formal-math": "16a5ce41",
+    "mathlib4": "51e6992efd06126df61a496bebf8f49482a4e129"
+  },
+  "toolchain_of_audited_build": {
+    "lean": "v4.33.0-rc2",
+    "mathlib": "51e6992efd06126df61a496bebf8f49482a4e129",
+    "site_pins_not_measured": {
+      "lean": "v4.34.1",
+      "mathlib": "d13f23b7"
+    }
+  },
+  "verifier": {
+    "repo": "bigospeedrun/verifier",
+    "route_cold": true,
+    "no_challenges_critical_line_zeros": true,
+    "no_direct_json_key": true,
+    "no_site_family": true,
+    "issue": 146
+  },
+  "exact_values": {
+    "cMT": "0.753296067856070677216584628269727682295739559906198738568757",
+    "H": "0.672500703679411645734379790803295188593403028626264078929589",
+    "H_minus_269_400": "7.0367941164573437979080329518859340302862626407892959e-7",
+    "margin_conservative": "821/5806080",
+    "margin_flipped_direction_trap": "8683/5806080",
+    "margin_ratio": "10.576127"
+  }
+}

@@ -1,0 +1,16 @@
+{
+  "algorithm": "sha256",
+  "sha256": {
+    "NOTICE.md": "1a33277709ee6f1db9d33eca036876f93507639aaa9f88b32ca01c72aa7a5753",
+    "README.md": "d9f4e884f6b6dab48a4d9c59390742c747e8016f86eb5b45e108f26bf9145a25",
+    "RESULT.json": "c6488a536091deebaf92067cf339e62ab60db1d41731daa058d97715a3f2631c",
+    "code/verify.py": "842b1d093177f83293b4c512450de6fa7b322f9fadb44e00c1e948a05ed07389",
+    "data/source.json": "bdc2a7104f977272362eb8a1dda6eae32508487a134d9318036798f7b2934a7e",
+    "evidence/build-log-audit.txt": "ef4261504a8c9a862865c341a9917e953646e7babee2c250ae3ca14fc005d3b9",
+    "evidence/exact-arithmetic.txt": "7b14d69d41a68f7dab04e78a361e3da49e6b558ef02055c8b89b68e8699bc0fe",
+    "evidence/margin-orientation-enumeration.txt": "37b910cefb0d0f30cb311c8c1afaa6c58979b54ec89d11fa1426d6b41aa64b70",
+    "evidence/mathlib-Normed-at-pin.txt": "113aaf52a8970f3d5731b3bef38b5eb29be69585d68fdd5fc22f4868fa9f35e6",
+    "evidence/receipt-line-authenticity.txt": "ed9a608de79311a24456b1297c81e8173a032c5baa95877dd2d84fe8ad3b6a45",
+    "evidence/verify-output.txt": "5ee2768b39279623b5badc366fc715f150ba312c737aa5496115403465f7c5f2"
+  }
+}

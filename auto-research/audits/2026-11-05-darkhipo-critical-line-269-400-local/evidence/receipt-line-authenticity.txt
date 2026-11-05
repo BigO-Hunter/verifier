@@ -1,0 +1,49 @@
+log axiom entries: 20
+OK  Scratch/adapter/RaceBound.lean:60 name='Race.bound_two_thirds' axioms=['Classical.choice', 'Quot.sound', 'propext']
+       src line 60: '#print axioms bound_two_thirds'
+OK  Scratch/P2Plugs.lean:159 name='P2Feas.A_bound_N4' axioms=['Classical.choice', 'Quot.sound', 'propext']
+       src line 159: '#print axioms P2Feas.A_bound_N4'
+OK  Scratch/P2Plugs.lean:160 name='P2Feas.cos_bound_N4' axioms=['Classical.choice', 'Quot.sound', 'propext']
+       src line 160: '#print axioms P2Feas.cos_bound_N4'
+OK  Scratch/P2Plugs.lean:161 name='P2Feas.target_331_A_ge_400_B' axioms=['Classical.choice', 'Quot.sound', 'propext']
+       src line 161: '#print axioms P2Feas.target_331_A_ge_400_B'
+OK  Scratch/HGe269.lean:245 name='H269.u_sq' axioms=['Classical.choice', 'Quot.sound', 'propext']
+       src line 245: '#print axioms u_sq'
+OK  Scratch/HGe269.lean:246 name='H269.sqrt2_eq_two_mul_u' axioms=['Classical.choice', 'Quot.sound', 'propext']
+       src line 246: '#print axioms sqrt2_eq_two_mul_u'
+OK  Scratch/HGe269.lean:247 name='H269.sin_pos' axioms=['Classical.choice', 'Quot.sound', 'propext']
+       src line 247: '#print axioms sin_pos'
+OK  Scratch/HGe269.lean:248 name='H269.cos_pos' axioms=['Classical.choice', 'Quot.sound', 'propext']
+       src line 248: '#print axioms cos_pos'
+OK  Scratch/HGe269.lean:249 name='H269.margin' axioms=['Classical.choice', 'Quot.sound', 'propext']
+       src line 249: '#print axioms margin'
+OK  Scratch/HGe269.lean:250 name='H269.margin_exact' axioms=['Classical.choice', 'Quot.sound', 'propext']
+       src line 250: '#print axioms margin_exact'
+OK  Scratch/HGe269.lean:251 name='H269.key_ineq' axioms=['Classical.choice', 'Quot.sound', 'propext']
+       src line 251: '#print axioms key_ineq'
+OK  Scratch/HGe269.lean:252 name='H269.s_ge' axioms=['Classical.choice', 'Quot.sound', 'propext']
+       src line 252: '#print axioms s_ge'
+OK  Scratch/HGe269.lean:253 name='H269.cMT_eq' axioms=['Classical.choice', 'Quot.sound', 'propext']
+       src line 253: '#print axioms cMT_eq'
+OK  Scratch/HGe269.lean:254 name='H269.cMT_ge' axioms=['Classical.choice', 'Quot.sound', 'propext']
+       src line 254: '#print axioms cMT_ge'
+OK  Scratch/HGe269.lean:255 name='H269.u_cot_eq' axioms=['Classical.choice', 'Quot.sound', 'propext']
+       src line 255: '#print axioms u_cot_eq'
+OK  Scratch/HGe269.lean:256 name='H269.H_eq' axioms=['Classical.choice', 'Quot.sound', 'propext']
+       src line 256: '#print axioms H_eq'
+OK  Scratch/HGe269.lean:257 name='H269.H_cMT_ge' axioms=['Classical.choice', 'Quot.sound', 'propext']
+       src line 257: '#print axioms H_cMT_ge'
+OK  Scratch/HGe269.lean:258 name='H269.h_ge_269_400' axioms=['Classical.choice', 'Quot.sound', 'propext']
+       src line 258: '#print axioms h_ge_269_400'
+OK  Scratch/Bridge269.lean:64 name='Race.bound_269_400' axioms=['Classical.choice', 'Quot.sound', 'propext']
+       src line 64: '#print axioms bound_269_400'
+OK  Scratch/Bridge269.lean:65 name='Race.bound_269_400_zeta23' axioms=['Classical.choice', 'Quot.sound', 'propext']
+       src line 65: '#print axioms bound_269_400_zeta23'
+
+20/20 entries: line number + declared name + exact axiom set all match
+ALL CHECKS PASS: True
+
+=== explicit re-check of the three previously flagged ===
+Scratch/P2Plugs.lean:159 -> '#print axioms P2Feas.A_bound_N4'   log name 'P2Feas.A_bound_N4' -> match=True
+Scratch/P2Plugs.lean:160 -> '#print axioms P2Feas.cos_bound_N4'   log name 'P2Feas.cos_bound_N4' -> match=True
+Scratch/P2Plugs.lean:161 -> '#print axioms P2Feas.target_331_A_ge_400_B'   log name 'P2Feas.target_331_A_ge_400_B' -> match=True

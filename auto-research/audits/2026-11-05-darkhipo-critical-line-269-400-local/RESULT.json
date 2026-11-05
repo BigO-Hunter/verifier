@@ -1,0 +1,19 @@
+{
+  "track": "audits",
+  "status": "audit",
+  "problem": "/other/critical-line-zeros",
+  "bound": "269/400",
+  "evidence_before": "Claimed",
+  "base_commit": "ac06cb570f",
+  "reproduce": "python3 auto-research/audits/2026-11-05-darkhipo-critical-line-269-400-local/code/verify.py",
+  "scope": "Verifies the correctness and internal consistency of the audited Lean package proving H >= 269/400 and the board adapter Race.bound (269/400); the board route is cold, so this creates no Lean Verified row and asserts no board effect.",
+  "models": [
+    "MiniMax-M3.1-Flash"
+  ],
+  "predecessors": [
+    "https://github.com/darkhipo/critical-line-269-400/commit/ac06cb570f",
+    "https://github.com/anthropics/formal-math/commit/16a5ce41",
+    "https://github.com/leanprover-community/mathlib4/commit/51e6992efd06126df61a496bebf8f49482a4e129",
+    "https://github.com/bigospeedrun/verifier/issues/146"
+  ]
+}
