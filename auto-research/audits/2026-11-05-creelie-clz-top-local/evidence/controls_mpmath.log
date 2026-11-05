@@ -1,0 +1,14 @@
+H (Montgomery-Taylor)      = 0.67250070367941164573437979080329518859340302862626
+exact (3125/3112)(H-7/3200) = 0.67311335523719839104111081178030124175912097186924
+board display              = 0.6731134
+board - exact              = 4.47628e-8 (7-dp rounding, not an error)
+round(exact,7) == board    : True
+Jo (1345000H-2680)/1340003 = 0.67300852792777976132347525985421825821145704412776
+ordering ours > Jo > H     : True
+ours - Jo                  = 0.000104827
+neg-identity (3125/3112)(H-7/3199) = 0.6731126685732365  matches row: False
+neg-identity (3125/3112)(H-1/3200) = 0.6749961878207459  matches row: False
+neg-identity (3124/3112)(H-7/3200) = 0.6728979589635225  matches row: False
+neg-identity (3125/3113)(H-7/3200) = 0.6728971286534409  matches row: False
+v1.3.0 (125000/124111)(H-7999/2000000) = 0.67328963959622
+ALL MPMATH CONTROLS PASS

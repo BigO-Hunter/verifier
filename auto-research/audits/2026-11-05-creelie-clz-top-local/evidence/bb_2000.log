@@ -1,0 +1,33 @@
+START 2026-11-05T00:44:58Z epoch=1793839498 load={ 32.21 79.20 94.25 }
+R=8 G=4000 cells=46000 T=0.0060500000000000006 cutoff_cells=48401 components=2: [3670,5066] [6837,48400]
+progress nodes=134217728 stack=68
+progress nodes=268435456 stack=70
+progress nodes=402653184 stack=74
+progress nodes=536870912 stack=70
+progress nodes=671088640 stack=74
+progress nodes=805306368 stack=74
+progress nodes=939524096 stack=78
+progress nodes=1073741824 stack=76
+progress nodes=1207959552 stack=78
+progress nodes=1342177280 stack=78
+progress nodes=1476395008 stack=78
+progress nodes=2013265920 stack=76
+progress nodes=2415919104 stack=74
+progress nodes=2550136832 stack=74
+progress nodes=2684354560 stack=82
+progress nodes=2818572288 stack=78
+progress nodes=2952790016 stack=80
+progress nodes=3221225472 stack=82
+progress nodes=3758096384 stack=80
+progress nodes=4160749568 stack=72
+progress nodes=4294967296 stack=76
+progress nodes=4429185024 stack=80
+progress nodes=4563402752 stack=80
+progress nodes=4697620480 stack=80
+progress nodes=4831838208 stack=80
+progress nodes=5100273664 stack=82
+VERIFIED R=8: F >= 605/100000 with mu0=1/2000; initial_boxes=128 nodes=5440924378 max_stack=144
+real 319.87
+user 239.01
+sys 1.74
+RC=0 END 2026-11-05T00:50:18Z epoch=1793839818 load={ 60.64 66.72 83.56 }

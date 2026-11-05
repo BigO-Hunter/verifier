@@ -1,0 +1,30 @@
+{
+  "algorithm": "sha256",
+  "sha256": {
+    "NOTICE.md": "d8ab427c777efc8ceabb7efbd68c46c1e6c30f5ecfc5168f1a72464bd3f00a6f",
+    "README.md": "e9fdce5dd2c6c0c3bb2230a3e1fd8a7ff6caf558da9355cb61478b1f99e34bf5",
+    "RESULT.json": "5ef01a1155bfc4f87504a7cd51f904493bf6b7616970a3a8d9f9d141f65f57ea",
+    "code/cmp_chain_all.py": "20a77a6884c999eb6932f3bcf5275294e907eaa412554b8efd38879be5fa8d24",
+    "code/controls_mpmath.py": "c4230a7bb8b8096dcce29321a00aabd49835b4e96058c2a730e1cce2d3940945",
+    "code/make_perturbed_table.py": "fc39fdcd3fa7b8270c6a2e3c5b60175afc33b61203523fe5b5eda9051088affa",
+    "data/record_23480715.json": "6751669165cff935b5b68174585ccfd6772ceb721ddc2e7b3094a4dbcf2d3865",
+    "data/record_23489033.json": "5556bbc7d6f6b69ca2fcfda660981a14c499ef653feb9ce5fcc049d99a5941a7",
+    "data/source.json": "bbb361459a5ea9f555526ba295d59f2e49e361549f6be845eb7e149eb5cc0a94",
+    "evidence/bb_2000.log": "17b7819004da18265c7c55f7273c0d85285bcce0d32328c7327411881af9379c",
+    "evidence/bbp_3200.log": "311de35eaddeefbebcaa2c0fb623bf6abfdb9d59a95f3760bc17d50946b85f6a",
+    "evidence/chain_all.log": "46b2ea0f7d995e2b6f24d0db5726738d286d96432f4ceb9a1ad7fe273b00696c",
+    "evidence/chain_all_rerun.txt": "e403a3eac2ccfc3c2a5a8ad253618bbb8743858dbba8fb0ab4c32a363246dd63",
+    "evidence/cmp_chain_all.log": "7cb237de0ecf81a3d0a6dc9591785cdb830a598f01d88cd7ea990db0b6a7d8a3",
+    "evidence/controls_mpmath.log": "971539334e50cc1c3030f50d2ecfd6d4111479980a3e7dd5eb66436fde503aac",
+    "evidence/eig_lemma.log": "fdf67f30e37b44b1decddb4186b15f26cb41e1f9fb0629273292e7261fe8238d",
+    "evidence/env.txt": "c685667591b9df52fe4eb2ac8d7443840a59823301896a7dd743281c45867c64",
+    "evidence/maintainer-artifact.zip": "34d1a3bf6643b6ff7a91f697acb5185b988c37189b2f37d4264c1b8968b1a693",
+    "evidence/make_perturbed_table.log": "668692b41dc9cf506e69b7c089a68f4b1feb3c503e6da7d382d1be6c7a80076c",
+    "evidence/neg_T14.log": "8836b9524238bff9a2ec05404213bd45ca131116d742ba3aa88e3f2b128cd102",
+    "evidence/neg_table.log": "46e364faec177b73f3bad773f2906ecfcbb25234e6eb62b6dff4d0890983df8c",
+    "evidence/replay.sh": "72734db9844dfe360510b21a76229cf0c3fe47c04b0deaba6e7ad012cdcdac2e",
+    "evidence/table_rebuild.log": "8d1acf90602eadeffe3fc3140a75106397dc037eb55651c5c3fc05c10939ef4d",
+    "evidence/zip_blob_audit.log": "f40fc0a5789f6c01df62f9c9015cda63e85c5e7cfdc7c993e08669b03e68e7cf",
+    "verify.py": "6f88f54c48b58595a254d6eee3b8ba73f90bd79353b1d0f7704127f809f9adda"
+  }
+}

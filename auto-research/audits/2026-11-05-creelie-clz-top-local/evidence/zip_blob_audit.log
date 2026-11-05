@@ -1,0 +1,3 @@
+# blob-hash audit: Zenodo zip contents vs git tree a772d9962 (git hash-object per file)
+compared=56 mismatches=0
+note: initial 'diff -r' showed every text file differing — that was the audit checkout's core.autocrlf=true, not the artifact; blob hashes are identical (cf. #138 retracted-before-filing CRLF note)
