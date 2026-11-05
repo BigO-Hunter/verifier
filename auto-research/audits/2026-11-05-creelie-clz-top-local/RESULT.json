@@ -1,0 +1,52 @@
+{
+  "track": "audits",
+  "status": "audit",
+  "problem": "/other/critical-line-zeros",
+  "bound": "liminf N_0^s(T,2T)/N(T,2T) >= (3125/3112)(H - 7/3200) = 0.67311335523719839104...; board display 0.6731134 = exact + 4.47628e-8 (correct 7-dp rounding, not an error)",
+  "row": "critical-line-zeros top row (claimed 2026-10-19T17:39Z), D. Bhattacharjee & U. Bhattacharya, Zenodo 23480715 (MIT), score 6731134/10000000",
+  "base_commit": "46bf70b3415db20a0d9b639f3aecaa0507a28859",
+  "pins": {
+    "mh-phys": "a772d9962c6e075edbac2008274dba58b0e2980e (tag v1.0.0)",
+    "zenodo_row": "23480715 (file md5 8a575fece758bda2f21eb4455a67d2a1, sha256 34d1a3bf6643b6ff7a91f697acb5185b988c37189b2f37d4264c1b8968b1a693)",
+    "zenodo_successor_disclosed": "23489033 (v1.3.0, aff473549ca8cacf6b6b890cacf67e8d3d458934, claims 0.6732896395, NOT on board, math not audited)"
+  },
+  "verdict": "PASS - full reproduction of the computational step: both branch-and-bound certificates VERIFIED with node counts matching the author EXACTLY (10,039,560,518 and 5,440,924,378) on a different compiler and ISA; table rebuilt byte-identically; eig_lemma digit-for-digit identical; ceiling 0.6735602 <= 0.67357 exact; identity/ordering re-verified at 50 digits; both negative controls REJECT (T=14/3125 and perturbed table). Hand proofs + unrefereed AF framework NOT re-verified (NOTICE.md); successor v1.3.0 disclosed.",
+  "reruns": {
+    "certificate_mu0_1_3200": {
+      "verdict": "VERIFIED R=8: F >= 13/3125",
+      "nodes": 10039560518,
+      "nodes_author": 10039560518,
+      "work_boxes": 222858,
+      "box_checksum": "d5746ef8030b2d5c (author-identical)",
+      "wall_seconds": 374.85,
+      "threads": 2,
+      "author_wall": "12m08s (2 threads)"
+    },
+    "certificate_mu0_1_2000": {
+      "verdict": "VERIFIED R=8: F >= 605/100000",
+      "nodes": 5440924378,
+      "nodes_author": 5440924378,
+      "initial_boxes": 128,
+      "max_stack": 144,
+      "wall_seconds": 319.87,
+      "threads": 1,
+      "author_wall": "9m57s (serial)"
+    },
+    "table_rebuild": "byte-identical: 80k sha256 fd9304e375e0e140a3046478dd8d382b6316887e16e10064d1f1ceb42175ea64; 46k prefix == w4000.bin sha256 8ea9e0208216cb99f4cdcbcaa160b75ba7e7c89058f4d0396392df4f3afa42d5 == README claim",
+    "eig_lemma": "digit-for-digit identical; lambda_max bound 1.9790264618989043491392825446270941444 < 2",
+    "chain_all": "max over all mu: 0.6735602 (exact match) <= 0.67357; identical up to cyclic rotation",
+    "negative_controls": {
+      "T_14_3125": "REJECTED: FAIL box 4144 4123 7866 4180 7866 4122 4144 lb=0.004479900828, RC=1, 291s",
+      "perturbed_table": "REJECTED: FAIL box 4177 7953 7945 7940 4160 4090 4160 lb=0.004159967975, RC=1, 0.5s",
+      "wrong_constant_identities": "4/4 fail to reproduce the row value (7/3199, 1/3200, 3124/3112, 3125/3113)"
+    }
+  },
+  "environment": {
+    "host": "Apple M4 Max (Mac16,9) arm64, macOS",
+    "compiler": "Homebrew GCC 16.2.0, flags -O2 -frounding-math [-fopenmp] (gcc honors FENV_ACCESS; Apple clang does not)",
+    "deviation": "Docker daemon not running on audit host -> SCOPE-sanctioned brew-gcc fallback; node counts still match exactly (no FP-contraction drift)",
+    "python": "3.11.10 venv: python-flint 0.9.0, numpy 2.4.6, scipy 1.17.1, mpmath 1.4.1",
+    "thread_cap": "<=4 (host running concurrent builds, load 32-161 during runs)"
+  },
+  "reproduce": "python3 auto-research/audits/2026-11-05-creelie-clz-top-local/verify.py   (add --full for the pointer to the complete local rerun; see evidence/replay.sh)"
+}

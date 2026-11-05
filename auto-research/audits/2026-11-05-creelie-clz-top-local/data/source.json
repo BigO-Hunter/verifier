@@ -1,0 +1,65 @@
+{
+  "row": {
+    "track": "critical-line-zeros",
+    "position": "top row",
+    "status": "claimed",
+    "timestamp": "2026-10-19T17:39Z",
+    "authors": "D. Bhattacharjee & U. Bhattacharya",
+    "score_display": "0.6731134 (score 6731134/10000000)",
+    "claim": "liminf N_0^s(T,2T)/N(T,2T) >= (3125/3112)(H - 7/3200) = 0.67311335523719839104...",
+    "kind": "asymptotic windowed liminf bound; NO zero database, no T-range, no counting (Platt/Odlyzko/LMFDB inapplicable in principle)"
+  },
+  "zenodo": {
+    "record": 23480715,
+    "doi": "10.5281/zenodo.23480715",
+    "conceptdoi": "10.5281/zenodo.23480714",
+    "created": "2026-10-19T17:39:53.553432+00:00",
+    "license": "MIT",
+    "title": "More Than 67.31 Percent of the Zeta Zeros Are Simple and on the Critical Line",
+    "file": {
+      "key": "creelie/mh-phys-v1.0.0.zip",
+      "size": 5822744,
+      "md5": "8a575fece758bda2f21eb4455a67d2a1",
+      "sha256": "34d1a3bf6643b6ff7a91f697acb5185b988c37189b2f37d4264c1b8968b1a693",
+      "local_copy": "evidence/maintainer-artifact.zip (md5+sha256 re-verified at package time)"
+    },
+    "metadata_snapshot": "data/record_23480715.json"
+  },
+  "git_pin": {
+    "repo": "https://github.com/creelie/mh-phys",
+    "commit": "a772d9962c6e075edbac2008274dba58b0e2980e",
+    "tag": "v1.0.0 (ls-remote verified)",
+    "commit_date": "2026-10-19 23:09:32 +0530 (= 17:39:32Z, the board row time)",
+    "blob_audit": "all 56 zip files byte-identical (git hash-object) to the pinned tree: evidence/zip_blob_audit.log",
+    "blobs": {
+      "verify/bbp.c": "b2da92e9e4d78b0d997df4584d137f6295ce2239",
+      "verify/table.py": "780b733fa742194e45255bc678c059d16566a06b",
+      "verify/w4000.bin": "d96fc81bb18e46a73303316ef9d0644d2d6517b5"
+    }
+  },
+  "table_sha256": {
+    "verify/w4000.bin": "8ea9e0208216cb99f4cdcbcaa160b75ba7e7c89058f4d0396392df4f3afa42d5",
+    "w4000.bin README claim": "8ea9e020...afa42d5 (matches)",
+    "verify/w4000_80k.bin": "fd9304e375e0e140a3046478dd8d382b6316887e16e10064d1f1ceb42175ea64",
+    "rebuild": "byte-identical from source at the pin (python-flint 0.9.0, Arb 128-bit): evidence/table_rebuild.log"
+  },
+  "successor_not_on_board": {
+    "record": 23489033,
+    "doi": "10.5281/zenodo.23489033",
+    "version": "v1.3.0",
+    "published": "2026-10-20",
+    "commit": "aff473549ca8cacf6b6b890cacf67e8d3d458934 (tag ls-remote verified)",
+    "license": "MIT",
+    "file_md5": "f2a3bff3d553b36f7c5647bd71ab92ef",
+    "claim": "(125000/124111)(H - 7999/2000000) = 0.6732896395 (ten-zero windows)",
+    "note": "strictly better than the board row's 0.6731134 and NOT on the board; metadata verified, math NOT audited (out of scope by plan of record). Disclosed in NOTICE.md.",
+    "metadata_snapshot": "data/record_23489033.json"
+  },
+  "references": {
+    "framework": "Alpöge–Furman rank-trace, arXiv:2608.13637 (UNREFEREED; Lean-4 formalization claimed, not audited here)",
+    "independent_prior": "Lamzouri, arXiv:2609.02882",
+    "eBLLM": "Zenodo 23469389 (route-finding engine, credited by the paper)",
+    "montgomery_taylor_H": "0.67250070367941164573437979080329518859340302862626 (recomputed, mpmath dps=60)",
+    "prior_comparator_Jo": "(1345000H - 2680)/1340003 = 0.67300852792777976132347525985421825821145704412776 (creelie/zeta-simple-zeros)"
+  }
+}

@@ -1,0 +1,13 @@
+START 2026-11-05T00:58:06Z epoch=1793840286 load={ 34.50 40.54 62.65 }
+R=8 G=4000 cells=46000 T=0.0044800000000000004 cutoff_cells=57345 components=2: [3739,4913] [7029,57344]
+work boxes after presplit: 270438 checksum=ca761b3f384f4a0e
+progress 13521/270438 work boxes
+progress 27042/270438 work boxes
+progress 40563/270438 work boxes
+progress 54084/270438 work boxes
+progress 67605/270438 work boxes
+FAIL box: 4144 4123 7866 4180 7866 4122 4144 lb=0.004479900828
+real 290.98
+user 479.38
+sys 3.17
+RC=1 END 2026-11-05T01:02:57Z epoch=1793840577

@@ -1,0 +1,28 @@
+START 2026-11-05T00:43:11Z epoch=1793839391 load={ 43.06 99.10 102.41 }
+R=8 G=4000 cells=46000 T=0.0041600000000000005 cutoff_cells=53249 components=2: [3756,4877] [7080,53248]
+work boxes after presplit: 222858 checksum=d5746ef8030b2d5c
+progress 11142/222858 work boxes
+progress 22284/222858 work boxes
+progress 33426/222858 work boxes
+progress 44568/222858 work boxes
+progress 55710/222858 work boxes
+progress 66852/222858 work boxes
+progress 77994/222858 work boxes
+progress 89136/222858 work boxes
+progress 100278/222858 work boxes
+progress 111420/222858 work boxes
+progress 122562/222858 work boxes
+progress 133704/222858 work boxes
+progress 144846/222858 work boxes
+progress 155988/222858 work boxes
+progress 167130/222858 work boxes
+progress 178272/222858 work boxes
+progress 189414/222858 work boxes
+progress 200556/222858 work boxes
+progress 211698/222858 work boxes
+progress 222840/222858 work boxes
+VERIFIED R=8: F >= 13/3125 with mu0=1/3200; grid=4000 threads=2 nodes=10039560518
+real 374.85
+user 436.82
+sys 3.28
+RC=0 END 2026-11-05T00:49:26Z epoch=1793839766 load={ 50.61 66.97 84.80 }
