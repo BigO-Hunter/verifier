@@ -44,9 +44,18 @@ their own `Challenge.lean` is not staged. Comparator checks the elaborated state
 Lean `v4.33.0-rc2` and Mathlib `51e6992efd06126df61a496bebf8f49482a4e129` are their pins:
 [profiles/zeta23-lake-manifest.json](../../profiles/zeta23-lake-manifest.json) is their
 `lake-manifest.json`, unchanged. The tools are in
-[profiles/tools-v4.33.0-rc2.json](../../profiles/tools-v4.33.0-rc2.json): Comparator `57567492` and
-lean4export `9fb131bb` (its `v4.33.0-rc2` tag), the pins with which their CI checked this project
-(run 33213372463, 2026-08-28); landrun, nanoda and elan as in our other tool files.
+[profiles/tools-v4.33.0-rc2.json](../../profiles/tools-v4.33.0-rc2.json): Comparator `7892797` and
+lean4export `9fb131bb` (its `v4.33.0-rc2` tag); landrun, nanoda and elan as in our other tool files.
+Comparator `7892797` is the merge of its pull request #65 (the fix of issue #64), the last Comparator
+commit on Lean `v4.33.0-rc2`, and its own manifest pins lean4export `9fb131bb`. Their CI (run
+33213372463, 2026-08-28) used Comparator `57567492`, built with that commit's own toolchain
+`v4.34.0-rc1`. Our setup builds Comparator with the toolchain of the profile, and `57567492` does
+not build with `v4.33.0-rc2`. The Comparator changes after `7892797` add multi-kernel support and
+fix issues #67 and #71; #71 applies only to a target named `Quot.mk`, `Quot.lift` or `Quot.ind`.
+Issue #68 (a constant reached only through `Expr.proj` is not compared) is fixed in Lean core
+(leanprover/lean4#14728), not in `v4.33.0-rc2`. It does not apply here: `Challenge.lean` declares no
+structure, and every structure it reaches comes from the pinned Mathlib build, which `Solution` cannot
+redefine.
 
 Their lakefile sets `relaxedAutoImplicit = false` and `pp.unicode.fun = true` and leaves
 `autoImplicit` at Lean's default, `true`. The profile keeps `autoImplicit = true` (`auto_implicit`).

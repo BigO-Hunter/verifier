@@ -85,8 +85,10 @@ class FrozenFilesTests(unittest.TestCase):
         new = json.loads((v.ROOT / PROFILE['tools_file']).read_text())
         old = json.loads((v.ROOT / 'profiles/anthropic-tools.json').read_text())
         self.assertEqual({k for k in new if new[k] != old[k]}, {'comparator', 'lean4export'})
-        # Comparator 57567492 and lean4export v4.33.0-rc2: the pins of their CI run 33213372463 (2026-08-28).
-        self.assertEqual(new['comparator'], '575674928e239f5bc452aab72d1dd7b0f1326494')
+        # Comparator 7892797 (the merge of #65, fix #64) is the last comparator commit on Lean v4.33.0-rc2, and its
+        # manifest pins lean4export 9fb131bb (tag v4.33.0-rc2). Their CI pin 57567492 is on v4.34.0-rc1 and does not
+        # build with rc2 (run 41964266185, 2026-11-05: no Lean.Kernel.Environment.replay).
+        self.assertEqual(new['comparator'], '789279735fe44c1c05dc54bb9f46ba4d9b8c7611')
         self.assertEqual(new['lean4export'], '9fb131bb100eb32ccf6836f14e4f8328d13b6792')
 
 
