@@ -1,0 +1,16 @@
+{
+  "algorithm": "sha256",
+  "sha256": {
+    "NOTICE.md": "ebe5fc87ba9d4fa78de1fcf1194a2a56a53f82009ddf95fa5db987b1baa3394a",
+    "README.md": "d186144b1e6db24434cdd30e1717e038c4eae63a023ab6e8feb6c36530eece0d",
+    "RESULT.json": "6dfe15d829cddd8bfdc6be5178b49b78a8dce3f48d40562334d0081845358fcf",
+    "code/Scope.lean": "af40f0a5f50254cb30d5072ed62ed6f481c05bc316d23e635362bda40192d65c",
+    "data/source.json": "5d94aedbab6f8efeb846a933a91b0fca84d26efb3d06eb94e91f67c5ed3f6fa2",
+    "evidence/first-attempt-build.log": "464adb00c1b6b40b0ab89a581f0f9e2b7e7b8a364bbadbb5108a052243188869",
+    "evidence/local-build.log": "b2c4d18632ac84046f14cae4c4b47f9344ec46ab2039d6e1b11555854d5ada86",
+    "evidence/local-run.exit": "72c9cf7030ddb7effa0e18e464cf0c84d7d1d1e86e8987cf53af1840bf37f4c9",
+    "evidence/local-run.json": "832d4523843b41b170f9a38b8999b7fb51a71927222aca6e3702c807994a3f98",
+    "evidence/scope-probe.out": "8287ef0f80571558878049a2653021fc6aba69ddb3e4018f737195be3e5f9554",
+    "verify.py": "66bf28490614f51ddb8b6f34b999ea4fc43f63b964a14c42a32ebe526e62529e"
+  }
+}

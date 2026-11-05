@@ -1,0 +1,36 @@
+{
+  "repo": "https://github.com/HalitZiyaKARTAL/bigO-dft-verifier.git",
+  "commit": "da94a2a6f593caa1f534f1ab1c84b88ff5d74906",
+  "submission_dir": "submissions/dft/halitziyakartal-halitziyav6-pi",
+  "submission_files": 427,
+  "submission_lean_files": 426,
+  "submission_bytes": 9354161,
+  "largest_lean_file_bytes": 1698058,
+  "largest_lean_file": "Submission/Work/BQT/Ctrl.lean",
+  "repo_tracked_files_at_sha": 6843,
+  "key_files_sha256": {
+    "Submission.lean": "03242bb99123740f4a823a9733cb310798cae3c95f53e7f15677968411fe5527",
+    "manifest.json": "249a4d19da76858216797cead2f40ff1098f97a370b4a3242641ae7076b77ae5",
+    "Submission/OAI/Computability/FourierTransform/RAM.lean": "4eb8a7cbd1566b9a0537c3423e32528c3d6be691a4780bd549768a96e568fa8d",
+    "Submission/OAI/Computability/FourierTransform/Goal.lean": "0bdcb9a96d336cfff6076207d1ec9d56051958af40732d9cd41795346464fa25",
+    "Submission/OAI/Computability/FourierCircuit/Core.lean": "45fd659a66b3bb93ea9e55ebf0c06fde26a3038e2c7fb369cbd8dada371603a6",
+    "Submission/Work/BQT/FourierTB/Goal.lean": "b47402d570be16df3f89f2fcaaa6a9a97623d9bfec8fd2be4bc2859dcd4ba8eb",
+    "Submission/Work/BQT/FourierTB/Main.lean": "fa5ac5e41b62533d58a14e097b3df49eea381c8127dac8e0317d5dc1156ad312"
+  },
+  "challenge_sha256": "3a646acd3ac9cf6ff93e29cc363dbfea0c8953a2e1415f7965bd86e8b2ee62a3",
+  "generated_challenge_sha256": "5a0b655ae2ca9447d9252a91de4114621b1db5df888f8b46d74ee2f3d15546bd",
+  "lean_toolchain": "leanprover/lean4:v4.34.1",
+  "mathlib_rev": "d13f23b723b8a846827a245b89c10fc7d3f11612",
+  "challenge_note": "challenge_sha256 is the tracked blob at bigospeedrun/verifier main AND at the fork's pinned commit (byte-identical); working-tree checkouts on a core.autocrlf=true machine show a 13691-byte CRLF artifact (sha256 c6f3783fb88eb4628417180a748c8a402d89a6d3778ed36111eeb9956a70f50f) - blob-level comparison is the operative check",
+  "generated_note": "generated_challenge_sha256 is the byte-exact VerifierChallenge.lean (trusted challenge + scripts/submissions.py challenge_source target for problem dft, bound 31415926535897932384626433/10000000000000000000000000000), re-run locally against verifier main bcd64bf",
+  "delta_vs_prior_entry": {
+    "prior": "submissions/dft/halitziyakartal-halitziyav5-pre-pi @ 524a8af8a277ca50c1237068c2b45430a03f547e (PR #91, saving 312780997/10^11)",
+    "files_identical": 399,
+    "files_modified": 2,
+    "modified": ["Submission.lean", "manifest.json"],
+    "files_added": 26,
+    "added_all_under": "Submission/Work/BQT/",
+    "files_removed": 25,
+    "removed": "the prior 16-pair controller chain (Work/FwdOnly/{FourierT104W,P104WEngine,P104WRate,RawP104W,T104W}, Work/G18, Work/P16A8)"
+  }
+}
