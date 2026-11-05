@@ -1,0 +1,17 @@
+G=4000 cells=6 (indices from dtable_diff.py; all six differing doubles are w'' cell bounds)
+cell 27137: sampled_min=4.74151825406e-10 shipped=4.74059847419e-10 rebuilt=4.74059847874e-10
+   shipped<=sampled_min:True rebuilt<=sampled_min:True ratio_sampled/shipped=1.000194
+cell 28396: sampled_min=1.35585515065e-9 shipped=1.35564527954e-9 rebuilt=1.35564528136e-9
+   shipped<=sampled_min:True rebuilt<=sampled_min:True ratio_sampled/shipped=1.000155
+cell 45207: sampled_min=-2.28951475804e-10 shipped=-2.28981540204e-10 rebuilt=-2.28981539977e-10
+   shipped<=sampled_min:True rebuilt<=sampled_min:True ratio_sampled/shipped=0.999869
+cell 69127: sampled_min=-6.12446493467e-11 shipped=-6.12505740493e-11 rebuilt=-6.12505739356e-11
+   shipped<=sampled_min:True rebuilt<=sampled_min:True ratio_sampled/shipped=0.999903
+cell 69218: sampled_min=-1.00271383725e-10 shipped=-1.00282120002e-10 rebuilt=-1.00282120116e-10
+   shipped<=sampled_min:True rebuilt<=sampled_min:True ratio_sampled/shipped=0.999893
+cell 75100: sampled_min=4.13447335816e-11 shipped=4.13411680142e-11 rebuilt=4.1341168071e-11
+   shipped<=sampled_min:True rebuilt<=sampled_min:True ratio_sampled/shipped=1.000086
+calibration cell 0: sampled_min=-3.82443698024e-7 stored=-3.82477931213e-7 ratio=0.999910
+calibration cell 1000: sampled_min=-2.22169417649e-7 stored=-2.22318918445e-7 ratio=0.999328
+calibration cell 79999: sampled_min=2.14217024115e-10 stored=2.14178915712e-10 ratio=1.000178
+BOTH STORED TABLES ARE VALID LOWER BOUNDS AT THE SIX CELLS: True

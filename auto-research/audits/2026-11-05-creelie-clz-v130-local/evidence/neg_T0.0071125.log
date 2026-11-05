@@ -1,0 +1,13 @@
+R=10 G=4000 cells=80000 T=0.0071125000000000007
+  gap 1: cutoff_cells=108963 components=1: [3321,108962]
+  gap 2: cutoff_cells=64222 components=2: [3521,5742] [6056,64209]
+  gap 3: cutoff_cells=62583 components=2: [3564,5424] [6401,61992]
+  gap 4: cutoff_cells=50641 components=2: [3634,5166] [6711,49748]
+  gap 5: cutoff_cells=50941 components=2: [3650,5120] [6768,49949]
+  gap 6: cutoff_cells=50641 components=2: [3634,5166] [6711,49748]
+  gap 7: cutoff_cells=62583 components=2: [3564,5424] [6401,61992]
+  gap 8: cutoff_cells=64222 components=2: [3521,5742] [6056,64209]
+  gap 9: cutoff_cells=108963 components=1: [3321,108962]
+work boxes after presplit: 208370 checksum=13cec30b713e6e73
+FAIL box: 7902 4157 7900 4158 7899 4158 7898 4157 7902 lb=0.007112482972
+rc_neg=1

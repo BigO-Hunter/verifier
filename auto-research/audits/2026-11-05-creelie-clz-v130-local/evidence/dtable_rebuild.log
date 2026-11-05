@@ -1,0 +1,9 @@
+# python3 -I verify/dtable.py 4000 80000 4 d80k_check.bin   (three independent runs)
+points 80001 cells 80000 grid 4000 subcells 4 sha256 d2681cb0eaef5a3099cd52fef3494924fd8494703bf13eab003c192ceea36d78
+d2681cb0eaef5a3099cd52fef3494924fd8494703bf13eab003c192ceea36d78  d80k_check.bin
+d2681cb0eaef5a3099cd52fef3494924fd8494703bf13eab003c192ceea36d78  d80k_check2.bin
+d2681cb0eaef5a3099cd52fef3494924fd8494703bf13eab003c192ceea36d78  d80k_check3.bin
+8915be681c85094d6a8686d078d4de01740fd139f5c7226bf116f6baca14c105  repo/verify/d4000_80k.bin
+REBUILD_DETERMINISTIC_ACROSS_3_RUNS
+cmp d80k_check.bin verify/d4000_80k.bin: DIFFERS (byte 2137121); 6 of 320003 doubles, all w'' cell lower bounds; see dtable_diff.log and w2_cell_check.log
+shipped verify/d4000_80k.bin sha256 == README claim 8915be68...baca14c105: yes

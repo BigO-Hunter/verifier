@@ -1,0 +1,45 @@
+{
+ "fetched_at": "2026-11-05T21:41:00Z",
+ "source": "https://bigospeedrun.com/chat-knowledge.json",
+ "board_updatedAt": "2026-11-05T21:17:33Z",
+ "otherBounds_checkedAt": "2026-10-11",
+ "row": {
+  "path": "/other/critical-line-zeros",
+  "title": "Zeta zeros on the critical line",
+  "aliases": [
+   "critical line zeros"
+  ],
+  "rankedQuantity": "c\\text{ in }\\kappa^{*}\\ge c",
+  "better": "A higher value is better.",
+  "statement": "The nontrivial zeros of the Riemann zeta function \\(\\zeta(s)\\) are its zeros \\(\\rho\\) with \\(0<\\operatorname{Re}\\rho<1\\). The critical line is \\(\\operatorname{Re}s=\\tfrac12\\); the Riemann hypothesis says that every nontrivial zero lies on it. A zero of multiplicity \\(m\\) counts \\(m\\) times, and a simple zero is a zero of multiplicity \\(1\\). Let \\(N(T)\\) be the number of nontrivial zeros with \\(0<\\operatorname{Im}\\rho\\le T\\), and let \\(N_0^{s}(T)\\) be the number of those that are simple and lie on the critical line. The quantity is \\(\\kappa^{*}=\\liminf_{T\\to\\infty}N_0^{s}(T)/N(T)\\), the share of the zeros that are simple and on the critical line, in the worst case as \\(T\\) grows. A result is a proof that \\(\\kappa^{*}\\ge c\\), and it must not assume an unproved hypothesis. A higher \\(c\\) is better. Several results below use the Montgomery\u2013Taylor constant \\(H=\\tfrac32-\\tfrac{1}{\\sqrt2}\\cot\\tfrac{1}{\\sqrt2}\\approx0.6725007\\). Under the Riemann hypothesis, larger values are known (for example \\(19/27\\approx0.7037\\) by Bui and Heath-Brown). Such conditional bounds do not count here. For zeros on the critical line with no condition on multiplicity, the human record before 2026 was \\(0.417293\\) (more than five-twelfths), by the same four authors as the baseline. Anthropic's post gives that record as 41.6%.",
+  "baseline": {
+   "kind": "Classic baseline",
+   "bound": "\\kappa^{*}\\ge 0.407511",
+   "source": "https://arxiv.org/abs/1802.10521",
+   "date": "2020",
+   "authors": "Kyle Pratt, Nicolas Robles, Alexandru Zaharescu and Dirk Zeindler"
+  },
+  "current": {
+   "bound": "\\kappa^{*}\\ge 0.673113",
+   "exactValue": "\\tfrac{3125}{3112}\\bigl(H-\\tfrac{7}{3200}\\bigr)",
+   "conditions": "A paper and its check programs, published together as one Zenodo record. It builds on Sunghyeon Jo's \\(0.6730085\\) and adds a bound for zeros that are at least \\(11/20\\) of the mean spacing apart. A computer search in interval arithmetic (arithmetic with guaranteed error bounds), with 10,039,560,518 steps, checks one inequality for eight consecutive zeros. The authors say that their AI system Anaxia found the method, and that the method cannot pass \\(0.67357\\). Here \\(H\\) is the Montgomery\u2013Taylor constant of the statement.",
+   "evidence": "Claimed",
+   "authors": [
+    "Deep Bhattacharjee",
+    "Ushashi Bhattacharya"
+   ],
+   "date": "2026-10-19",
+   "source": "https://zenodo.org/records/23480715",
+   "proofScope": "A written proof with a computer check of one inequality. It is not on arXiv and has no peer review. No Lean proof is supplied, and nobody else has run the check. It builds on Sunghyeon Jo's proof and on the Claude paper, which also have no peer review."
+  },
+  "claimCount": 4,
+  "relevantRepos": [
+   {
+    "name": "anthropics/formal-math",
+    "url": "https://github.com/anthropics/formal-math/tree/main/zeta23",
+    "note": "Anthropic's Lean 4 proof (folder zeta23). The README and AUDIT.md give the statements and the axiom check."
+   }
+  ]
+ },
+ "observation": "row.current.source is Zenodo 23480715 (release 1.0.0, kappa* >= 0.673113); the successor v1.3.0 (Zenodo 23489033, 0.6732896395) is NOT listed on the board at this snapshot"
+}

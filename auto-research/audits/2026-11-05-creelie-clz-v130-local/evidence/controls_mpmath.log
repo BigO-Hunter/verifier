@@ -1,0 +1,21 @@
+H              = 0.672500703679411645734379790803295188593403028626264078929589
+mu (linear)    = 0.0039995 = 7999/2000000 (exact)
+c0 (certified) = 0.007112 = 889/125000 (exact)
+1 - c0         = 0.992888 = 124111/125000 (exact)
+bound (H-mu)/(1-c0)        = 0.673289639596219962104869623566097272394673949756935403519419
+bound (125000/124111)(H-mu)= 0.673289639596219962104869623566097272394673949756935403519419
+closed form equals quotient: True
+paper's printed 16 digits  = 0.6732896395962199 (truncation) ; exact = 0.6732896395962199621
+claimed board-style 10 dp  = 0.6732896395
+10-dp truncation           = 0.6732896395
+10-dp correct rounding     = 0.6732896396
+claimed <= exact (a true lower bound remains claimed): True
+11*c0          = 0.078232
+0.4794         = 0.4794
+(4/3) w(11/20) = 0.479418746237293386426305881024
+condition 11c0 < 0.4794 < (4/3)w(11/20): True
+sum of b_i in /tmp/clz_v130_audit/repo/verify/weights10.txt = 7999/2000000 == 7999/2000000 True
+F target 889/125000 = 0.007112 ; 0.0071125 = 0.0071125 ; margin = -5.0e-7
+ten-zero weight ceiling (chain_window10.txt) = 0.6732908 ; claim below ceiling: True
+method ceiling (chain_all.txt) = 0.6735602 <= 0.67357: True
+row gain over listed v1.0.0 0.6731134: 0.0001762395962

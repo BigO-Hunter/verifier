@@ -1,0 +1,4 @@
+rows rerun/shipped: 123 123
+non-rotation differences: 0
+max line: [('max', '0.6735602')]
+CHAIN_ALL: identical up to cyclic rotation; ceiling 0.6735602 <= 0.67357 PASS

@@ -1,0 +1,6 @@
+# build (R2125608601)
+gcc: gcc-16 (Homebrew GCC 16.2.0) 16.2.0
+$ /opt/homebrew/bin/gcc-16 -O2 -frounding-math -fopenmp -o bbp_cf verify/bbp_cf.c -lm
+rc=0 (no warnings; verify/bbp_cf.c is at the audited pin aff473549)
+$ gcc ... -o bbp_ww verify/bbp_ww.c -lm   # not run: the weighted nine-zero certificate is out of scope (D3)
+rc=0
