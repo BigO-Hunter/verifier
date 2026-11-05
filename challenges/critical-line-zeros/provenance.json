@@ -1,0 +1,16 @@
+{
+  "source_repository": "https://github.com/anthropics/formal-math",
+  "source_commit": "16a5ce41304fcdaea4e0be7c132e1c361dc26da5",
+  "original_path": "zeta23/Challenge.lean",
+  "local_path": "Challenge.lean",
+  "git_blob": "6da17cdcf6ca29c831279867fc9908850df90f8b",
+  "sha256": "6f2a4ba95ab8c5319e541a1cc1b3699c0ae8cef23ea8e68f958e11b07281761e",
+  "source_author": "Anthropic",
+  "license": "Apache-2.0",
+  "license_git_blob": "261eeb9e9f8b2b4b0d119366dda99c6fd7d35c64",
+  "notice_git_blob": "8de3803673ccab52dd029d6b9942f4f410c57fe4",
+  "manifest_git_blob": "af9ef405e4e292f2e0176b12b6cb66f547575314",
+  "theorem": "montgomery_taylor_simple_on_critical_line_mult_cumulative",
+  "lean": "leanprover/lean4:v4.33.0-rc2",
+  "mathlib": "51e6992efd06126df61a496bebf8f49482a4e129"
+}

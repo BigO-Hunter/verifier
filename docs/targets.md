@@ -232,4 +232,14 @@ one appended theorem, in `challenges/integer-factoring-sqrtlog/Challenge.lean`, 
 `leanprover/lean4:v4.33.1`. See [its README](../challenges/integer-factoring-sqrtlog/README.md).
 There is no `Race.bound` target for other scores yet.
 
+## Zeta zeros on the critical line
+
+Closed to issues and PRs. A maintainer can rerun Anthropic's proof of
+`κ* ≥ 3/2 − cot(1/√2)/√2` (their theorem
+`montgomery_taylor_simple_on_critical_line_mult_cumulative`, from anthropics/formal-math
+`zeta23`) against their unchanged statement in `challenges/critical-line-zeros/Challenge.lean`,
+with Lean `leanprover/lean4:v4.33.0-rc2`. See
+[the statement README](../challenges/critical-line-zeros/README.md). There is no `Race.bound`
+target yet.
+
 Integer multiplication has no trusted statement in this gate.

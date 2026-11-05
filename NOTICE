@@ -35,3 +35,9 @@ theorem and the rerun profile are Big O Speedrun additions dated 2026-10-30. The
 LICENSE remains next to that statement. The profile builds, without changes, sources from
 1337isnot1337/integer-factoring, IsaacRudich/SubexponentialDeterministicFactoring and
 anthropics/formal-math (all Apache-2.0) at pinned commits; none of their files is copied here.
+
+The unchanged statement in challenges/critical-line-zeros/Challenge.lean comes from
+anthropics/formal-math at 16a5ce41304fcdaea4e0be7c132e1c361dc26da5, zeta23/Challenge.lean
+(Apache-2.0, Copyright 2026 Anthropic, PBC). The upstream LICENSE and NOTICE remain next to that
+statement, and profiles/zeta23-lake-manifest.json is their unchanged lake-manifest.json. The rerun
+profile is a Big O Speedrun addition dated 2026-11-05.

@@ -73,9 +73,11 @@ class AutoImplicitTests(unittest.TestCase):
             v.lakefile([], auto_implicit='true')
         profiles = [json.loads(p.read_text()) for p in (v.ROOT / 'profiles').glob('*.json')]
         profiles += list(json.loads((v.ROOT / 'profiles/direct.json').read_text()).values())
-        # integer-factoring-sqrtlog builds the same upstream sources (and its submission's), which also use the default.
+        # integer-factoring-sqrtlog builds the same upstream sources (and its submission's), which also use the default;
+        # critical-line-zeros builds Anthropic's zeta23, whose lakefile also keeps it (test_critical_line_zeros).
         self.assertEqual(sorted(p.get('challenge_file') for p in profiles if isinstance(p, dict) and 'auto_implicit' in p),
-                         sorted([PROFILE['challenge_file'], 'challenges/integer-factoring-sqrtlog/Challenge.lean']))
+                         sorted([PROFILE['challenge_file'], 'challenges/integer-factoring-sqrtlog/Challenge.lean',
+                                 'challenges/critical-line-zeros/Challenge.lean']))
 
 
 class RequestTests(unittest.TestCase):
