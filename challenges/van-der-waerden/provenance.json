@@ -1,0 +1,15 @@
+{
+  "source_repository": "https://github.com/openai/math",
+  "source_commit": "1581d4cbdd69a0faf34b2089614fe2a814316a6a",
+  "original_path": "lean/ComparatorChallenges/QuantitativeVanDerWaerden.lean",
+  "local_path": "Challenge.lean",
+  "git_blob": "bee3f5a820455ead2a00f8fdc08d4ae5276cba2a",
+  "sha256": "1caa563bbf7a5602adb8cdbbc06aaf1e3d4d5fe27ed4bebf2bf44cf2937a6593",
+  "source_author": "OpenAI",
+  "license": "Apache-2.0",
+  "license_git_blob": "261eeb9e9f8b2b4b0d119366dda99c6fd7d35c64",
+  "comparator_config": "lean/ComparatorChallenges/QuantitativeVanDerWaerden.json",
+  "theorem": "OAI.QuantitativeVanDerWaerden.uniform_lower_bound",
+  "lean": "leanprover/lean4:v4.34.1",
+  "mathlib": "d13f23b723b8a846827a245b89c10fc7d3f11612"
+}

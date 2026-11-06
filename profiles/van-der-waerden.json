@@ -1,0 +1,31 @@
+{
+  "lean_toolchain": "leanprover/lean4:v4.34.1",
+  "challenge_file": "challenges/van-der-waerden/Challenge.lean",
+  "challenge_sha256": "1caa563bbf7a5602adb8cdbbc06aaf1e3d4d5fe27ed4bebf2bf44cf2937a6593",
+  "manifest_file": "profiles/lake-manifest.json",
+  "tools_file": "profiles/tools.json",
+  "solution_module": "OAI.Combinatorics.ProgressionColoring.Main",
+  "theorem_names": [
+    "OAI.QuantitativeVanDerWaerden.uniform_lower_bound"
+  ],
+  "source_roots": [
+    "OAI"
+  ],
+  "source_subdir": "lean",
+  "source_prefixes": [
+    "OAI/Combinatorics/ProgressionColoring"
+  ],
+  "sparse_paths": [
+    "/lean/OAI/Combinatorics/ProgressionColoring/"
+  ],
+  "permitted_axioms": [
+    "propext",
+    "Quot.sound",
+    "Classical.choice"
+  ],
+  "bound": "1/100000",
+  "score_relation": "attained",
+  "model": "van-der-waerden",
+  "upstream_repo": "https://github.com/openai/math",
+  "upstream_commit": "1581d4cbdd69a0faf34b2089614fe2a814316a6a"
+}

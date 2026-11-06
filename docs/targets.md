@@ -272,4 +272,12 @@ with Lean `leanprover/lean4:v4.33.0-rc2`. See
 [the statement README](../challenges/critical-line-zeros/README.md). There is no `Race.bound`
 target yet.
 
+## Van der Waerden numbers
+
+Closed to issues and PRs. A maintainer can rerun OpenAI's proof of
+`W_r(k) > k^{k ⌊log₂ r⌋/100000}` (their theorem `OAI.QuantitativeVanDerWaerden.uniform_lower_bound`, from
+openai/math `lean/OAI/Combinatorics/ProgressionColoring`) against their unchanged statement in
+`challenges/van-der-waerden/Challenge.lean`, with Lean `leanprover/lean4:v4.34.1`. See
+[the statement README](../challenges/van-der-waerden/README.md). There is no `Race.bound` target yet.
+
 Integer multiplication has no trusted statement in this gate.

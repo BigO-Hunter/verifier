@@ -41,3 +41,8 @@ anthropics/formal-math at 16a5ce41304fcdaea4e0be7c132e1c361dc26da5, zeta23/Chall
 (Apache-2.0, Copyright 2026 Anthropic, PBC). The upstream LICENSE and NOTICE remain next to that
 statement, and profiles/zeta23-lake-manifest.json is their unchanged lake-manifest.json. The rerun
 profile is a Big O Speedrun addition dated 2026-11-05.
+
+The unchanged statement in challenges/van-der-waerden/Challenge.lean comes from openai/math at
+1581d4cbdd69a0faf34b2089614fe2a814316a6a, lean/ComparatorChallenges/QuantitativeVanDerWaerden.lean
+(Apache-2.0). OpenAI wrote the statement and the proof. The upstream LICENSE remains next to that
+statement. The rerun profile is a Big O Speedrun addition dated 2026-11-06.
