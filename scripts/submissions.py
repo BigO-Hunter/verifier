@@ -167,9 +167,10 @@ def validate_submission(value):
         bound = Fraction(value['bound'])
         if not 0 <= bound <= Fraction(profiles[value['problem']]['maximum']):
             raise ValueError('bound is outside the problem range')
-        # A Snaky bound counts Maker moves (Lead, 2026-11-02, verifier #106): a whole number, no fraction.
-        if value['problem'] == 'snaky' and bound.denominator != 1:
-            raise ValueError('bound must be a whole number of Maker moves for snaky')
+        # A Snaky bound counts Maker moves (Lead, 2026-11-02, verifier #106), a prime gaps bound is a gap between
+        # primes (2026-11-06): a whole number, no fraction.
+        if value['problem'] in WHOLE and bound.denominator != 1:
+            raise ValueError(f"bound must be a whole number of {WHOLE[value['problem']]} for {value['problem']}")
         bound_text = str(bound)
     if not isinstance(value['repo_url'], str) or not re.fullmatch(r'https://github\.com/[A-Za-z0-9][A-Za-z0-9_.-]{0,99}/[A-Za-z0-9][A-Za-z0-9_.-]{0,99}', value['repo_url']):
         raise ValueError('repo_url must be a public GitHub repository URL without query or credentials')
@@ -198,9 +199,11 @@ MODEL_IDS = {'dft': 'exact-dft/uniform-exact-arithmetic', '3sum': '3sum/word-ram
              'average-sensitivity': 'other/average-sensitivity', 'catalan': 'other/catalan',
              'subset-sum': 'subset-sum/randomized-word-ram', 'snaky': 'other/snaky',
              'heilbronn-triangle': 'other/heilbronn-triangle',
-             'directed-sssp': 'directed-sssp/comparison-addition-sparse'}
+             'directed-sssp': 'directed-sssp/comparison-addition-sparse', 'prime-gaps': 'other/prime-gaps'}
 # Other bounds rows with a trusted statement: the record gate reads the row, not a board file.
-OTHER = {'average-sensitivity', 'catalan', 'snaky', 'heilbronn-triangle'}
+OTHER = {'average-sensitivity', 'catalan', 'snaky', 'heilbronn-triangle', 'prime-gaps'}
+# Problems whose bound is a whole number (the form refuses a fraction), and what it counts.
+WHOLE = {'snaky': 'Maker moves', 'prime-gaps': 'the gap between consecutive primes'}
 # Problems where a larger bound is better (a saving): the gate takes the largest Lean Verified bound, and the weakest
 # bound of the range is 0. On the other problems a smaller bound is better.
 HIGHER = {'dft', 'heilbronn-triangle'}
@@ -217,7 +220,9 @@ HIGHER = {'dft', 'heilbronn-triangle'}
 # Directed SSSP opened on 2026-11-03 after its smoke (run 41641134677, issue #127, the C-HD proof with our bridge)
 # passed and its control and five statement mutations were refused (issues #128 to #133). Its record gate compares
 # (D, T) tuples, not one rational (sssp_record).
-CLOSED = set()
+# Prime gaps (task cbea6e9e, verifier #148) stays closed until its maintainer smoke passes and its control and
+# statement mutations are refused.
+CLOSED = {'prime-gaps'}
 
 
 def form_error(body):
@@ -352,10 +357,11 @@ theorem Race.bound : ∃ order solve W, DFTProgram order solve W ∧
         target = f'theorem Race.bound : BigOSpeedrun.Catalan.Bound (({n} : ℚ) / {d}) := by\n  sorry\n'
     elif submission['problem'] == 'subset-sum':
         target = f'theorem Race.bound : BigOSpeedrun.SubsetSum.SolvedInTime (({n} : Rat) / {d}) := by\n  sorry\n'
-    elif submission['problem'] == 'snaky':
+    elif submission['problem'] in WHOLE:
         if d != 1:
-            raise ValueError('bound must be a whole number of Maker moves for snaky')
-        target = f'theorem Race.bound : BigOSpeedrun.Snaky.Bound {n} := by\n  sorry\n'
+            raise ValueError(f"bound must be a whole number of {WHOLE[submission['problem']]} for {submission['problem']}")
+        namespace = 'Snaky' if submission['problem'] == 'snaky' else 'PrimeGaps'
+        target = f'theorem Race.bound : BigOSpeedrun.{namespace}.Bound {n} := by\n  sorry\n'
     elif submission['problem'] == 'heilbronn-triangle':
         target = f'theorem Race.bound : BigOSpeedrun.HeilbronnTriangle.Bound (({n} : ℚ) / {d}) := by\n  sorry\n'
     else:
@@ -689,7 +695,7 @@ BOARDS = {'dft': ('Exact discrete Fourier transform', 'exact-dft'), '3sum': ('3S
           'apsp': ('All-pairs shortest paths', 'apsp'), 'average-sensitivity': ('Average sensitivity', 'other/average-sensitivity'),
           'catalan': ("Catalan's constant", 'other/catalan'), 'subset-sum': ('Subset Sum', 'subset-sum'),
           'snaky': ('Snaky', 'other/snaky'), 'heilbronn-triangle': ('Heilbronn triangle', 'other/heilbronn-triangle'),
-          'directed-sssp': ('Directed shortest paths', 'directed-sssp')}
+          'directed-sssp': ('Directed shortest paths', 'directed-sssp'), 'prime-gaps': ('Bounded prime gaps', 'other/prime-gaps')}
 
 
 def board_line(problem):

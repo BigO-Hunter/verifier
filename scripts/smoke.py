@@ -85,9 +85,28 @@ SSSP_MUTATIONS = {
     'sssp-m4-fallback-f06285b-v1': ('directed-sssp', SSSP_BOUND, SSSP_REPO, 'f06285b90fc64b33cf0cc9541cc7d066c9cf5e62'),
     'sssp-m5-exact-a922982-v1': ('directed-sssp', SSSP_BOUND, SSSP_REPO, 'a9229827f0a9327e8aec8bf61e3dc343481818e4'),
 }
+# The prime gaps runs before that problem opens (Lead GO 2026-11-06, task cbea6e9e, verifier #148), all on our own
+# repository bigospeedrun/verifier-smoke-prime-gaps, one branch per case. The smoke must PASS: Race.bound for 246 from
+# darkhipo's composition (darkhipo/prime-gaps-246-lean@ac0eb01b: Axiom Math's PrimeGapsLib and Jonas Whidden's
+# bombieri-vinogradov) moved into the Submission layout (branch main), with the pinned PNT+ fork and LeanArchitect as
+# solution dependencies. The control (an exact statement copy, Race.bound by sorry) must fail on sorryAx. Each
+# mutation must fail at Comparator's compare step (statement_mismatch): the bound 245 for the theorem about 246, < for
+# ≤, ∀ᶠ for ∃ᶠ, the gap over two steps (m + 2), the general Prime for Nat.Prime.
+PG_REPO = 'https://github.com/bigospeedrun/verifier-smoke-prime-gaps'
+PG_CONTROL = '1b31b82d168a32b9484ad947d2d2aa5eb52efce8'
+PG_FIXTURE = ('prime-gaps', '246', PG_REPO, 'abc6a6eb2d4fa59a3e113631c0cad28ef4c5d9cd')
+PG_TAG = 'prime-gaps-abc6a6e-v1'
+PG_MUTATIONS = {
+    'prime-gaps-control-1b31b82-v1': ('prime-gaps', '246', PG_REPO, PG_CONTROL),
+    'prime-gaps-m1-bound245-1b31b82-v1': ('prime-gaps', '245', PG_REPO, PG_CONTROL),
+    'prime-gaps-m2-strict-ff005c1-v1': ('prime-gaps', '246', PG_REPO, 'ff005c1eb5f6b88434e72a51941c61306415cb79'),
+    'prime-gaps-m3-eventually-f707281-v1': ('prime-gaps', '246', PG_REPO, 'f70728128e83ad30ef0002ead8f51f3c511eb61c'),
+    'prime-gaps-m4-two-steps-ce76e48-v1': ('prime-gaps', '246', PG_REPO, 'ce76e481a3b5aabea3773d93f4f62898bb44f835'),
+    'prime-gaps-m5-prime-de38d4d-v1': ('prime-gaps', '246', PG_REPO, 'de38d4d0d862485d33fdb01f93cb8cef1639f45c'),
+}
 # Smokes that post nothing and run only on a maintainer test issue.
 SILENT = {CATALAN_TAG: CATALAN_FIXTURE, SS_TAG: SS_FIXTURE, SNAKY_TAG: SNAKY_FIXTURE, **SNAKY_MUTATIONS,
-          HB_TAG: HB_FIXTURE, **HB_MUTATIONS, SSSP_TAG: SSSP_FIXTURE, **SSSP_MUTATIONS}
+          HB_TAG: HB_FIXTURE, **HB_MUTATIONS, SSSP_TAG: SSSP_FIXTURE, **SSSP_MUTATIONS, PG_TAG: PG_FIXTURE, **PG_MUTATIONS}
 
 
 def fixture(sub):

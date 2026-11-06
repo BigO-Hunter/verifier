@@ -185,9 +185,16 @@ def chain_targets(profile, chains, split):
     return ''.join(chain[-1] + '\n' for chain in chains)
 
 
-# The Lean options that a solution dependency may set: those of a reviewed upstream build (eth, integer factoring).
-# A new option needs review; Comparator and nanoda re-check every exported term in any case.
-LEAN_OPTION_NAMES = {'autoImplicit', 'relaxedAutoImplicit', 'exponentiation.threshold', 'pp.unicode.fun'}
+# The Lean options that a solution dependency, or a profile for its submission roots (source_lean_options), may set:
+# those of a reviewed upstream build (eth, integer factoring; maxSynthPendingDepth = 3 of Axiom Math's PrimeGapsLib,
+# 2026-11-06). A new option needs review; Comparator and nanoda re-check every exported term in any case.
+LEAN_OPTION_NAMES = {'autoImplicit', 'relaxedAutoImplicit', 'exponentiation.threshold', 'pp.unicode.fun', 'maxSynthPendingDepth'}
+# A data file that a profile admits in the submission roots (source_data_suffixes): a regular file read by the
+# submission's own build code (the prime gaps certificate JSON that Axiom Math's PrimeGapsCert reads with
+# IO.FS.readFile), never built or run. Each path part is an ordinary name; the size cap is per file.
+DATA_SUFFIXES = {'.json'}
+DATA_PART = re.compile(r'[A-Za-z0-9_][A-Za-z0-9_.-]{0,127}')
+DATA_MAX_BYTES = 1_000_000
 
 
 def lean_options(options):
@@ -240,6 +247,25 @@ rev = "d13f23b723b8a846827a245b89c10fc7d3f11612"
     return result
 
 
+def source_root_options(profile):
+    """The Lean options of the profile's own submission roots (source_lean_options), merged with those of its
+    solution dependencies. The profile is trusted; the submission cannot set an option."""
+    dependencies = profile.get('solution_dependencies', [])
+    options = dependency_root_options(dependencies, profile['source_roots'])
+    if 'source_lean_options' in profile:
+        lean_options(profile['source_lean_options'])
+        for root in profile['source_roots']:
+            options[root] = profile['source_lean_options']
+    return options
+
+
+def data_suffixes(profile):
+    suffixes = profile.get('source_data_suffixes', [])
+    if not isinstance(suffixes, list) or not set(suffixes) <= DATA_SUFFIXES:
+        raise ValueError('source_data_suffixes must name reviewed data suffixes only')
+    return set(suffixes)
+
+
 def dependency_root_options(dependencies, source_roots):
     """Each root of a solution dependency with lean_options gets those options.
     A dependency root must not be a submission root, a Verifier* root or a reserved root: this fails at
@@ -281,7 +307,7 @@ def prepare():
     clone_options = {'sparse_paths': profile['sparse_paths']} if profile.get('sparse_paths') else {}
     clone(request['repo_url'], request['commit'], WORK / 'clone', 'submission', **clone_options)
     sources = [(WORK / 'clone', request.get('source_subdir', profile.get('source_subdir', '')),
-                profile['source_roots'], profile.get('source_prefixes', []))]
+                profile['source_roots'], profile.get('source_prefixes', []), data_suffixes(profile))]
     dependencies = profile.get('solution_dependencies', [])
     for index, dep in enumerate(dependencies):
         location = WORK / f'solution-dependency-{index}'
@@ -292,11 +318,11 @@ def prepare():
                 raise ValueError('solution compatibility patch digest mismatch')
             command(['git', '-C', location, 'apply', '--check', patch_file], f'solution-dependency-{index}-patch-check')
             command(['git', '-C', location, 'apply', patch_file], f'solution-dependency-{index}-patch')
-        sources.append((location, dep.get('source_subdir', ''), dep['source_roots'], []))
+        sources.append((location, dep.get('source_subdir', ''), dep['source_roots'], [], set()))
     data = receipt(); data['solution_dependencies'] = dependencies; save(data)
     stage = WORK / 'stage'; stage.mkdir()
     hashes, total = {}, 0
-    for location, subdir, roots, prefixes in sources:
+    for location, subdir, roots, prefixes, data in sources:
         tracked = subprocess.check_output(['git', '-C', location, 'ls-tree', '-rz', 'HEAD'])
         for entry in tracked.split(b'\0'):
             if not entry:
@@ -309,16 +335,23 @@ def prepare():
                     rel = source_rel.relative_to(subdir)
                 except ValueError:
                     continue
-            if not rel.parts or rel.parts[0].removesuffix('.lean') not in roots or rel.suffix != '.lean':
+            if not rel.parts or rel.parts[0].removesuffix('.lean') not in roots or rel.suffix not in {'.lean'} | data:
                 continue
             if prefixes and not any(rel.is_relative_to(prefix) for prefix in prefixes):
                 continue
-            module = '.'.join(rel.with_suffix('').parts)
-            if mode != b'100644' or not NAME.fullmatch(module):
-                raise ValueError('only regular Lean source files with ordinary module names are admitted')
             source = location / source_rel
-            if source.stat().st_size > 20_000_000:
-                raise ValueError('individual Lean source exceeds 20 MB')
+            if rel.suffix != '.lean':
+                # A data file inside a submission root (source_data_suffixes), not a module: never built or run.
+                if mode != b'100644' or len(rel.parts) < 2 or not all(DATA_PART.fullmatch(part) for part in rel.parts):
+                    raise ValueError('only regular data files with ordinary names inside a source root are admitted')
+                if source.stat().st_size > DATA_MAX_BYTES:
+                    raise ValueError('individual data file exceeds 1 MB')
+            else:
+                module = '.'.join(rel.with_suffix('').parts)
+                if mode != b'100644' or not NAME.fullmatch(module):
+                    raise ValueError('only regular Lean source files with ordinary module names are admitted')
+                if source.stat().st_size > 20_000_000:
+                    raise ValueError('individual Lean source exceeds 20 MB')
             total += source.stat().st_size
             if total > 150_000_000:
                 raise ValueError('Lean source input exceeds 150 MB')
@@ -339,7 +372,7 @@ def prepare():
     data = receipt(); data['generated_challenge_sha256'] = digest(stage / 'VerifierChallenge.lean'); save(data)
     (stage / 'VerifierAudit.lean').write_text('import ' + profile['solution_module'] + '\n' +
                                            ''.join('#print axioms ' + n + '\n' for n in names))
-    (stage / 'lakefile.toml').write_text(lakefile(profile['source_roots'] + [root for dep in dependencies for root in dep['source_roots']] + ['VerifierChallenge', 'VerifierAudit'], profile.get('manifest_file', 'profiles/lake-manifest.json'), profile.get('auto_implicit', False), dependency_root_options(dependencies, profile['source_roots'])))
+    (stage / 'lakefile.toml').write_text(lakefile(profile['source_roots'] + [root for dep in dependencies for root in dep['source_roots']] + ['VerifierChallenge', 'VerifierAudit'], profile.get('manifest_file', 'profiles/lake-manifest.json'), profile.get('auto_implicit', False), source_root_options(profile)))
     (stage / 'lean-toolchain').write_text(request['lean_toolchain'] + '\n')
     shutil.copyfile(ROOT / profile.get('manifest_file', 'profiles/lake-manifest.json'), stage / 'lake-manifest.json')
     (stage / '.lake/build').mkdir(parents=True); (stage / '.lake/packages').mkdir()

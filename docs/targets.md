@@ -219,6 +219,36 @@ The classical bound, Dijkstra with Fibonacci heaps, is `O(m + n log n)`, that is
 SSSP runs use about 14 GB of the 15 GB runner memory; import only the fork modules
 your proof needs. A run that hits the memory limit is a failed run, not a verdict.
 
+## Bounded prime gaps
+
+Not open yet: the profile `prime-gaps` waits for its maintainer smoke run. Issue route only. Use
+Lean `leanprover/lean4:v4.33.1` and the Mathlib pin in `profiles/anthropic-lake-manifest.json`.
+The trusted statement is `challenges/prime-gaps/Statement.lean`, namespace
+`BigOSpeedrun.PrimeGaps`. It imports three Mathlib modules. Copy it byte for byte into your
+sources (for example `Submission/PrimeGapsStatement.lean`), and for a whole number `B`, export:
+
+```lean
+import Submission.PrimeGapsStatement
+
+theorem Race.bound : BigOSpeedrun.PrimeGaps.Bound B := by
+  -- Supply the proof.
+```
+
+`Bound B` says that infinitely often two consecutive primes differ by at most `B`
+(`H₁ ≤ B`). A smaller `B` is better; the form refuses a fraction. See
+[the statement README](../challenges/prime-gaps/README.md).
+
+The verifier stages two pinned libraries for every run, so your sources can import them but
+must not contain their roots: PrimeNumberTheoremAnd (the kimihiro64 fork at
+`0f15a38c619298b5cd786d39a84dd4bb8997324c`, root `PrimeNumberTheoremAnd`) and LeanArchitect
+(`d9013cc08bd2b5483e837368dfa4cc7ead92a5c2`, root `Architect`), as in
+kimihiro64/bombieri-vinogradov. Put every other library you use (for example Axiom Math's
+PrimeGapsLib or the Bombieri-Vinogradov theorem) under `Submission/`, with imports renamed to
+`Submission.*`. Your modules build with `autoImplicit = false` and
+`maxSynthPendingDepth = 3` (Axiom Math's PrimeGapsLib options). A `.json` file inside
+`Submission/` is staged as data (at most 1 MB each; Axiom Math's certificate is one); no other
+file type is staged.
+
 ## Integer factoring
 
 Closed to issues and PRs. A maintainer can rerun Isaac Rudich and Louis-Martin

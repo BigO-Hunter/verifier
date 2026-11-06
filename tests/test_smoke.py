@@ -391,6 +391,48 @@ class DirectedSsspSmokeTests(SubsetSumSmokeTests):
                 self.dispatch(dict(self.issue(),body=body))
 
 
+class PrimeGapsSmokeTests(SubsetSumSmokeTests):
+    """The prime gaps runs before that problem opens (task cbea6e9e): our own fixture repository, one branch per case,
+    on a maintainer test issue only, test_only, silent, no record gate."""
+    TAGS = {smoke.PG_TAG: smoke.PG_FIXTURE, **smoke.PG_MUTATIONS}
+
+    def issue(self,labels=('test',),tag=None,**fields):
+        from test_submissions import issue
+        problem,bound,repo,commit=self.TAGS[tag or smoke.PG_TAG]
+        item=issue(95,**{'problem':problem,'bound':bound,'commit':commit,**fields})
+        item['body']=item['body'].replace('https://github.com/example/proof',repo)
+        return dict(item,labels=[{'name':name} for name in labels])
+
+    def test_fixture(self):
+        repo='https://github.com/bigospeedrun/verifier-smoke-prime-gaps'
+        self.assertEqual({tag:(b,c[:7]) for tag,(p,b,r,c) in self.TAGS.items() if (p,r)==('prime-gaps',repo)},
+                         {'prime-gaps-abc6a6e-v1':('246','abc6a6e'),'prime-gaps-control-1b31b82-v1':('246','1b31b82'),
+                          'prime-gaps-m1-bound245-1b31b82-v1':('245','1b31b82'),'prime-gaps-m2-strict-ff005c1-v1':('246','ff005c1'),
+                          'prime-gaps-m3-eventually-f707281-v1':('246','f707281'),'prime-gaps-m4-two-steps-ce76e48-v1':('246','ce76e48'),
+                          'prime-gaps-m5-prime-de38d4d-v1':('246','de38d4d')})
+        self.assertTrue(set(self.TAGS.items())<=set(smoke.SILENT.items()))
+        self.assertIn('prime-gaps',s.CLOSED)
+
+    def test_dispatch_selects_one_silent_issue_entry(self):
+        for tag,pinned in self.TAGS.items():
+            with self.subTest(tag=tag):
+                selected=self.dispatch(self.issue(tag=tag))
+                self.assertEqual(smoke.fixture(selected['submission']),pinned)
+                self.assertEqual((selected['test_only'],selected['live_smoke'],selected['lease_kind']),(True,tag,'smoke'))
+                self.assertTrue(selected['record_gate']['test_only'])
+                self.assertTrue(smoke.active(selected));self.assertTrue(smoke.silent(selected))
+                self.assertEqual(selected['inputs']['challenge_file'],'challenges/prime-gaps/Statement.lean')
+
+    def test_only_a_maintainer_test_issue_with_the_fixture_form(self):
+        for item in [self.issue(labels=()),self.issue(bound='240'),self.issue(commit='b'*40),
+                     self.issue(tag='prime-gaps-control-1b31b82-v1',bound='244')]:
+            with self.subTest(body=item['body'],labels=item['labels']),self.assertRaises(ValueError):
+                self.dispatch(item)
+        with self.assertRaises(ValueError):
+            self.dispatch(self.issue(),actor='someone-else')
+        self.assertFalse(Path('requests').exists())
+
+
 class HeilbronnSmokeTests(SubsetSumSmokeTests):
     """The Heilbronn runs before that problem opens (Lead, 2026-11-03, verifier #105): our own repository, on a
     maintainer test issue only, test_only, silent, no record gate. The smoke has the bound 0, which the public form refuses."""
