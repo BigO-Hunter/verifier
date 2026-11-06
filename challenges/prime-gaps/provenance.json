@@ -1,0 +1,14 @@
+{
+  "source_repository": "https://github.com/AxiomMath/PrimeGapsLib",
+  "source_commit": "1faa7b14e82ddebc2772dfb9153922f01b106477",
+  "original_path": "PrimeGaps/Bounded246.lean",
+  "original_git_blob": "133dfc6badbc454ffdefd33168b082e94b8b9332",
+  "original_sha256": "c5c29fc7c07cc005cfbd73705273df38e9ad5af881be3146ab92aa076c504abf",
+  "original_statement": "∃ᶠ m in Filter.atTop, Nat.nth Nat.Prime (m + 1) - Nat.nth Nat.Prime m ≤ 246",
+  "original_theorem": "bombieriVinogradov_implies_frequently_prime_gap_le_246",
+  "source_author": "Axiom Math",
+  "license": "Apache-2.0",
+  "adapter_author": "BOS Integrations (Claude), for Big O Speedrun: Statement.lean (246 replaced by B, no hypothesis), Validation.lean",
+  "lean": "leanprover/lean4:v4.33.1",
+  "mathlib": "0df444a360eaa60ab8c11dca51a86af692955474"
+}

@@ -1,0 +1,11 @@
+Bounded prime gaps trusted statement
+
+Statement.lean and Validation.lean are written by Big O Speedrun agents (BOS Integrations,
+using Claude) in 2026, under Apache-2.0 (see LICENSE).
+
+The proposition in Statement.lean is the conclusion of Axiom Math's theorem
+bombieriVinogradov_implies_frequently_prime_gap_le_246 in PrimeGaps/Bounded246.lean of
+https://github.com/AxiomMath/PrimeGapsLib at commit 1faa7b14e82ddebc2772dfb9153922f01b106477
+(Copyright (c) 2026 Axiom Math, Apache-2.0), with the number 246 replaced by the parameter B and
+without the Bombieri-Vinogradov hypothesis. No other part of that file is copied.
+See provenance.json.
