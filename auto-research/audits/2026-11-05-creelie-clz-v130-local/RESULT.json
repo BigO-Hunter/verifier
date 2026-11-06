@@ -1,0 +1,74 @@
+{
+  "track": "audits",
+  "status": "audit",
+  "problem": "/other/critical-line-zeros",
+  "bound": "liminf N_0^s(T,2T)/N(T,2T) >= (125000/124111)(H - 7999/2000000) = 0.673289639596219962104869623566097272394673949756935403519419...; claimed display 0.6732896395 is the 10-dp TRUNCATION (correct rounding: 0.6732896396), so the claim understates by 9.6e-11",
+  "evidence_before": "Claimed",
+  "row": "critical-line-zeros successor release v1.3.0, published 2026-10-20T03:35Z, D. Bhattacharjee & U. Bhattacharya, Zenodo 23489033 (MIT). NOT on the board: the row still lists release v1.0.0 (Zenodo 23480715, 0.673113).",
+  "base_commit": "545c566c18de0fe6042575e65dbe448a98e1766f",
+  "pins": {
+    "mh-phys": "aff473549ca8cacf6b6b890cacf67e8d3d458934 (tag v1.3.0, ls-remote verified; commit 2026-10-20T03:34:49Z)",
+    "zenodo": "23489033 (v1.3.0, MIT); file creelie/mh-phys-v1.3.0.zip, 9126044 B, md5 f2a3bff3d553b36f7c5647bd71ab92ef, sha256 5afc161ed79c43e60d5d9d75b713f49125492bf8b10f1dc1d250cc0b13798ac2",
+    "blob_audit": "84/84 zip files byte-identical (git hash-object) to the pinned tree",
+    "tables": {
+      "verify/w4000_80k.bin": "fd9304e375e0e140a3046478dd8d382b6316887e16e10064d1f1ceb42175ea64 (rebuild byte-identical)",
+      "verify/w4000.bin": "8ea9e0208216cb99f4cdcbcaa160b75ba7e7c89058f4d0396392df4f3afa42d5 (rebuild byte-identical)",
+      "verify/d4000_80k.bin": "8915be681c85094d6a8686d078d4de01740fd139f5c7226bf116f6baca14c105 (== README claim); platform rebuild d2681cb0eaef5a3099cd52fef3494924fd8494703bf13eab003c192ceea36d78, 6/320003 doubles differ (D1)"
+    }
+  },
+  "verdict": "PASS - full reproduction of the claim's computational step: the ten-zero certificate VERIFIED with nodes = 1,424,333,714, 207,518 work boxes and box checksum bb2e8f8af3a7efd2 matching the author EXACTLY, on a different compiler and ISA; same verdict with the platform-rebuilt second-order table; kernel table byte-identical; eigenvalue lemma digit-for-digit identical; ten-zero ceiling 0.6732908 and method ceiling 0.6735602 exact; the 60-digit arithmetic, weights linear total and paper condition hold; negative control T=0.0071125 REJECTED. Hand proofs + unrefereed AF framework NOT re-verified (NOTICE.md). Two disclosed non-invalidating deviations: D1 platform dtable 6-cell variance, D2 truncation vs rounding of the display.",
+  "reruns": {
+    "certificate_ten_zero_shipped_tables": {
+      "command": "OMP_NUM_THREADS=4 ./bbp_cf 10 4000 verify/w4000_80k.bin verify/d4000_80k.bin verify/weights10.txt 889 125000",
+      "verdict": "VERIFIED R=10: F >= 889/125000",
+      "nodes": 1424333714,
+      "nodes_author": 1424333714,
+      "work_boxes": 207518,
+      "box_checksum": "bb2e8f8af3a7efd2 (author-identical)",
+      "wall_seconds": 219,
+      "threads": 4,
+      "author_wall": "2m48s (4 threads)"
+    },
+    "certificate_ten_zero_platform_rebuilt_dtable": {
+      "command": "same, with the dtable.py rebuild instead of verify/d4000_80k.bin",
+      "verdict": "VERIFIED R=10: F >= 889/125000",
+      "nodes": 1424333714,
+      "work_boxes": 207518,
+      "box_checksum": "bb2e8f8af3a7efd2",
+      "wall_seconds": 299,
+      "note": "verdict and node count unchanged by the six differing w'' cell bounds (D1)"
+    },
+    "table_rebuild": "kernel table byte-identical (both 80k and 46k); second-order table deterministic across 3 runs, deviating from the shipped file in 6/320003 doubles, all w'' cell lower bounds, abs <= 1.8e-18 (D1)",
+    "eig_lemma": "digit-for-digit identical to checks/eig_lemma.txt (both 823 B); lambda_max bound 1.9790264618989043491392825446270941444 < 2",
+    "chain_window10": "exact match, 7/7 rows; max 0.6732908 at mu = 0.004",
+    "chain_all": "max over all mu: 0.6735602 (exact match) <= 0.67357; 123/123 rows identical up to cyclic rotation",
+    "negative_controls": {
+      "T_0.0071125_over_claim": "REJECTED: FAIL box 7902 4157 7900 4158 7899 4158 7898 4157 7902 lb=0.007112482972 < T, RC=1",
+      "comparison": "the exact minimum of F for these rounded weights is 0.0071126, so certified 0.007112 is 6e-7 below it; 0.0071125 sits 1.7e-8 above the failing box's bound"
+    }
+  },
+  "arithmetic": {
+    "H": "0.672500703679411645734379790803295188593403028626264078929589 (3/2 - cot(1/sqrt2)/sqrt2, mpmath dps=60)",
+    "mu_from_weights10_txt": "7999/2000000 exactly (sum of b_i, exact rational arithmetic)",
+    "c0": "889/125000 = 0.007112",
+    "one_minus_c0": "124111/125000 exactly",
+    "bound": "0.673289639596219962104869623566097272394673949756935403519419",
+    "closed_form_equals_quotient": true,
+    "paper_condition": "11*c0 = 0.078232 < 0.4794 < (4/3)w(11/20) = 0.479418746237293386426305881024 (holds)",
+    "display": "0.6732896395 = 10-dp truncation; 10-dp rounding 0.6732896396; paper prints 16-digit truncation 0.6732896395962199 (D2)"
+  },
+  "environment": {
+    "host": "Apple M4 Max (arm64), macOS 26.6.2, 16 cpus",
+    "compiler": "Homebrew GCC 16.2.0, flags -O2 -frounding-math -fopenmp (gcc honors FENV_ACCESS; Apple clang does not)",
+    "python": "3.11.10, python-flint 0.9.0 (README/CI pin), mpmath 1.3.0, numpy 1.26.4, scipy 1.15.3",
+    "thread_cap": "4 (host load average 150-230 during runs; load does not affect node counts)"
+  },
+  "scope": "Machine audit of the claim's computational step (ten-zero branch-and-bound certificate, tables, lemma numerics, ceilings) and of the exact arithmetic of the claim; the hand proofs (block decomposition, rank-trace framework) and the claimed Lean formalization are NOT re-verified, and the row is not listed by this audit.",
+  "models": ["deepseek-flash (MultiAgency body harness, AI agent under human direction)"],
+  "predecessors": [
+    "https://github.com/bigospeedrun/verifier/tree/545c566c18de0fe6042575e65dbe448a98e1766f/auto-research/audits/2026-11-05-creelie-clz-top-local (audit of v1.0.0, Zenodo 23480715)",
+    "https://github.com/creelie/mh-phys/tree/aff473549ca8cacf6b6b890cacf67e8d3d458934 (audited source)",
+    "https://doi.org/10.5281/zenodo.23489033 (audited artifact)"
+  ],
+  "reproduce": "python3 auto-research/audits/2026-11-05-creelie-clz-v130-local/verify.py   (add --full for the pointer to the complete local rerun; see evidence/replay.sh)"
+}

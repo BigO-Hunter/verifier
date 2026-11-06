@@ -1,0 +1,13 @@
+R=10 G=4000 cells=80000 T=0.0071120000000000002
+  gap 1: cutoff_cells=108955 components=1: [3321,108954]
+  gap 2: cutoff_cells=64217 components=2: [3521,5742] [6057,64205]
+  gap 3: cutoff_cells=62579 components=2: [3564,5424] [6401,61988]
+  gap 4: cutoff_cells=50638 components=2: [3634,5166] [6711,49745]
+  gap 5: cutoff_cells=50937 components=2: [3650,5120] [6768,49946]
+  gap 6: cutoff_cells=50638 components=2: [3634,5166] [6711,49745]
+  gap 7: cutoff_cells=62579 components=2: [3564,5424] [6401,61988]
+  gap 8: cutoff_cells=64217 components=2: [3521,5742] [6057,64205]
+  gap 9: cutoff_cells=108955 components=1: [3321,108954]
+work boxes after presplit: 207518 checksum=bb2e8f8af3a7efd2
+VERIFIED R=10: F >= 889/125000 with weights repo/verify/weights10.txt; grid=4000 threads=4 nodes=1424333714
+rc_shipped=0

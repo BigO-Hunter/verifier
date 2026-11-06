@@ -1,0 +1,67 @@
+{
+  "row": {
+    "track": "critical-line-zeros",
+    "position": "successor release v1.3.0 (not on the board)",
+    "status": "claimed",
+    "published": "2026-10-20T03:35:12Z",
+    "authors": "D. Bhattacharjee & U. Bhattacharya",
+    "score_display": "0.6732896395 (10-dp truncation; 10-dp rounding would be 0.6732896396)",
+    "claim": "liminf N_0^s(T,2T)/N(T,2T) >= (H - mu)/(1 - c0) = (125000/124111)(H - 7999/2000000) = 0.67328963959621996210..., where mu = 7999/2000000 is the linear total of the ten-zero weights and c0 = 889/125000 is the certified ten-zero window constant",
+    "kind": "asymptotic windowed liminf bound; NO zero database, no T-range, no counting (Platt/Odlyzko/LMFDB inapplicable in principle)",
+    "board_status_at_audit": "the site row /other/critical-line-zeros lists release v1.0.0 (Zenodo 23480715, kappa* >= 0.673113, evidence Claimed); record 23489033 does not appear in chat-knowledge.json (see data/board_row_snapshot.json)"
+  },
+  "zenodo": {
+    "record": 23489033,
+    "conceptrecid": 23480714,
+    "doi": "10.5281/zenodo.23489033",
+    "conceptdoi": "10.5281/zenodo.23480714",
+    "created": "2026-10-20T03:35:12.330986+00:00",
+    "revision": 4,
+    "status": "published",
+    "version": "1.3.0",
+    "license": "MIT",
+    "title": "More Than 67.32 Percent of the Zeta Zeros Are Simple and on the Critical Line",
+    "file": {
+      "key": "creelie/mh-phys-v1.3.0.zip",
+      "size": 9126044,
+      "md5": "f2a3bff3d553b36f7c5647bd71ab92ef",
+      "sha256": "5afc161ed79c43e60d5d9d75b713f49125492bf8b10f1dc1d250cc0b13798ac2",
+      "included_in_package": false,
+      "note": "not included (no third-party binaries, per the #151 maintainer rule); the pins above are the reference. verify.py --artifact PATH hashes a local copy."
+    },
+    "metadata_snapshot": "data/record_23489033.json"
+  },
+  "git_pin": {
+    "repo": "https://github.com/creelie/mh-phys",
+    "commit": "aff473549ca8cacf6b6b890cacf67e8d3d458934",
+    "tag": "v1.3.0 (ls-remote verified)",
+    "commit_date": "2026-10-20 09:04:49 +0530 (= 2026-10-20T03:34:49Z, 23 s before the Zenodo record)",
+    "blob_audit": "all 84 zip files byte-identical (git hash-object) to the pinned tree: evidence/zip_blob_audit.log",
+    "blobs": {
+      "verify/bbp_cf.c": "second-order weighted branch-and-bound verifier (the ten-zero certificate)",
+      "verify/weights10.txt": "weights of Table I (linear total 7999/2000000)",
+      "verify/bbpcf10.log": "the author's certified run: 1,424,333,714 nodes, 2m48s on four threads"
+    }
+  },
+  "table_sha256": {
+    "verify/w4000.bin": "8ea9e0208216cb99f4cdcbcaa160b75ba7e7c89058f4d0396392df4f3afa42d5",
+    "verify/w4000_80k.bin": "fd9304e375e0e140a3046478dd8d382b6316887e16e10064d1f1ceb42175ea64",
+    "verify/d4000_80k.bin": "8915be681c85094d6a8686d078d4de01740fd139f5c7226bf116f6baca14c105 (== README claim 8915be68...baca14c105)",
+    "kernel_table_rebuild": "byte-identical at the pin (both files): evidence/table_rebuild.log",
+    "second_order_table_rebuild": "deterministic platform rebuild d2681cb0eaef5a3099cd52fef3494924fd8494703bf13eab003c192ceea36d78, differing from the shipped file in 6 of 320,003 doubles (all w'' cell lower bounds, abs <= 1.8e-18); both are valid lower bounds and the certificate is unchanged (D1): evidence/dtable_diff.log, evidence/w2_cell_check.log"
+  },
+  "release_history": {
+    "note": "context only; the prior releases' bounds are not the claim audited here",
+    "v1.0.0": "Zenodo 23480715, tag a772d9962, 0.6731133552 (eight-zero uniform; audited in the sibling package)",
+    "v1.1.0": "Zenodo 23483313, tag 20eac3726, 0.6731985970 (weighted eight-zero)",
+    "v1.2.0": "Zenodo 23484951, tag ff75f12f8, 0.6732133974 (weighted nine-zero)",
+    "v1.3.0": "Zenodo 23489033, tag aff473549, 0.6732896395 (weighted ten-zero; this package)"
+  },
+  "references": {
+    "framework": "Alpoege-Furman rank-trace, arXiv:2608.13637 (UNREFEREED; Lean-4 formalization claimed, not audited here)",
+    "independent_prior": "Lamzouri, arXiv:2609.02882",
+    "eBLLM": "Zenodo 23484395 (route-finding engine credited by the paper)",
+    "montgomery_taylor_H": "0.67250070367941164573437979080329518859340302862626 (recomputed, mpmath dps=60)",
+    "prior_comparator_Jo": "(1345000H - 2680)/1340003 = 0.6730085279... (creelie/zeta-simple-zeros)"
+  }
+}
