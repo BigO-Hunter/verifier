@@ -1,0 +1,53 @@
+{
+  "machine": "Apple M4 Max, 128 GB RAM, macOS 26.6.2",
+  "lean": "leanprover/lean4:v4.34.1 (elan toolchain)",
+  "lake": "/opt/homebrew/bin/lake",
+  "mathlib": "d13f23b723b8a846827a245b89c10fc7d3f11612 (restored from a warm local packages tree whose 9 dependency revisions all match profiles/lake-manifest.json at the pinned commit; mathlib olib present, traces validated by lake)",
+  "build_targets": [
+    "VerifierAudit",
+    "VerifierChallenge"
+  ],
+  "build_jobs_total_schedule": 9353,
+  "built_oleans": 428,
+  "submission_modules_built_from_source": 426,
+  "run_history": "Two attempts, one proof: the first (nice 19, background) was interrupted by a host restart at ~9000/9353 jobs; the resumed run completed the full schedule from the same staged tree. Both logs are included verbatim; the explicit exit receipt is evidence/local-run.exit (exit_code=0, 2026-11-05T20:03:38Z).",
+  "build_result": "exit 0, no errors; warnings only (submission unused-variable warnings, including the author's anti-rebrand canary variable names; 2 sorry warnings from the trusted challenge's own placeholder theorems; 1 sorry from the verifier-generated Race.bound target inside VerifierChallenge)",
+  "sorry_warnings": {
+    "total": 3,
+    "in_VerifierChallenge_lean": 3,
+    "outside_VerifierChallenge_lean": 0
+  },
+  "axioms_Race_bound": [
+    "Classical.choice",
+    "Quot.sound",
+    "propext"
+  ],
+  "axioms_Race_bound_pi": [
+    "Classical.choice",
+    "Quot.sound",
+    "propext"
+  ],
+  "axioms_AuditScope_verifier_target": [
+    "Classical.choice",
+    "Quot.sound",
+    "propext"
+  ],
+  "scope_probe": "exit 0 (evidence/scope-probe.out): verifier-generated target at 31415926535897932384626433/10^28 discharged verbatim (defeq) by Race.bound; DFTProgram = rfl-expansion of the full all-lengths exact-RAM body; statedSavingTB19 = Real.pi/1000, board fraction <= pi/1000 (PiCut.cut_le_pi_div), and pi/1000 < 67/21280 (via SeamTB19.pi_lt_TB19 + exact rational bridge)",
+  "model_diff": "RAM section of trusted challenge vs Submission/OAI/Computability/FourierTransform/RAM.lean: identical after comment-stripping and whitespace normalization (5850 chars normalized)",
+  "challenge_bytes": "staged from the tracked blobs: fork blob at da94a2a6 and bigospeedrun/verifier main blob both sha256 3a646acd..., equal to the profiles/dft233.json pin; working-tree copies on this core.autocrlf=true machine are the CRLF artifact (13691 bytes, c6f3783f...) and were not used",
+  "generated_challenge": "trusted bytes + scripts/submissions.py challenge_source target (problem dft, bound 31415926535897932384626433/10000000000000000000000000000), re-run locally against verifier main bcd64bf; 13248 bytes, sha256 5a0b655ae2ca9447d9252a91de4114621b1db5df888f8b46d74ee2f3d15546bd",
+  "arithmetic_recomputation": {
+    "saving_s": "31415926535897932384626433/10^28 = 0.0031415926535897932384626433",
+    "s_is": "pi/1000 cut right after pi's first 26 digits; fraction reduced (gcd = 1); s*1000 < pi verified at 50-digit truncation",
+    "chain": "s < seam 3148496240/10^12 < certificate 67/21280 = 0.00314849624060... (all exact rational comparisons; the submission proves the same chain in-kernel via PiCut and SeamTB19/RateBQT772)",
+    "prior_sota": "312780997/10^11 = 0.00312780997 (PR #91)",
+    "improvement": "s/prior - 1 = +0.440650% (the issue title's +0.44%)"
+  },
+  "delta_vs_prior_entry": {
+    "prior": "submissions/dft/halitziyakartal-halitziyav5-pre-pi @ 524a8af8a277ca50c1237068c2b45430a03f547e",
+    "files_identical": 399,
+    "files_modified": 2,
+    "files_added_all_under_Work_BQT": 26,
+    "files_removed": 25
+  }
+}

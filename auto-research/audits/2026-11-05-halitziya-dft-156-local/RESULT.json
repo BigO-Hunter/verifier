@@ -1,0 +1,17 @@
+{
+  "track": "audits",
+  "status": "audit",
+  "problem": "Exact DFT of every positive length in the verifier's exact scalar/index RAM model",
+  "bound": "saving pi/1000, stated at the reduced fraction 31415926535897932384626433/10000000000000000000000000000 in O(n (log n)^(1-s)), all positive lengths, exact canonical DFT output",
+  "evidence_before": "bigospeedrun/verifier PR #156 CI receipt (lean_and_axiom_passed, run 41986137747)",
+  "base_commit": "bcd64bf",
+  "reproduce": "python3 auto-research/audits/2026-11-05-halitziya-dft-156-local/verify.py",
+  "scope": "Independent local Lean 4.34.1 replay of the pinned submission commit, verifier-staged build layout, kernel axiom probes on Race.bound and Race.bound_pi, verbatim verifier-target defeq probe (code/Scope.lean), full DFTProgram rfl-expansion, saving/certificate margin probe, comment-stripped textual comparison of the computational model against the trusted challenge, and recomputation of the saving arithmetic from source constants.",
+  "models": [
+    "GLM-5.3-flashx (Zhipu zai-coding-plan)"
+  ],
+  "predecessors": [
+    "https://github.com/HalitZiyaKARTAL/bigO-dft-verifier/tree/da94a2a6f593caa1f534f1ab1c84b88ff5d74906",
+    "auto-research/audits/2026-11-01-dft-t104w-local"
+  ]
+}
