@@ -78,6 +78,10 @@ class ProfileTests(unittest.TestCase):
         text = v.lakefile(PROFILE['source_roots'] + ['Architect', 'PrimeNumberTheoremAnd', 'VerifierChallenge', 'VerifierAudit'],
                           PROFILE['manifest_file'], False, v.source_root_options(PROFILE))
         self.assertIn('[[lean_lib]]\nname = "Submission"\n[lean_lib.leanOptions]\nautoImplicit = false\nmaxSynthPendingDepth = 3\n', text)
+        # LeanArchitect's lakefile at d9013cc sets no options, so it keeps Lean's default autoImplicit = true
+        # (Architect/CollectUsed.lean binds m implicitly; smoke run 42301733703 failed there with false).
+        # PNT+ sets autoImplicit = false itself, as the package does.
+        self.assertIn('[[lean_lib]]\nname = "Architect"\n[lean_lib.leanOptions]\nautoImplicit = true\n', text)
         self.assertIn('[[lean_lib]]\nname = "PrimeNumberTheoremAnd"\n\n', text)
         self.assertNotIn('maxSynthPendingDepth', text.split('name = "VerifierChallenge"')[1])
         with self.assertRaises(ValueError):

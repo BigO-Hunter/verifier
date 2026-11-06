@@ -196,7 +196,10 @@
         "commit": "d9013cc08bd2b5483e837368dfa4cc7ead92a5c2",
         "source_roots": [
           "Architect"
-        ]
+        ],
+        "lean_options": {
+          "autoImplicit": true
+        }
       },
       {
         "repo_url": "https://github.com/kimihiro64/PrimeNumberTheoremAnd",
