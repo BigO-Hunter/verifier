@@ -322,7 +322,7 @@ def prepare():
     data = receipt(); data['solution_dependencies'] = dependencies; save(data)
     stage = WORK / 'stage'; stage.mkdir()
     hashes, total = {}, 0
-    for location, subdir, roots, prefixes, data in sources:
+    for location, subdir, roots, prefixes, allowed in sources:
         tracked = subprocess.check_output(['git', '-C', location, 'ls-tree', '-rz', 'HEAD'])
         for entry in tracked.split(b'\0'):
             if not entry:
@@ -335,7 +335,7 @@ def prepare():
                     rel = source_rel.relative_to(subdir)
                 except ValueError:
                     continue
-            if not rel.parts or rel.parts[0].removesuffix('.lean') not in roots or rel.suffix not in {'.lean'} | data:
+            if not rel.parts or rel.parts[0].removesuffix('.lean') not in roots or rel.suffix not in {'.lean'} | allowed:
                 continue
             if prefixes and not any(rel.is_relative_to(prefix) for prefix in prefixes):
                 continue
