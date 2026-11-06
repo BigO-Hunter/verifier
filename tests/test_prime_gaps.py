@@ -59,7 +59,11 @@ class ProfileTests(unittest.TestCase):
         self.assertEqual([(d['repo_url'], d['commit'], d['source_roots']) for d in PROFILE['solution_dependencies']], [
             ('https://github.com/hanwenzhu/LeanArchitect', 'd9013cc08bd2b5483e837368dfa4cc7ead92a5c2', ['Architect']),
             ('https://github.com/kimihiro64/PrimeNumberTheoremAnd', '0f15a38c619298b5cd786d39a84dd4bb8997324c', ['PrimeNumberTheoremAnd'])])
-        self.assertIn('prime-gaps', s.CLOSED)
+        # Opened on 2026-11-07 after its smoke (run 42305726764, issue #172) and the refused control and mutations.
+        self.assertNotIn('prime-gaps', s.CLOSED)
+        form = (ROOT / '.github/ISSUE_TEMPLATE/lean-submission.yml').read_text()
+        self.assertIn('heilbronn-triangle, directed-sssp, prime-gaps]', form)
+        self.assertEqual(s.board_line('prime-gaps'), 'Bounded prime gaps board: https://bigospeedrun.com/other/prime-gaps')
         self.assertIn('prime-gaps', s.OTHER)
 
     def test_target_and_whole_number_bounds(self):

@@ -282,6 +282,27 @@ issue per entry, as for Snaky:
 
 They post nothing. Read the receipts.
 
+### Prime gaps runs (maintainers only)
+
+Prime gaps opened on 2026-11-07 after these runs (smoke: issue #172, run
+42305726764 at verifier 2d44726), all on our own repository
+`https://github.com/bigospeedrun/verifier-smoke-prime-gaps` (darkhipo's
+`prime-gaps-246-lean` at `ac0eb01b` under `Submission/`, with only the imports
+renamed), one test issue per entry, as for Snaky:
+
+- the smoke (`smoke.PG_FIXTURE`, commit `abc6a6e`, bound `246`) must pass. It
+  passed as a split run: build job 34 minutes, Lean 890 s (peak 6.6 GB), nanoda
+  1211 s. Its first run (42301733703 at 18158dd) failed to build LeanArchitect,
+  which needs Lean's default `autoImplicit = true` (fixed in 2d44726);
+- the control (`1b31b82`, bound `246`, an exact statement copy and `sorry`)
+  must fail on the axiom check (`sorryAx`);
+- each mutation (`smoke.PG_MUTATIONS`) must end with the Lean reason
+  `statement_mismatch`: the bound `245` for the theorem about `246` (`1b31b82`),
+  `<` for `≤` (`ff005c1`), `∀ᶠ` for `∃ᶠ` (`f707281`), `m + 2` for `m + 1`
+  (`ce76e48`), and `Prime` for `Nat.Prime` (`de38d4d`).
+
+They post nothing. Read the receipts.
+
 ### Known limits
 
 - The Lean checkpoint watcher (`live_publish.watch`, 330 minutes) cannot see the

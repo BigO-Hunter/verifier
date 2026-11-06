@@ -1,7 +1,8 @@
 # Big O Speedrun verifier
 
 Submit a Lean proof of a bound for Fourier transform, 3SUM, APSP, Subset Sum,
-average sensitivity, Catalan's constant, Snaky, or the Heilbronn triangle problem.
+average sensitivity, Catalan's constant, Snaky, the Heilbronn triangle problem, or bounded
+prime gaps.
 The verifier checks the proof against our fixed statement on GitHub Actions.
 A passing submission appears as **Lean Verified** on [bigospeedrun.com](https://bigospeedrun.com).
 An open submission without a passing check appears as **Claimed**.
@@ -24,8 +25,8 @@ Choose either route. Both use the same statement, record gate, and proof checks.
 
 See [the problem guide](docs/targets.md) for the exact target and Lean version.
 
-Use `dft`, `3sum`, `apsp`, `subset-sum`, `average-sensitivity`, `catalan`, `snaky` or
-`heilbronn-triangle` for `problem`. Use an exact nonnegative rational for `bound`, with at most 40 digits in
+Use `dft`, `3sum`, `apsp`, `subset-sum`, `average-sensitivity`, `catalan`, `snaky`,
+`heilbronn-triangle` or `prime-gaps` for `problem`. Use an exact nonnegative rational for `bound`, with at most 40 digits in
 each integer (300 for `heilbronn-triangle`). For DFT, the bound is the
 saving s in O(n (log n)^(1-s)); a larger saving is better. For 3SUM and APSP, it is
 the exponent r in O(n^r); smaller is better. For Subset Sum, it is the exponent α in
@@ -37,12 +38,15 @@ route takes it. For Snaky (an Other bounds row), it is a whole number n of Maker
 that win on the infinite board; smaller is better, a fraction is refused, and only the
 issue route takes it. For the Heilbronn triangle problem (an Other bounds row), it is the
 saving η in Δ(n) ≥ c n^(-2+η); a larger saving is better, 0 is refused (it is the
-classical bound), and only the issue route takes it. The ranges are 0 ≤ s ≤ 1,
+classical bound), and only the issue route takes it. For bounded prime gaps (an Other
+bounds row), it is a whole number B with H₁ ≤ B (infinitely often, two consecutive primes
+differ by at most B); smaller is better, a fraction is refused, and only the issue route
+takes it. The ranges are 0 ≤ s ≤ 1,
 0 ≤ r ≤ 2 for 3SUM, 0 ≤ r ≤ 3 for APSP, 0 ≤ α ≤ 1 for Subset Sum, 0 ≤ C ≤ 8 for
-average sensitivity, 0 ≤ μ ≤ 100000000 for Catalan, 0 ≤ n ≤ 100 for Snaky, and
-0 < η ≤ 5/6 for Heilbronn.
+average sensitivity, 0 ≤ μ ≤ 100000000 for Catalan, 0 ≤ n ≤ 100 for Snaky,
+0 < η ≤ 5/6 for Heilbronn, and 0 ≤ B ≤ 100000 for prime gaps.
 
-A Catalan proof is large, so it runs in two jobs: a build job, then the check job
+A Catalan or prime gaps proof is large, so it runs in two jobs: a build job, then the check job
 ([split build](docs/execution.md#split-build-for-large-proofs)). This has three
 effects. The bot posts only the final result, not an earlier Lean checkpoint
 comment. The run holds the verifier queue for its full time, up to about 12 hours.

@@ -3,7 +3,7 @@
 Board: https://bigospeedrun.com/other/prime-gaps
 
 `Statement.lean` is the trusted statement of the `prime-gaps` profile. It is not a proof of a gap
-bound. The profile is closed: the issue form does not offer it until a maintainer smoke run passes.
+bound. The issue route takes this problem since 2026-11-07 (verifier #148).
 
 For a whole number `B`, the race target is:
 

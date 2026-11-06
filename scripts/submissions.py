@@ -220,9 +220,10 @@ HIGHER = {'dft', 'heilbronn-triangle'}
 # Directed SSSP opened on 2026-11-03 after its smoke (run 41641134677, issue #127, the C-HD proof with our bridge)
 # passed and its control and five statement mutations were refused (issues #128 to #133). Its record gate compares
 # (D, T) tuples, not one rational (sssp_record).
-# Prime gaps (task cbea6e9e, verifier #148) stays closed until its maintainer smoke passes and its control and
-# statement mutations are refused.
-CLOSED = {'prime-gaps'}
+# Prime gaps opened on 2026-11-07 (verifier #148) after its smoke (run 42305726764, issue #172, darkhipo's Bound 246
+# proof at 2d44726) passed and its control and five statement mutations were refused (runs 42292994745, 42295113989,
+# 42296539519, 42297912639, 42299387647, 42300560394).
+CLOSED = set()
 
 
 def form_error(body):

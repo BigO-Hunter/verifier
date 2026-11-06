@@ -217,11 +217,11 @@ The classical bound, Dijkstra with Fibonacci heaps, is `O(m + n log n)`, that is
 `T_classic(D) = max(D, n log n)`. It is a line on the board only.
 
 SSSP runs use about 14 GB of the 15 GB runner memory; import only the fork modules
-your proof needs. A run that hits the memory limit is a failed run, not a verdict.
+your proof needs. A run that hits the memory limit ends incomplete; it is not a verdict on the proof.
 
 ## Bounded prime gaps
 
-Not open yet: the profile `prime-gaps` waits for its maintainer smoke run. Issue route only. Use
+Issue route only (opened 2026-11-07). It runs as a split build (two jobs). Use
 Lean `leanprover/lean4:v4.33.1` and the Mathlib pin in `profiles/anthropic-lake-manifest.json`.
 The trusted statement is `challenges/prime-gaps/Statement.lean`, namespace
 `BigOSpeedrun.PrimeGaps`. It imports three Mathlib modules. Copy it byte for byte into your

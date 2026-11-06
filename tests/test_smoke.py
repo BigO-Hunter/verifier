@@ -411,7 +411,7 @@ class PrimeGapsSmokeTests(SubsetSumSmokeTests):
                           'prime-gaps-m3-eventually-f707281-v1':('246','f707281'),'prime-gaps-m4-two-steps-ce76e48-v1':('246','ce76e48'),
                           'prime-gaps-m5-prime-de38d4d-v1':('246','de38d4d')})
         self.assertTrue(set(self.TAGS.items())<=set(smoke.SILENT.items()))
-        self.assertIn('prime-gaps',s.CLOSED)
+        self.assertNotIn('prime-gaps',s.CLOSED)
 
     def test_dispatch_selects_one_silent_issue_entry(self):
         for tag,pinned in self.TAGS.items():
