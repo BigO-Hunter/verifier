@@ -117,7 +117,8 @@ that quantity.** The two are not different measurements:
   enters the exponent in the identical position, `O_D(q^(−D+189))` versus
   `O_D(q^(−D+1641))`.
 - The formally verified baseline uses the same quantity with the same
-  meaning: in the Lean-Leader row's proof,
+  meaning: in the Lean formalization at
+  `darkhipo/sidorenko-counterexample-lean`,
   `OAI/Combinatorics/Sidorenko/Tail.lean:307` states the residual contribution
   as `residualNondirectConstant D * q^(−(D:ℝ)+1641)` and the threshold
   `1642 ≤ D₀` at `Tail.lean:282`. That is `C = 1641` in exactly the site's
@@ -127,10 +128,15 @@ that quantity.** The two are not different measurements:
 Three qualifications, none of which change the comparison:
 
 1. **Evidence level is not comparable.** 189 is Claimed, with no Lean proof
-   (the row says so). 1641's Lean row is a Lean-kernel check of the end
-   theorem, with the constant as a literal in `Tail.lean`. A smaller constant
-   at Claimed level does not become Lean Verified, and does not by itself
-   upgrade the other row.
+   (the row says so). On the 1641 side there is a Lean-kernel-checked proof of
+   the end theorem at `darkhipo/sidorenko-counterexample-lean`, with the
+   constant as a literal in `Tail.lean`. A smaller constant at Claimed level
+   does not become Lean Verified, and does not by itself upgrade that proof.
+   Caveat on site state: the race table read on 2026-11-07 displayed only two
+   rows — 189 (Claimed) and 1641 (Agent breakthrough) — and did not itself
+   display the Lean formalization's row, so this audit claims nothing about
+   that row's site label. The quantity comparison above rests on the
+   repository's own `Tail.lean`, not on the table.
 2. **Lowering the constant is not a literal edit.** The Lean proof derives the
    residual bound by the coarse two-space count; reaching 189 formally needs
    the per-vector type argument (defect bookkeeping, orthogonality, averaged
@@ -143,7 +149,7 @@ Three qualifications, none of which change the comparison:
 
 So the row ordering is correct in the same quantity, and 189 is a real
 improvement **conditional on the source's analytic inputs** — the same
-conditionality under which 1641 sits in the Lean row.
+conditionality under which 1641 sits in the Lean formalization.
 
 ## What is taken as given
 
