@@ -1,0 +1,21 @@
+# #print axioms captured from the audit build (pinned toolchain v4.35.0-rc2, BUILD_EXIT=0)
+
+--
+info: CatalanMeasure/GenD/Signed/RouteI/Theorem296.lean:151:0: 'CatalanMeasure.GenD.Signed.RouteI.catalan_irrationalityMeasure_295' depends on axioms: [propext,
+ Classical.choice,
+ Quot.sound]
+--
+info: CatalanMeasure/GenD/Signed/Count/WinCertGlue.lean:118:0: 'CatalanMeasure.GenD.Signed.Count.WinCertGlue.growth_count' depends on axioms: [propext, Classical.choice, Quot.sound]
+info: CatalanMeasure/GenD/Signed/Count/WinCertGlue.lean:119:0: 'CatalanMeasure.GenD.Signed.Count.WinCertGlue.eta295_lt_of_gain' depends on axioms: [propext,
+ Classical.choice,
+ Quot.sound]
+--
+--
+info: CatalanMeasure/GenD/Signed/Count/LedgerContent.lean:35:0: 'CatalanMeasure.GenD.Signed.Count.LedgerContent.content' depends on axioms: [propext, Classical.choice, Quot.sound]
+ℹ [5358/5371] Built CatalanMeasure.GenD.Signed.RouteI.Terminal295 (6.9s)
+info: CatalanMeasure/GenD/Signed/RouteI/Terminal295.lean:299:0: 'CatalanMeasure.GenD.Signed.RouteI.Terminal295.hweights295' depends on axioms: [propext, Classical.choice, Quot.sound]
+--
+--
+info: Solution.lean:24:0: 'CatalanIrrationalityMeasure.catalan_irrationalityMeasure_295' depends on axioms: [propext,
+ Classical.choice,
+ Quot.sound]

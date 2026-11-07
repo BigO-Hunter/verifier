@@ -1,0 +1,6 @@
+== tactic-position native_decide in own libs ==
+(exit 1)
+== tactic-position sorry outside Challenge placeholders ==
+(exit 1)
+== axiom/opaque decls ==
+(exit 1)

@@ -1,0 +1,46 @@
+# Build tail (pinned toolchain v4.35.0-rc2)
+# total 'error' occurrences in full build log: 0
+# final line:
++ echo BUILD_EXIT=0
+BUILD_EXIT=0
+
+✔ [5354/5371] Built CatalanMeasure.GenD.Uniform.Bank535.Ledger10.CWinP (9.3s)
+✔ [5355/5371] Built CatalanMeasure.GenD.Uniform.Bank535.Ledger10.Merge13 (3.0s)
+✔ [5356/5371] Built CatalanMeasure.GenD.Uniform.ContentBank.Table (2.4s)
+⚠ [5357/5371] Built CatalanMeasure.GenD.Signed.Count.LedgerContent (2.5s)
+warning: CatalanMeasure/GenD/Signed/Count/LedgerContent.lean:31:61: Variable name `o` is not explicitly referenced.
+
+Hint: The binding can be removed (if unused) or named `_` (if used implicitly). Alternatively, prefix the name with `_` to silence this warning:
+  [apply] _o
+
+Note: This linter can be disabled with `set_option linter.unusedVariables false`
+info: CatalanMeasure/GenD/Signed/Count/LedgerContent.lean:35:0: 'CatalanMeasure.GenD.Signed.Count.LedgerContent.content' depends on axioms: [propext, Classical.choice, Quot.sound]
+ℹ [5358/5371] Built CatalanMeasure.GenD.Signed.RouteI.Terminal295 (6.9s)
+info: CatalanMeasure/GenD/Signed/RouteI/Terminal295.lean:299:0: 'CatalanMeasure.GenD.Signed.RouteI.Terminal295.hweights295' depends on axioms: [propext, Classical.choice, Quot.sound]
+info: CatalanMeasure/GenD/Signed/RouteI/Terminal295.lean:300:0: 'CatalanMeasure.GenD.Signed.RouteI.Terminal295.hfirst295' depends on axioms: [propext, Classical.choice, Quot.sound]
+info: CatalanMeasure/GenD/Signed/RouteI/Terminal295.lean:301:0: 'CatalanMeasure.GenD.Signed.RouteI.Terminal295.hlarge295' depends on axioms: [propext, Classical.choice, Quot.sound]
+info: CatalanMeasure/GenD/Signed/RouteI/Terminal295.lean:302:0: 'CatalanMeasure.GenD.Signed.RouteI.Terminal295.compact295' depends on axioms: [propext, Classical.choice, Quot.sound]
+info: CatalanMeasure/GenD/Signed/RouteI/Terminal295.lean:303:0: 'CatalanMeasure.GenD.Signed.RouteI.Terminal295.hnearSheet295' depends on axioms: [propext, Classical.choice, Quot.sound]
+info: CatalanMeasure/GenD/Signed/RouteI/Terminal295.lean:304:0: 'CatalanMeasure.GenD.Signed.RouteI.Terminal295.measure_295' depends on axioms: [propext, Classical.choice, Quot.sound]
+✔ [5359/5371] Built CatalanMeasure.GenD.Signed.RouteI.RowCert.GrpP0 (369s)
+✔ [5360/5371] Built CatalanMeasure.GenD.Signed.RouteI.RowCert.GrpFinP (4.1s)
+✔ [5361/5371] Built CatalanMeasure.GenD.Signed.RouteI.RowCert.OwnFinP (317s)
+✔ [5362/5371] Built CatalanMeasure.GenD.Signed.RouteI.RowCert.OwnAllP (3.5s)
+⚠ [5363/5371] Built CatalanMeasure.GenD.Signed.RouteI.RowCert.RowP (4.4s)
+warning: CatalanMeasure/GenD/Signed/RouteI/RowCert/RowP.lean:106:15: `if_true` has been deprecated: Use `ite_true` instead
+
+Hint: Replace the deprecated name:
+  i̵f̵_̵t̵r̵u̵e̵i̲t̲e̲_̲t̲r̲u̲e̲
+✔ [5364/5371] Built CatalanMeasure.GenD.Signed.RouteI.RowCert.GrpN0 (530s)
+✔ [5365/5371] Built CatalanMeasure.GenD.Signed.RouteI.RowCert.GrpN1 (533s)
+✔ [5366/5371] Built CatalanMeasure.GenD.Signed.RouteI.RowCert.GrpFinN (10s)
+✔ [5367/5371] Built CatalanMeasure.GenD.Signed.RouteI.RowCert.RowN (8.5s)
+✔ [5368/5371] Built CatalanMeasure.GenD.Signed.RouteI.RowCert.All (1.9s)
+✔ [5369/5371] Built CatalanMeasure.GenD.Signed.RouteI.Measure295 (5.4s)
+ℹ [5370/5371] Built Solution (1.0s)
+info: Solution.lean:24:0: 'CatalanIrrationalityMeasure.catalan_irrationalityMeasure_295' depends on axioms: [propext,
+ Classical.choice,
+ Quot.sound]
+Build completed successfully (5371 jobs).
++ echo BUILD_EXIT=0
+BUILD_EXIT=0
