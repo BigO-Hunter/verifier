@@ -1,0 +1,82 @@
+{
+  "audit": "2026-11-06-slitsey-catalan-295-local",
+  "board": "https://bigospeedrun.com/other/catalan",
+  "row": {
+    "board_id": "catalan",
+    "value": "mu(G) <= 295",
+    "status": "Claimed",
+    "claimant": "S. Litsey (slitsey)",
+    "repo": "https://github.com/slitsey/catalan-irrationality-measure",
+    "pin": "65cfcc216b2fd8a6c52f84a8ea41fb654b11eddb",
+    "claim_shape": "|G - a/b| > b^(-295) for every integer a and all sufficiently large b; G = sum_{j>=0} (-1)^j/(2j+1)^2"
+  },
+  "verdict": "verified-with-conditions",
+  "verdict_scope": "The Lean formalization is independently verified (kernel-checked build at pinned toolchain, axiom-clean, numeric criterion chain recomputed exactly). Conditions concern board verifiability: (1) toolchain leanprover/lean4:v4.35.0-rc2 (release candidate, module system) vs the board Catalan verifier's v4.34.1 pin - the verifier cannot build the row without a toolchain bump or back-port (author contacted in slitsey issue #8); (2) lake comparator not run on the 295 route (author-disclosed); the standard kernel check passes.",
+  "checks": {
+    "build_pinned_toolchain": {
+      "pass": true,
+      "toolchain": "leanprover/lean4:v4.35.0-rc2",
+      "mathlib": "065356127b1dc0016f66b7283ce0ce2c4055aa55 (v4.35.0-rc2)",
+      "command": "lake exe cache get && lake build Solution",
+      "result": "Build completed successfully (5371 jobs), zero errors (BUILD_EXIT=0)"
+    },
+    "print_axioms_top_theorem": {
+      "pass": true,
+      "theorem": "CatalanIrrationalityMeasure.catalan_irrationalityMeasure_295",
+      "axioms": ["propext", "Classical.choice", "Quot.sound"],
+      "sorryAx": false,
+      "unlisted_axioms": false,
+      "also_clean": [
+        "CatalanMeasure.GenD.Signed.RouteI.catalan_irrationalityMeasure_295",
+        "CatalanMeasure.GenD.Signed.Count.WinCertGlue.eta295_lt_of_gain",
+        "CatalanMeasure.GenD.Signed.Count.LedgerContent.content",
+        "CatalanMeasure.GenD.Signed.RouteI.Terminal295.measure_295"
+      ]
+    },
+    "statement_matches_row": {
+      "pass": true,
+      "note": "Challenge.lean states exactly the board claim; the single 'sorry' is the challenge placeholder, discharged by Solution.lean (0 tactic-position sorry in the proof path)"
+    },
+    "exact_recomputation": {
+      "pass": true,
+      "arithmetic": "Python fractions.Fraction, exact; 220-digit decimal cross-checks",
+      "literals": {
+        "rho296": "147924897/500000 = 295.849794",
+        "eta295": "1063213/20000 = 53.16065",
+        "delta296": "29/100000000",
+        "cost296": "3596893/1000000",
+        "psi296": "8723/100",
+        "shift296": "57783/2500",
+        "content295": "220607/10000",
+        "content296_hex": "0x33b226df05efafb7e3/0x25c6ecd580a48ba00 = 21.89515755127535...",
+        "T296": "475738895269/210250000000"
+      },
+      "headline": "295*(eta-4*53*delta) - 53*rho = 11672657/5000000 = 2.334531 > 0; quotient 294.9560852980564... < 295 (README '294.956...', paper \\Bstar 294.95608 - both consistent)",
+      "hgain_step": "eta295 = 53.16065 < 58^2*(T296 - log2/2) - gDg(22.0607) = 53.16166490, slack 0.0010149",
+      "paper_conditions_7_of_7": "all pass exactly (63.207053 > 53; 1.1999992 > 1; 53.0000613 < 53.0079522; etc.)",
+      "hybrid_table_crosscheck": "all six gamma/(D-Lambda) quotients reproduce with correct outward rounding"
+    },
+    "failure_class_scan": {
+      "pass": true,
+      "native_decide_tactic_position": 0,
+      "sorry_tactic_position_outside_challenge": 0,
+      "axiom_declarations": 0,
+      "note": "certificate literals are kernel-rechecked inputs (decide +kernel), not shadows of computed values; generator scripts in scripts/ are untrusted by construction"
+    },
+    "reproducibility": {
+      "pass": true,
+      "note": "the certificate receipt is the build itself; full rebuild from pinned toolchain reproduces the theorem"
+    }
+  },
+  "conditions_for_board": [
+    "Lean Verified status requires the verifier's Catalan profile to support Lean v4.35.0-rc2 (module system) or the author to back-port; current pin v4.34.1 cannot build this repo (mirrors slitsey issue #8 for the 410 row)",
+    "annotate that lake comparator (external kernels) has not been run on the 295 route (author-disclosed)"
+  ],
+  "lineage_notes": [
+    "supersedes the board's earlier 410 row from the same repository (commit 8b354fd1, see slitsey issue #8)",
+    "independent lines remain: 1337isnot1337 528.23288, darkhipo gen5 528.2315, ry-xu 727.03 (unformalized, issue #5), Carreira 2294, Bojnal 2401.74, Jha 1e8",
+    "builds on OpenAI's G-irrationality formalization (489 vendored files, ported) and 33 Davis files (1337isnot1337, commit 3c45153) - provenance documented in repo NOTICE/PORTING.md"
+  ],
+  "auditor": "MultiAgency agent (darkhipo), independent - auditor's own board lines are weaker bounds (528.2315 / 410-era)",
+  "date": "2026-11-06"
+}
