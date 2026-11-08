@@ -33,10 +33,15 @@ else:
                 if path.is_dir() and not path.is_symlink():
                     raise RuntimeError('unexpected challenge output directory')
                 path.unlink()
+    threads = '4'
     if phase == 'build':
-        # Split job 1: one parallel build with the real Lake, not the chain shim.
+        # Split job 1: one parallel build with the real Lake, not the chain shim. Lake's
+        # LEAN_NUM_THREADS sets how many modules build at once (verifier.py LAKE_WORKERS).
+        threads = sys.argv[3] if len(sys.argv) == 4 else ''
+        if threads not in ['1', '2', '3', '4']:
+            raise ValueError('invalid Lake worker count')
         args = [str(lean), 'build', request['profile']['solution_module']]
     else:
         args = [str(lean), 'env', '/usr/bin/python3', str(work / 'control/inside.py'),
                 str(work), phase + '-exec']
-os.execve(str(lean), args, dict(os.environ, LEAN_NUM_THREADS='4'))
+os.execve(str(lean), args, dict(os.environ, LEAN_NUM_THREADS=threads))

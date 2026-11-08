@@ -106,6 +106,19 @@ build job and never splits: a 3SUM PR runs as one job, as before, and keeps the 
    has the same caps as the checks and no swap. It stops 15 minutes before the
    deadline. A failed or partial build does not stop the job. The receipt
    records the exit code, the unit result and the sampled peak memory.
+   Lake builds 4 modules at once (`LEAN_NUM_THREADS=4` for Lake). After an
+   `oom-kill`, the build continues in a new unit with 3, then 2, then 1
+   modules at once, until it stops for another reason or the deadline comes.
+   Lake keeps each finished module. The receipt records each attempt
+   (`build.attempts`), and `build.log` holds all of them (verifier#182).
+   Job 2 uses the same rule when its Lean or nanoda check continues the build:
+   the shim reads the count from `control/lake-workers.txt`, which the
+   verifier writes before each check. The first check starts at the count of
+   job 1's last attempt, and the nanoda check at that of the Lean check. After
+   an `oom-kill` before the shim reports each chain done (`exit=0`), the check
+   starts again in a new unit with the next count, inside the job's deadline.
+   The check record keeps each attempt (`attempts`), and its outcome comes
+   from the last attempt only.
 2. `verifier.py pack` (trusted, rule S2) runs after the unit has stopped. It
    walks `.lake/build` with `lstat` and never follows a symlink. It keeps only
    the allow-list below (regular files with one link, and directories) and

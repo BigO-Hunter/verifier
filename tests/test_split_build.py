@@ -421,12 +421,19 @@ class BuildTests(Base):
         class Exec(Exception): pass
         def execve(path, args, env):
             calls.append((path, args, env['LEAN_NUM_THREADS'])); raise Exec()
-        with patch.object(sys, 'argv', ['inside.py', str(self.work), 'build']), patch.object(os, 'execve', side_effect=execve), \
-             self.assertRaises(Exec):
-            runpy.run_path(str(ROOT / 'scripts/inside.py'), run_name='__main__')
+        for jobs in ['4', '2']:
+            with patch.object(sys, 'argv', ['inside.py', str(self.work), 'build', jobs]), \
+                 patch.object(os, 'execve', side_effect=execve), self.assertRaises(Exec):
+                runpy.run_path(str(ROOT / 'scripts/inside.py'), run_name='__main__')
         lake = str(self.work / 'tools/elan/toolchains/leanprover--lean4---v4.34.1/bin/lake')
-        self.assertEqual(calls, [(lake, [lake, 'build', 'Submission'], '4')])
+        self.assertEqual(calls, [(lake, [lake, 'build', 'Submission'], '4'), (lake, [lake, 'build', 'Submission'], '2')])
         self.assertFalse(challenge.exists())
+        # The Lake worker count comes only from the controller, and only 1 to 4.
+        for argv in [['build'], ['build', '0'], ['build', '5'], ['build', '2 '], ['build', '2', 'x']]:
+            with patch.object(sys, 'argv', ['inside.py', str(self.work), *argv]), \
+                 patch.object(os, 'execve', side_effect=execve), self.assertRaises(ValueError):
+                runpy.run_path(str(ROOT / 'scripts/inside.py'), run_name='__main__')
+        self.assertEqual(len(calls), 2)
 
 
 try:

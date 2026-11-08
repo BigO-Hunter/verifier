@@ -3,6 +3,8 @@ The split build (docs/execution.md) must not change them. Ported from the deskto
 import json
 import os
 from pathlib import Path
+import shutil
+import subprocess
 import sys
 import tempfile
 import time
@@ -100,9 +102,96 @@ class VerifyPinTests(Base):
             'systemd_result': 'success', 'status': 'passed', 'reason': 'comparator_acceptance', 'exit_code': 0,
             'wall_seconds': data['kernels']['lean']['wall_seconds'], 'sampled_peak_cgroup_bytes': 0,
             'memory_limit_bytes': 14 * 1024**3, 'sampled_peak_swap_bytes': 0, 'swap_limit_bytes': 0,
-            'sampled_peak_tasks': 0, 'tasks_limit': 4096, 'guard_stop': None, 'log': 'lean.log'})
+            'sampled_peak_tasks': 0, 'tasks_limit': 4096, 'guard_stop': None, 'log': 'lean.log',
+            'attempts': [{'lake_jobs': 4, 'exit_code': 0, 'systemd_result': 'success',
+                          'wall_seconds': data['kernels']['lean']['attempts'][0]['wall_seconds'], 'sampled_peak_cgroup_bytes': 0,
+                          'memory_limit_bytes': 14 * 1024**3, 'sampled_peak_swap_bytes': 0, 'swap_limit_bytes': 0,
+                          'sampled_peak_tasks': 0, 'tasks_limit': 4096, 'guard_stop': None}]})
         self.assertEqual(data['kernels']['nanoda']['swap_limit_bytes'], 16 * 1024**3)
+        self.assertEqual((self.work / 'control/lake-workers.txt').read_text(), '4\n')
         self.assertEqual(data['axiom_audit']['status'], 'invalid_output')  # The fixture log prints no axioms.
+
+    def run_verify(self, kernels, outputs):
+        """v.verify() with one (log text, systemd result) per launch; returns (unit, Lake workers) per launch and the systemctl calls."""
+        launched, runs, outputs = [], [], list(outputs)
+        (self.work / 'control/chain-targets.txt').write_text('Submission\n')
+
+        def popen(args, stdout=None, stderr=None, **kwargs):
+            text, result = outputs.pop(0)
+            launched.append((args[4].removeprefix('--unit='), (self.work / 'control/lake-workers.txt').read_text().strip()))
+            runs.append(result); stdout.write(text); stdout.flush()
+            return Mock(poll=Mock(return_value=0), wait=Mock(return_value=0 if result == 'success' else 1))
+
+        def run(args, **kwargs):
+            if args[2] == 'show':
+                return Mock(stdout=runs.pop(0) + '\n', returncode=0)
+            calls.append(args); return Mock(stdout='', returncode=0)
+
+        def command(args, label, *a, **k):
+            calls.append(label)
+            if label == 'nanoda-swap-allocate':
+                Path(args[-1]).touch()
+
+        calls = []
+        with patch.object(v.subprocess, 'Popen', side_effect=popen), patch.object(v.subprocess, 'run', side_effect=run), \
+             patch.object(v, 'command', side_effect=command), \
+             patch.object(v.time, 'time', return_value=1000.0), patch.object(v.shutil, 'disk_usage', return_value=Mock(free=100 * 1024**3)):
+            v.verify(kernels)
+        return launched, calls
+
+    def test_an_oom_kill_during_the_build_starts_the_check_again_with_fewer_lake_workers(self):
+        building = '✔ [10/20] Built Submission.A\n'
+        done = 'VERIFIER source chain 0: exit=0 seconds=9.000\n'
+        launched, calls = self.run_verify(['lean'], [(building, 'oom-kill'), (building, 'oom-kill'), (done + ACCEPT, 'success')])
+        self.assertEqual(launched, [('bos-verifier-lean', '4'), ('bos-verifier-lean', '3'), ('bos-verifier-lean', '2')])
+        reset = ['sudo', 'systemctl', 'reset-failed', 'bos-verifier-lean']
+        self.assertEqual(calls, ['sandbox-preflight', reset, reset])
+        lean = v.receipt()['kernels']['lean']
+        self.assertEqual((lean['status'], lean['reason']), ('passed', 'comparator_acceptance'))
+        self.assertEqual([(a['lake_jobs'], a['systemd_result']) for a in lean['attempts']], [(4, 'oom-kill'), (3, 'oom-kill'), (2, 'success')])
+        self.assertEqual(v.receipt()['lake_workers'], 2)
+        self.assertIn('VERIFIER lean: oom-kill during the build, the check starts again with 3 Lake workers\n',
+                      (self.art / 'lean.log').read_text())
+        # The outcome reads only the last attempt: an oom-kill and then a source error is a rejection.
+        error = 'error: Submission/A.lean:1:2: unsolved goals\nerror: build failed\n'
+        self.run_verify(['lean'], [(building, 'oom-kill'), (error, 'exit-code')])
+        self.assertEqual(v.receipt()['kernels']['lean']['reason'], 'lean_compile_error')
+
+    def test_no_new_attempt_after_the_build_finished_or_at_one_worker(self):
+        done = 'VERIFIER source chain 0: exit=0 seconds=9.000\n'
+        launched, _ = self.run_verify(['lean'], [(done, 'oom-kill')])
+        self.assertEqual(launched, [('bos-verifier-lean', '4')])
+        self.assertEqual(v.receipt()['kernels']['lean']['reason'], 'out_of_memory')
+        data = v.receipt(); data['lake_workers'] = 1; v.save(data)
+        launched, _ = self.run_verify(['lean'], [('', 'oom-kill')])
+        self.assertEqual(launched, [('bos-verifier-lean', '1')])
+
+    def test_job_2_starts_at_the_last_count_of_job_1_and_nanoda_at_that_of_lean(self):
+        data = v.receipt()
+        data['build'] = {'systemd_result': 'success', 'attempts': [{'lake_jobs': 4, 'systemd_result': 'oom-kill'},
+                                                                 {'lake_jobs': 2, 'systemd_result': 'success'}]}
+        v.save(data)
+        building = '✔ [10/20] Built Submission.A\n'
+        launched, calls = self.run_verify(['lean', 'audit'], [(building, 'oom-kill'), (ACCEPT, 'success'), ('', 'success')])
+        self.assertEqual(launched, [('bos-verifier-lean', '2'), ('bos-verifier-lean', '1'), ('bos-verifier-audit', '1')])
+        launched, calls = self.run_verify(['nanoda'], [(building, 'oom-kill')])
+        self.assertEqual(launched, [('bos-verifier-nanoda', '1')])
+        # Swap is made once per job, also when the check starts again.
+        data = v.receipt(); data['lake_workers'] = 2; v.save(data)
+        (self.work / 'nanoda.swap').unlink()
+        launched, calls = self.run_verify(['nanoda'], [(building, 'oom-kill'), (ACCEPT, 'success')])
+        self.assertEqual(launched, [('bos-verifier-nanoda', '2'), ('bos-verifier-nanoda', '1')])
+        self.assertEqual([c for c in calls if isinstance(c, str) and c.startswith('nanoda-swap')],
+                         ['nanoda-swap-allocate', 'nanoda-swap-permissions', 'nanoda-swap-format', 'nanoda-swap-enable'])
+
+    def test_a_bad_count_from_the_build_record_starts_at_4(self):
+        for value in [None, 0, 5, '2', True, 2.0]:
+            data = v.receipt(); data.pop('lake_workers', None)
+            data['build'] = {'attempts': [{'lake_jobs': value}]}; v.save(data)
+            self.assertEqual(v.first_lake_workers(v.receipt()), 4)
+        for build in [None, [], {'attempts': []}, {'attempts': 'x'}, {'attempts': ['x']}]:
+            self.assertEqual(v.first_lake_workers({'build': build}), 4)
+        self.assertEqual(v.first_lake_workers({'lake_workers': 3, 'build': {'attempts': [{'lake_jobs': 1}]}}), 3)
 
     def test_the_deadline_is_320_minutes_on_github(self):
         self.assertEqual(v.DEADLINE_SECONDS, 320 * 60)
@@ -191,14 +280,92 @@ class BuildPinTests(Base):
                                      '--property=RestrictAddressFamilies=~AF_UNIX', '--property=Nice=10',
                                      '--property=CPUQuota=400%', '--property=MemoryMax=14G', '--property=MemorySwapMax=0',
                                      '--property=RuntimeMaxSec=18300', '--property=TasksMax=4096',
-                                     *self.sandbox(), '/usr/bin/python3', f'{W}/control/inside.py', W, 'build']])
+                                     *self.sandbox(), '/usr/bin/python3', f'{W}/control/inside.py', W, 'build', '4']])
+        # Only an oom-kill starts a second attempt.
         self.assertEqual(runs, [['sudo', 'systemctl', 'show', 'bos-verifier-build', '--property=Result', '--value']])
         record = v.receipt()['build']
-        self.assertEqual(record, {'exit_code': 1, 'systemd_result': 'exit-code', 'wall_seconds': record['wall_seconds'],
-                                  'sampled_peak_cgroup_bytes': 0, 'memory_limit_bytes': 14 * 1024**3, 'sampled_peak_swap_bytes': 0,
-                                  'swap_limit_bytes': 0, 'sampled_peak_tasks': 0, 'tasks_limit': 4096, 'guard_stop': None,
-                                  'log': 'build.log'})
+        attempt = {'exit_code': 1, 'systemd_result': 'exit-code', 'wall_seconds': record['wall_seconds'],
+                   'sampled_peak_cgroup_bytes': 0, 'memory_limit_bytes': 14 * 1024**3, 'sampled_peak_swap_bytes': 0,
+                   'swap_limit_bytes': 0, 'sampled_peak_tasks': 0, 'tasks_limit': 4096, 'guard_stop': None}
+        self.assertEqual(record, {**attempt, 'log': 'build.log', 'attempts': [{'lake_jobs': 4, **attempt}]})
         self.assertEqual((self.art / 'build.log').read_text(), 'build output\n')
+
+    def run_build(self, results, clock=None, guard=None):
+        """v.build() with one systemd result per attempt; returns the launches and the other systemctl calls."""
+        launched, runs, results = [], [], list(results)
+
+        def popen(args, stdout=None, stderr=None, **kwargs):
+            launched.append(args); stdout.write(f'attempt {len(launched)}\n'); stdout.flush()
+            return Mock(poll=Mock(side_effect=[None, 0]), wait=Mock(return_value=1))
+
+        def run(args, **kwargs):
+            runs.append(args)
+            return Mock(stdout=results.pop(0) + '\n' if args[2] == 'show' else '', returncode=0)
+
+        free = guard or (lambda: 100 * 1024**3)
+        with patch.object(v.subprocess, 'Popen', side_effect=popen), patch.object(v.subprocess, 'run', side_effect=run), \
+             patch.object(v, 'command'), patch.object(v.time, 'sleep'), \
+             patch.object(v.time, 'time', side_effect=lambda: clock(launched) if clock else 1000.0), \
+             patch.object(v.shutil, 'disk_usage', side_effect=lambda path: Mock(free=free())):
+            v.build()
+        return launched, runs
+
+    def test_an_oom_kill_continues_the_build_with_fewer_lake_workers(self):
+        W = str(self.work)
+        launched, runs = self.run_build(['oom-kill', 'oom-kill', 'success'])
+        self.assertEqual([a[a.index('--unit=bos-verifier-build') + 1:][-1] for a in launched], ['4', '3', '2'])
+        self.assertTrue(all(a[:3] == ['sudo', 'systemd-run', '--wait'] and '--property=MemoryMax=14G' in a and
+                            a[-5:-1] == ['/usr/bin/python3', f'{W}/control/inside.py', W, 'build'] for a in launched))
+        show = ['sudo', 'systemctl', 'show', 'bos-verifier-build', '--property=Result', '--value']
+        reset = ['sudo', 'systemctl', 'reset-failed', 'bos-verifier-build']
+        self.assertEqual(runs, [show, reset, show, reset, show])
+        self.assertEqual((self.art / 'build.log').read_text(),
+                         'attempt 1\nVERIFIER build: oom-kill, the build continues with 3 Lake workers\n'
+                         'attempt 2\nVERIFIER build: oom-kill, the build continues with 2 Lake workers\nattempt 3\n')
+        record = v.receipt()['build']
+        self.assertEqual([(a['lake_jobs'], a['systemd_result']) for a in record['attempts']], [(4, 'oom-kill'), (3, 'oom-kill'), (2, 'success')])
+        self.assertEqual((record['systemd_result'], record['log']), ('success', 'build.log'))
+        self.assertEqual(record['wall_seconds'], round(sum(a['wall_seconds'] for a in record['attempts']), 3))
+        self.assertNotIn('lake_jobs', record)
+
+    def test_the_retries_stop_at_one_worker(self):
+        launched, runs = self.run_build(['oom-kill'] * 4)
+        self.assertEqual([a[-1] for a in launched], ['4', '3', '2', '1'])
+        self.assertEqual(v.receipt()['build']['systemd_result'], 'oom-kill')
+
+    def test_no_retry_after_another_failure_a_guard_stop_or_the_deadline(self):
+        for result in ['exit-code', 'timeout']:
+            launched, _ = self.run_build([result])
+            self.assertEqual(len(launched), 1)
+        # Disk space below 1 GiB stops the unit; that is not a memory problem.
+        launched, _ = self.run_build(['oom-kill'], guard=lambda: 512 * 1024**2)
+        self.assertEqual(len(launched), 1)
+        self.assertEqual(v.receipt()['build']['guard_stop'], 'disk space below 1 GiB')
+        # started_unix is 1000 in Base; the build deadline is 320 - 15 minutes later.
+        launched, runs = self.run_build(['oom-kill'], clock=lambda launched: 1000.0 + 305 * 60 if launched else 1000.0)
+        self.assertEqual(len(launched), 1)
+        self.assertNotIn('reset-failed', [a[2] for a in runs])
+
+
+
+@unittest.skipIf(shutil.which('cc') is None, 'no C compiler')
+class LakeShimTests(unittest.TestCase):
+    def test_the_shim_gives_lake_the_worker_count_of_the_verifier(self):
+        tmp = tempfile.TemporaryDirectory(); self.addCleanup(tmp.cleanup)
+        control, shim = Path(tmp.name), Path(tmp.name) / 'lake'
+        subprocess.run(['cc', '-O2', '-Wall', '-Wextra', '-Werror', '-DREAL_LAKE="/usr/bin/env"', f'-DCONTROL="{control}"',
+                        '-DSOLUTION_MODULE="Submission"', str(ROOT / 'scripts/lake-shim.c'), '-o', str(shim)], check=True)
+
+        def threads():
+            out = subprocess.run([str(shim)], capture_output=True, text=True, env={})
+            return out.returncode, [l for l in out.stdout.splitlines() if l.startswith('LEAN_NUM_THREADS=')]
+        self.assertEqual(threads(), (0, ['LEAN_NUM_THREADS=4']))  # No file: 4, as before.
+        for value, expected in [('1\n', 1), ('2', 2), ('3\n', 3), ('4\n', 4)]:
+            (control / 'lake-workers.txt').write_text(value)
+            self.assertEqual(threads(), (0, [f'LEAN_NUM_THREADS={expected}']))
+        for value in ['', '0\n', '5\n', '2 \n', '12\n', '2\n\n', 'x']:
+            (control / 'lake-workers.txt').write_text(value)
+            self.assertEqual(threads(), (1, []))
 
 
 if __name__ == '__main__':
