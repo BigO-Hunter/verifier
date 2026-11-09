@@ -435,6 +435,20 @@ class BuildTests(Base):
                 runpy.run_path(str(ROOT / 'scripts/inside.py'), run_name='__main__')
         self.assertEqual(len(calls), 2)
 
+    def test_inside_audit_launches_lean_with_a_thread_default(self):
+        # Regression (issue #188): the audit branch reaches the shared execve without
+        # passing through a `threads` assignment; it raised NameError before the default
+        # was hoisted above the branch.
+        calls = []
+        class Exec(Exception): pass
+        def execve(path, args, env):
+            calls.append((path, args, env['LEAN_NUM_THREADS'])); raise Exec()
+        with patch.object(sys, 'argv', ['inside.py', str(self.work), 'audit']), \
+             patch.object(os, 'execve', side_effect=execve), self.assertRaises(Exec):
+            runpy.run_path(str(ROOT / 'scripts/inside.py'), run_name='__main__')
+        lake = str(self.work / 'tools/elan/toolchains/leanprover--lean4---v4.34.1/bin/lake')
+        self.assertEqual(calls, [(lake, [lake, 'env', 'lean', str(self.work / 'stage/VerifierAudit.lean')], '4')])
+
 
 try:
     import yaml
