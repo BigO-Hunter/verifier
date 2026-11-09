@@ -20,6 +20,10 @@ if phase.endswith('-exec'):
     env['PATH'] = str(work / 'control/bin') + ':' + env['PATH']
     comparator = work / 'tools/comparator/.lake/build/bin/comparator'
     os.execve(str(comparator), [str(comparator), str(work / f'control/{kernel}.json')], env)
+# Every phase but the build runs Lean with 4 threads. Set it before the branches, so that the
+# audit has it too (verifier#188: 195060b2 set it only in the else branch, and the audit's
+# execve below raised NameError).
+threads = '4'
 if phase == 'audit':
     args = [str(lean), 'env', 'lean', str(stage / 'VerifierAudit.lean')]
 else:
@@ -33,7 +37,6 @@ else:
                 if path.is_dir() and not path.is_symlink():
                     raise RuntimeError('unexpected challenge output directory')
                 path.unlink()
-    threads = '4'
     if phase == 'build':
         # Split job 1: one parallel build with the real Lake, not the chain shim. Lake's
         # LEAN_NUM_THREADS sets how many modules build at once (verifier.py LAKE_WORKERS).

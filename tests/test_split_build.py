@@ -435,6 +435,36 @@ class BuildTests(Base):
                 runpy.run_path(str(ROOT / 'scripts/inside.py'), run_name='__main__')
         self.assertEqual(len(calls), 2)
 
+    def test_inside_every_phase_reaches_execve(self):
+        # verifier#188 (AnanasClassic; test idea from darkhipo's PR #189): 195060b2 set LEAN_NUM_THREADS only in
+        # the build branch, so the audit raised NameError before its execve. The build test above was the only
+        # unit test of inside.py; the other phases ran only in real sandbox runs. Run every phase here.
+        v.write_json(self.work / 'control/request.json', {'request': {'lean_toolchain': 'leanprover/lean4:v4.34.1'},
+                                                          'profile': {'solution_module': 'Submission'}})
+        lake = str(self.work / 'tools/elan/toolchains/leanprover--lean4---v4.34.1/bin/lake')
+        comparator = str(self.work / 'tools/comparator/.lake/build/bin/comparator')
+        expected = {
+            'audit': (lake, [lake, 'env', 'lean', str(self.work / 'stage/VerifierAudit.lean')]),
+            'lean': (lake, [lake, 'env', '/usr/bin/python3', str(self.work / 'control/inside.py'), str(self.work), 'lean-exec']),
+            'nanoda': (lake, [lake, 'env', '/usr/bin/python3', str(self.work / 'control/inside.py'), str(self.work), 'nanoda-exec']),
+            'lean-exec': (comparator, [comparator, str(self.work / 'control/lean.json')]),
+            'nanoda-exec': (comparator, [comparator, str(self.work / 'control/nanoda.json')]),
+        }
+        class Exec(Exception): pass
+        for phase, (path, args) in expected.items():
+            calls = []
+            def execve(p, a, env):
+                calls.append((p, a, env['LEAN_NUM_THREADS'], env.get('PATH', ''))); raise Exec()
+            with self.subTest(phase=phase), patch.object(sys, 'argv', ['inside.py', str(self.work), phase]), \
+                 patch.object(os, 'execve', side_effect=execve), self.assertRaises(Exec):
+                runpy.run_path(str(ROOT / 'scripts/inside.py'), run_name='__main__')
+            self.assertEqual(calls[0][:3], (path, args, '4'), phase)
+            if phase.endswith('-exec'):
+                self.assertTrue(calls[0][3].startswith(str(self.work / 'control/bin') + ':'), phase)
+        with patch.object(sys, 'argv', ['inside.py', str(self.work), 'audit-exec']), \
+             patch.object(os, 'execve', side_effect=AssertionError('no execve')), self.assertRaises(ValueError):
+            runpy.run_path(str(ROOT / 'scripts/inside.py'), run_name='__main__')
+
 
 try:
     import yaml
