@@ -1,3 +1,5 @@
+> **BigO-Hunter fork notice.** The org's copy of [bigospeedrun/verifier](https://github.com/bigospeedrun/verifier) — kept for isolated public proof reruns and artifact receipts, and as the staging source for the org's audit/statement branches (`audit/*`, `statement/*`, `fix/*`, `automation/*`). The org stamps this copy's LICENSE with the Copy-Free/Stays-Free (CFSF) License — see [LICENSE](LICENSE) ([github.com/darkhipo/cfsf](https://github.com/darkhipo/cfsf)); upstream's own Apache-2.0 remains as published — see [NOTICE](NOTICE.md). Upstream's README below is unchanged. See the [org profile](https://github.com/BigO-Hunter/.github).
+
 # Big O Speedrun verifier
 
 Submit a Lean proof of a bound for Fourier transform, 3SUM, APSP, Subset Sum,
