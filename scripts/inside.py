@@ -21,6 +21,7 @@ if phase.endswith('-exec'):
     comparator = work / 'tools/comparator/.lake/build/bin/comparator'
     os.execve(str(comparator), [str(comparator), str(work / f'control/{kernel}.json')], env)
 if phase == 'audit':
+    threads = '4'
     args = [str(lean), 'env', 'lean', str(stage / 'VerifierAudit.lean')]
 else:
     # Submission code can write build products. Never trust its copy of the
