@@ -248,7 +248,8 @@ class PackTests(Base):
         sha = hashlib.sha256((self.out / 'build.tar').read_bytes()).hexdigest()
         self.assertEqual(record['sha256'], sha)
         self.assertEqual(self.output.read_text(), 'build_sha256=' + sha + '\n')
-        self.assertEqual(json.loads((self.out / 'build.json').read_text()), {'build': {'exit_code': 0}, 'pack': record})
+        self.assertEqual(json.loads((self.out / 'build.json').read_text()),
+                         {'build': {'exit_code': 0}, 'pack': record, 'chain_started_unix': 1000.0})
 
     def test_pack_is_deterministic(self):
         self.put('lib/lean/Submission/B.olean', b'b'); self.put('lib/lean/Submission/A.olean', b'a'); self.put('ir/Submission.c')
@@ -482,26 +483,45 @@ class WorkflowTests(unittest.TestCase):
         self.assertEqual(check[True]['workflow_call']['inputs']['split'], {'required': False, 'type': 'boolean', 'default': False})
         self.assertEqual(self.load('submissions.yml')['jobs']['check']['with']['split'], '${{ matrix.split == true }}')
 
+    @staticmethod
+    def steps_for(job, split):
+        """The steps that run in one mode: a condition mentioning inputs.split gates on it."""
+        picked = []
+        for step in job['steps']:
+            cond = str(step.get('if', ''))
+            if 'inputs.split' not in cond or split != ('!inputs.split' in cond):
+                picked.append(step)
+        return picked
+
     def test_build_job(self):
         jobs = self.load('submission-check.yml')['jobs']
-        self.assertEqual(list(jobs), ['build', 'verify', 'pr_verify'])
+        self.assertEqual(list(jobs), ['build', 'verify', 'nanoda', 'pr_verify'])
         build, verify = jobs['build'], jobs['verify']
         self.assertEqual(build['if'], "inputs.split && inputs.route == 'issue'")
         self.assertEqual(build['permissions'], {'contents': 'read', 'issues': 'read'})
         self.assertEqual(build['timeout-minutes'], 350)
         self.assertEqual(build['outputs'], {'proceed': '${{ steps.gate.outputs.proceed }}',
-                                            'build_sha256': '${{ steps.pack.outputs.build_sha256 }}'})
-        runs = [step.get('run') or step['uses'].split('@')[0] for step in build['steps']]
+                                            'build_sha256': '${{ steps.pack.outputs.build_sha256 }}',
+                                            'tools_sha256': '${{ steps.pack_tools.outputs.tools_sha256 }}'})
+        steps = build['steps']
+        runs = [step.get('run') or step['uses'].split('@')[0] for step in steps]
         self.assertEqual(runs, ['actions/checkout', 'actions/download-artifact', 'python3 scripts/submissions.py materialize',
                                 'python3 scripts/submissions.py preflight', 'python3 -m unittest discover -s tests -v',
                                 'python3 scripts/verifier.py prepare', 'python3 scripts/verifier.py setup',
+                                'python3 scripts/verifier.py pack_tools', 'actions/upload-artifact',
                                 'python3 scripts/verifier.py build', 'python3 scripts/verifier.py pack', 'actions/upload-artifact'])
-        self.assertEqual(build['steps'][0]['with'], {'ref': '${{ github.sha }}', 'persist-credentials': False})
-        pack, upload = build['steps'][8], build['steps'][9]
+        self.assertEqual(steps[0]['with'], {'ref': '${{ github.sha }}', 'persist-credentials': False})
+        # The tools artifact is packed before the build: a failed build still leaves usable tools.
+        pack_tools, tools_upload = steps[7], steps[8]
+        self.assertEqual((pack_tools['id'], pack_tools['if']), ('pack_tools', "${{ !cancelled() && steps.setup.outcome == 'success' }}"))
+        self.assertEqual(tools_upload['if'], "${{ !cancelled() && steps.pack_tools.outcome == 'success' }}")
+        self.assertEqual(tools_upload['with'], {'name': 'verifier-tools-${{ github.run_id }}-${{ github.run_attempt }}-${{ inputs.issue_number }}',
+                                                'path': 'tools-artifact/', 'if-no-files-found': 'error', 'retention-days': 2})
+        pack, upload = steps[10], steps[11]
         self.assertEqual((pack['id'], pack['if']), ('pack', "${{ !cancelled() && steps.prepare.outcome == 'success' }}"))
         self.assertEqual(upload['if'], pack['if'])
         self.assertEqual(upload['with'], {'name': 'verifier-build-${{ github.run_id }}-${{ github.run_attempt }}-${{ inputs.issue_number }}',
-                                          'path': 'build-artifact/', 'if-no-files-found': 'error', 'retention-days': 1})
+                                          'path': 'build-artifact/', 'if-no-files-found': 'error', 'retention-days': 2})
         # The same action pins as the other jobs.
         pins = {step['uses'] for step in verify['steps'] if 'uses' in step}
         self.assertTrue({step['uses'] for step in build['steps'] if 'uses' in step} <= pins)
@@ -512,39 +532,96 @@ class WorkflowTests(unittest.TestCase):
         self.assertEqual(verify['needs'], 'build')
         # A skipped build skips its dependents unless a status function is used. Not always(): a cancel stops the run.
         self.assertEqual(verify['if'], "${{ !cancelled() && inputs.route == 'issue' }}")
-        steps = verify['steps']
+        self.assertEqual(verify['outputs'], {'proceed': '${{ steps.gate.outputs.proceed }}'})
+        steps = self.steps_for(verify, True)
         runs = [step.get('run') or step['uses'].split('@')[0] for step in steps]
-        at = runs.index('python3 scripts/verifier.py setup')
-        self.assertEqual(runs[at + 1:at + 4], ['actions/download-artifact', 'python3 scripts/verifier.py unpack',
-                                               'python3 scripts/verifier.py verify_lean'])
-        download, unpack = steps[at + 1], steps[at + 2]
+        at = runs.index('python3 scripts/verifier.py prepare')
+        # A split run replaces setup with the pinned tools restore (rule T1), then unpacks the build (rule S1).
+        self.assertEqual(runs[at + 1:at + 5],
+                         ['actions/download-artifact', 'python3 scripts/verifier.py unpack_tools',
+                          'actions/download-artifact', 'python3 scripts/verifier.py unpack'])
+        self.assertEqual(runs[at + 5:], ['python3 scripts/verifier.py verify_lean', 'python3 scripts/verifier.py finalize',
+                                         'actions/upload-artifact'])
+        download_tools, unpack_tools = steps[at + 1], steps[at + 2]
+        self.assertEqual(download_tools['with'], {'name': 'verifier-tools-${{ github.run_id }}-${{ github.run_attempt }}-${{ inputs.issue_number }}',
+                                                  'path': 'tools-artifact'})
+        self.assertEqual(unpack_tools['env'], {'BOS_TOOLS_RESULT': '${{ needs.build.result }}',
+                                               'BOS_TOOLS_SHA256': '${{ needs.build.outputs.tools_sha256 }}'})
+        download, unpack = steps[at + 3], steps[at + 4]
         self.assertEqual(download['with'], {'name': 'verifier-build-${{ github.run_id }}-${{ github.run_attempt }}-${{ inputs.issue_number }}',
                                             'path': 'build-artifact'})
         self.assertEqual(unpack['env'], {'BOS_BUILD_RESULT': '${{ needs.build.result }}',
                                          'BOS_BUILD_SHA256': '${{ needs.build.outputs.build_sha256 }}'})
-        for step in [download, unpack]:
+        for step in [download_tools, unpack_tools, download, unpack]:
             self.assertEqual(step['if'], "inputs.split && steps.gate.outputs.proceed == 'true'")
-        gate = next(step for step in steps if step.get('id') == 'gate')
+        # The Lean-stage artifact upload is the last step of the split leg: job 3 merges it.
+        self.assertEqual(steps[-1]['with']['name'],
+                         'verifier-receipt-and-logs-${{ github.run_id }}-${{ github.run_attempt }}-${{ inputs.issue_number }}-lean')
+        gate = next(step for step in verify['steps'] if step.get('id') == 'gate')
         self.assertEqual(gate['env'], {'GH_TOKEN': '${{ github.token }}', 'BOS_BUILD_PROCEED': '${{ needs.build.outputs.proceed }}'})
         build_gate = next(step for step in jobs['build']['steps'] if step.get('id') == 'gate')
         self.assertEqual(build_gate['env'], {'GH_TOKEN': '${{ github.token }}'})
         # Both issue jobs set BOS_SPLIT for the gate and prepare (verifier.chain_targets); pr_verify never does.
-        for name in ['build', 'verify']:
+        for name in ['build', 'verify', 'nanoda']:
             self.assertEqual(jobs[name]['env']['BOS_SPLIT'], '${{ inputs.split }}')
         self.assertNotIn('BOS_SPLIT', jobs['pr_verify']['env'])
         # The unit tests of both issue jobs run without it: #99's rerun 41494392206 failed there, 3 errors (2026-11-02).
-        for name in ['build', 'verify']:
+        for name in ['build', 'verify', 'nanoda']:
             tests = next(step for step in jobs[name]['steps'] if step.get('run') == 'python3 -m unittest discover -s tests -v')
             self.assertEqual(tests['env'], {'BOS_SPLIT': ''})
-        # Without split, the steps are the steps of 255e338, and the report job is unchanged.
-        plain = [r for r, step in zip(runs, steps) if 'inputs.split' not in str(step.get('if'))]
+        # Without split, the steps are the steps of 255e338: setup, Lean, nanoda, both uploads.
+        plain = [step.get('run') or step['uses'].split('@')[0] for step in self.steps_for(verify, False)]
         self.assertEqual(plain, ['actions/checkout', 'actions/download-artifact', 'python3 scripts/submissions.py materialize',
                                  'python3 scripts/submissions.py preflight', 'python3 -m unittest discover -s tests -v',
                                  'python3 scripts/verifier.py prepare', 'python3 scripts/verifier.py setup',
                                  'python3 scripts/verifier.py verify_lean', 'python3 scripts/verifier.py finalize',
                                  'actions/upload-artifact', 'python3 scripts/verifier.py verify_nanoda',
                                  'python3 scripts/verifier.py finalize', 'actions/upload-artifact'])
+        # A split verify leg ends at the Lean receipt: nanoda runs in the chained job, never here.
+        self.assertTrue(all('inputs.split' not in str(step.get('if', '')).replace('!inputs.split', '')
+                            for step in verify['steps'] if step.get('run', '').endswith('verify_nanoda')))
         self.assertNotIn('needs', jobs['pr_verify'])
+
+    def test_nanoda_job(self):
+        jobs = self.load('submission-check.yml')['jobs']
+        nanoda = jobs['nanoda']
+        self.assertEqual(nanoda['needs'], ['build', 'verify'])
+        # Only a split run chains the nanoda pass; a single job runs it after the Lean check.
+        self.assertEqual(nanoda['if'], "${{ !cancelled() && inputs.split && inputs.route == 'issue' }}")
+        self.assertEqual(nanoda['timeout-minutes'], 350)
+        self.assertEqual(nanoda['permissions'], {'contents': 'read', 'issues': 'read'})
+        self.assertEqual(nanoda['env'], {
+            'BOS_REQUEST_PATH': 'request/request.json', 'ISSUE_NUMBER': '${{ inputs.issue_number }}',
+            'BOS_SPLIT': '${{ inputs.split }}', 'BOS_CHAIN': 'true',
+            'BOS_BUILD_RESULT': '${{ needs.build.result }}', 'BOS_BUILD_SHA256': '${{ needs.build.outputs.build_sha256 }}',
+            'BOS_TOOLS_RESULT': '${{ needs.build.result }}', 'BOS_TOOLS_SHA256': '${{ needs.build.outputs.tools_sha256 }}'})
+        steps = nanoda['steps']
+        runs = [step.get('run') or step['uses'].split('@')[0] for step in steps]
+        self.assertEqual(runs, ['actions/checkout', 'actions/download-artifact', 'python3 scripts/submissions.py materialize',
+                                'python3 -m unittest discover -s tests -v', 'python3 scripts/verifier.py prepare',
+                                'actions/download-artifact', 'python3 scripts/verifier.py merge_lean',
+                                'actions/download-artifact', 'python3 scripts/verifier.py unpack_tools',
+                                'actions/download-artifact', 'python3 scripts/verifier.py unpack',
+                                'python3 scripts/verifier.py verify_nanoda', 'python3 scripts/verifier.py finalize',
+                                'actions/upload-artifact'])
+        self.assertEqual(steps[0]['with'], {'ref': '${{ github.sha }}', 'persist-credentials': False})
+        # No gate: the run was admitted twice, and the report's staleness check covers later issue changes.
+        self.assertNotIn('preflight', ' '.join(runs))
+        # Each link pins its input; the chain merges job 2's Lean receipt by its exact bytes.
+        by_id = {step.get('id'): step for step in steps if step.get('id')}
+        self.assertEqual(by_id['merge']['env'], {'BOS_LEAN_ARTIFACT': 'lean-artifact'})
+        self.assertEqual(by_id['merge']['if'], "${{ always() && steps.prepare.outcome == 'success' }}")
+        downloads = {step['with']['name'] for step in steps if step.get('uses', '').startswith('actions/download-artifact')}
+        self.assertEqual(downloads, {'direct-requests-${{ github.run_id }}-${{ github.run_attempt }}',
+                                     'verifier-receipt-and-logs-${{ github.run_id }}-${{ github.run_attempt }}-${{ inputs.issue_number }}-lean',
+                                     'verifier-tools-${{ github.run_id }}-${{ github.run_attempt }}-${{ inputs.issue_number }}',
+                                     'verifier-build-${{ github.run_id }}-${{ github.run_attempt }}-${{ inputs.issue_number }}'})
+        self.assertEqual(by_id['unpack']['if'], "${{ steps.tools.outcome == 'success' }}")
+        verify_nanoda = next(step for step in steps if step.get('run', '').endswith('verify_nanoda'))
+        self.assertEqual((verify_nanoda['if'], verify_nanoda['continue-on-error']),
+                         ("${{ steps.unpack.outcome == 'success' }}", True))
+        self.assertEqual(steps[-1]['with']['name'],
+                         'verifier-receipt-and-logs-${{ github.run_id }}-${{ github.run_attempt }}-${{ inputs.issue_number }}')
 
     def test_each_issue_of_a_matrix_gets_its_report(self):
         # Run 42648121034 (2026-11-09) checked #187 and #190 in one matrix. The report job inside the reusable workflow
@@ -573,11 +650,21 @@ class WorkflowTests(unittest.TestCase):
         self.assertEqual(steps[1]['with']['name'], 'direct-requests-${{ github.run_id }}-${{ github.run_attempt }}')
         self.assertEqual(steps[3]['with']['name'], 'verifier-receipt-and-logs-${{ github.run_id }}-${{ github.run_attempt }}-${{ matrix.issue_number }}')
         self.assertEqual(steps[5]['with']['name'], 'direct-submission-${{ github.run_id }}-${{ github.run_attempt }}-${{ matrix.issue_number }}')
-        verify = self.load('submission-check.yml')['jobs']['verify']
-        uploads = [step['with']['name'] for step in verify['steps'] if step.get('uses', '').startswith('actions/upload-artifact')]
-        self.assertIn('verifier-receipt-and-logs-${{ github.run_id }}-${{ github.run_attempt }}-${{ inputs.issue_number }}', uploads)
+        # The report reads the unsuffixed final receipt, which chained job 3 uploads. A split
+        # verify leg uploads only the Lean checkpoint; a single job uploads both.
+        checks = self.load('submission-check.yml')['jobs']
+        self.assertEqual([step['with']['name'] for step in self.steps_for(checks['verify'], True)
+                          if step.get('uses', '').startswith('actions/upload-artifact')],
+                         ['verifier-receipt-and-logs-${{ github.run_id }}-${{ github.run_attempt }}-${{ inputs.issue_number }}-lean'])
+        self.assertEqual([step['with']['name'] for step in self.steps_for(checks['verify'], False)
+                          if step.get('uses', '').startswith('actions/upload-artifact')],
+                         ['verifier-receipt-and-logs-${{ github.run_id }}-${{ github.run_attempt }}-${{ inputs.issue_number }}-lean',
+                          'verifier-receipt-and-logs-${{ github.run_id }}-${{ github.run_attempt }}-${{ inputs.issue_number }}'])
+        self.assertEqual([step['with']['name'] for step in checks['nanoda']['steps']
+                          if step.get('uses', '').startswith('actions/upload-artifact')],
+                         ['verifier-receipt-and-logs-${{ github.run_id }}-${{ github.run_attempt }}-${{ inputs.issue_number }}'])
         # The same action pins as the check jobs.
-        pins = {step['uses'] for step in verify['steps'] if 'uses' in step}
+        pins = {step['uses'] for name in ['build', 'verify', 'nanoda'] for step in checks[name]['steps'] if 'uses' in step}
         self.assertTrue({step['uses'] for step in steps if 'uses' in step} <= pins)
 
 

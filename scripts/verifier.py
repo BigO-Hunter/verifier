@@ -451,10 +451,8 @@ def setup():
              '-DSOLUTION_MODULE=' + json.dumps(profile['solution_module']),
              ROOT / 'scripts/lake-shim.c', '-o', bin_dir / 'lake'], 'build-lake-adapter')
     shutil.copyfile(ROOT / 'scripts/inside.py', WORK / 'control/inside.py')
-    binaries = {'lean': lean / 'lean', 'comparator': tools / 'comparator/.lake/build/bin/comparator',
-                'lean4export': exporter / '.lake/build/bin/lean4export',
-                'nanoda': tools / 'nanoda/target/release/nanoda_bin', 'landrun': tools / 'landrun/landrun'}
-    write_json(ART / 'tool-sha256.json', {name: digest(path) for name, path in binaries.items()})
+    write_json(ART / 'tool-sha256.json',
+               {name: digest(WORK / rel) for name, rel in tool_binaries(request['lean_toolchain']).items()})
     # Compile only our Lake configuration before making its cache immutable.
     # `lean --version` elaborates no submission source. This stays offline.
     command(sandbox_args(config_write=True) + [str(lean / 'lake'), 'env', 'lean', '--version'],
@@ -668,6 +666,62 @@ def verify(kernels=None):
     save(data)
 
 
+# Chained stages (docs/execution.md). A split run's Lean and nanoda checks run as separate hosted
+# jobs of one workflow run. Each has the 350-minute job timeout and its own 320-minute deadline
+# from its own prepare, so a chain of three jobs gives the heavy proofs three full budgets where
+# one job hits the wall (verifier#182, #187). Every link pins its input artifact by sha256.
+# Rule T1 (unpack_tools) and rule T2 (pack_tools) share tools_allowed, like S1 and S2 share
+# build_allowed: only the trusted setup's own outputs travel, never a submission file.
+TOOLS_ARTIFACT = ROOT / 'tools-artifact'
+TOOLS_MAX_BYTES = 12 * 1024**3
+TOOLS_MAX_MEMBERS = 400_000
+# Toolchain download archives and elan's unpack scratch, not runtime state.
+TOOLS_DENY_PREFIXES = ('tools/elan/downloads/', 'tools/elan/tmp/')
+
+
+def tool_binaries(toolchain):
+    """The work-relative paths of the security-relevant executables, keyed by tool name.
+    setup records their sha256; unpack_tools re-checks every restored copy against that record."""
+    tc = 'tools/elan/toolchains/' + toolchain.replace('/', '--').replace(':', '---')
+    return {'lean': tc + '/bin/lean', 'lake_shim': 'control/bin/lake',
+            'comparator': 'tools/comparator/.lake/build/bin/comparator',
+            'lean4export': 'tools/comparator/.lake/packages/lean4export/.lake/build/bin/lean4export',
+            'nanoda': 'tools/nanoda/target/release/nanoda_bin', 'landrun': 'tools/landrun/landrun'}
+
+
+def tools_disk_path(rel):
+    """The work path of a tools-artifact member name (rule T1 mapping): the tar's
+    cache/packages/... prefix is the cache folder that sandbox_args reads read-only."""
+    if rel.startswith('cache/packages/'):
+        return WORK / 'cache/.lake/packages' / rel[len('cache/packages/'):]
+    return WORK / rel
+
+
+def tools_allowed(rel, is_dir):
+    """Rule T1, shared by pack_tools and unpack_tools: only the trusted setup outputs. rel is a
+    relative path with '/' separators. The build artifact (rule S1) already carries the
+    submission's own outputs; this rule must never carry one."""
+    try:
+        rel.encode('utf-8')
+    except UnicodeEncodeError:
+        return False
+    parts = rel.split('/')
+    if '\0' in rel or any(x in ['', '.', '..'] for x in parts):
+        return False
+    if rel.startswith(TOOLS_DENY_PREFIXES) or rel.rstrip('/') in [p.rstrip('/') for p in TOOLS_DENY_PREFIXES]:
+        return False
+    if rel.startswith('tools/') and len(parts) > 1:
+        return True
+    # The pinned Mathlib and dependency cache that sandbox_args reads read-only.
+    if rel.startswith('cache/packages/') and len(parts) > 2:
+        return True
+    if rel == 'control/inside.py':
+        return True
+    if rel.startswith('control/bin/') and len(parts) == 3:
+        return True
+    return False
+
+
 # Split build (docs/execution.md). Job 1 stops its build in time to pack and upload.
 BUILD_PACK_SECONDS = 15 * 60
 BUILD_ARTIFACT = ROOT / 'build-artifact'
@@ -751,8 +805,8 @@ def pack():
     roots = build_roots(json.loads((WORK / 'control/request.json').read_text())['profile'])
     BUILD_ARTIFACT.mkdir(exist_ok=True)
     data = receipt()
-    # Job 1's record and log go to job 2's receipt as data, also when the pack fails below.
-    write_json(BUILD_ARTIFACT / 'build.json', {'build': data.get('build')})
+    # Job 1's record, log and chain start go to job 2's and job 3's receipts as data, also when the pack fails below.
+    write_json(BUILD_ARTIFACT / 'build.json', {'build': data.get('build'), 'chain_started_unix': data.get('started_unix')})
     if (ART / 'build.log').is_file():
         shutil.copyfile(ART / 'build.log', BUILD_ARTIFACT / 'build.log')
     base = WORK / 'stage/.lake/build'
@@ -802,7 +856,8 @@ def pack():
     data['pack'] = {'sha256': sha, 'members': len(members), 'files': sum(not stat.S_ISDIR(m[1].st_mode) for m in members),
                     'bytes': total, 'skipped_count': len(skipped), 'skipped_first': sorted(skipped)[:20]}
     save(data)
-    write_json(BUILD_ARTIFACT / 'build.json', {'build': data.get('build'), 'pack': data['pack']})
+    write_json(BUILD_ARTIFACT / 'build.json', {'build': data.get('build'), 'pack': data['pack'],
+                                               'chain_started_unix': receipt().get('started_unix')})
     if os.environ.get('GITHUB_OUTPUT'):
         with open(os.environ['GITHUB_OUTPUT'], 'a') as out:
             out.write('build_sha256=' + sha + '\n')
@@ -816,7 +871,8 @@ def unpack():
     record = BUILD_ARTIFACT / 'build.json'
     if record.is_file() and not record.is_symlink() and record.stat().st_size <= 64 * 1024:
         job1 = json.loads(record.read_text())
-        data.update({k: job1[k] for k in ['build', 'pack'] if isinstance(job1, dict) and k in job1})
+        data.update({k: job1[k] for k in ['build', 'pack', 'chain_started_unix']
+                     if isinstance(job1, dict) and k in job1})
     # The site accepts at most 128 MB of receipt files; a larger log stays in job 1's artifact only.
     log = BUILD_ARTIFACT / 'build.log'
     if log.is_file() and not log.is_symlink() and log.stat().st_size <= 32 * 1024**2:
@@ -875,6 +931,181 @@ def unpack():
     save(data)
 
 
+def pack_tools():
+    """Chained job 1, rule T2: after setup, a deterministic tar of the built tools, the pinned
+    dependency cache and the Lake adapter. It never follows a symlink. Jobs 2 and 3 check the
+    sha256 (BOS_TOOLS_SHA256) and restore it, so a chain job starts checking about 45 minutes
+    earlier than a setup rebuild would."""
+    TOOLS_ARTIFACT.mkdir(exist_ok=True)
+    binaries = tool_binaries(json.loads((WORK / 'control/request.json').read_text())['request']['lean_toolchain'])
+    missing = [rel for rel in ['cache/.lake/packages', 'control/bin'] if not (WORK / rel).is_dir()]
+    missing += [rel for rel in list(binaries.values()) + ['control/inside.py'] if not (WORK / rel).is_file()]
+    if missing:
+        raise RuntimeError('tool layout is incomplete, nothing to pack: ' + ', '.join(missing))
+    members, skipped, total = [], [], 0
+    inside = WORK / 'control/inside.py'
+    st = os.lstat(inside)
+    if stat.S_ISREG(st.st_mode) and st.st_nlink == 1:
+        members.append(('control/inside.py', st)); total += st.st_size
+    else:
+        raise RuntimeError('the control inside.py is not an ordinary file')
+    for base, prefix in [(WORK / 'tools', 'tools'), (WORK / 'cache/.lake/packages', 'cache/packages'),
+                         (WORK / 'control/bin', 'control/bin')]:
+        for top, dirs, files in os.walk(base, followlinks=False):
+            relative = os.path.relpath(top, base)
+            reldir = prefix if relative == '.' else prefix + '/' + relative
+            keep = []
+            for name in dirs + files:
+                rel = reldir + '/' + name
+                entry = os.lstat(os.path.join(top, name))
+                is_dir = stat.S_ISDIR(entry.st_mode)
+                if is_dir:
+                    if tools_allowed(rel, True):
+                        keep.append(name)
+                    else:
+                        skipped.append(rel)
+                elif stat.S_ISREG(entry.st_mode) and entry.st_nlink == 1 and tools_allowed(rel, False):
+                    members.append((rel, entry)); total += entry.st_size
+                else:
+                    skipped.append(rel)
+                if len(members) > TOOLS_MAX_MEMBERS or total > TOOLS_MAX_BYTES:
+                    raise RuntimeError('tool files exceed the pack caps')
+            dirs[:] = keep
+    # A pinned binary that the walk could not carry (a symlink or hard link) must fail the pack,
+    # not vanish from the artifact that jobs 2 and 3 verify their tools against.
+    packed_names = {rel for rel, _ in members}
+    lost = [rel for rel in list(binaries.values()) + ['control/inside.py'] if rel not in packed_names]
+    if lost:
+        raise RuntimeError('tool files are not packable (symlink or hard link): ' + ', '.join(lost))
+    with tarfile.open(TOOLS_ARTIFACT / 'tools.tar', 'w', format=tarfile.PAX_FORMAT) as tar:
+        for rel, entry in sorted(members, key=lambda m: m[0]):
+            info = tarfile.TarInfo(rel)
+            info.uid = info.gid = 0
+            info.uname = info.gname = ''
+            info.type, info.mode, info.size = tarfile.REGTYPE, 0o644, entry.st_size
+            # Keep the real mtime to the nanosecond: Lake compares mtimes against the build traces.
+            ns = max(0, entry.st_mtime_ns)
+            info.mtime = ns // 10**9
+            info.pax_headers = {'mtime': f'{ns // 10**9}.{ns % 10**9:09d}'}
+            with os.fdopen(os.open(tools_disk_path(rel), os.O_RDONLY | os.O_NOFOLLOW | os.O_CLOEXEC), 'rb') as f:
+                now = os.fstat(f.fileno())
+                if not stat.S_ISREG(now.st_mode) or (now.st_dev, now.st_ino, now.st_size) != (entry.st_dev, entry.st_ino, entry.st_size):
+                    raise RuntimeError('tool file changed while packing')
+                tar.addfile(info, f)
+    sha = digest(TOOLS_ARTIFACT / 'tools.tar')
+    data = receipt()
+    data['pack_tools'] = {'sha256': sha, 'files': len(members), 'bytes': total,
+                          'skipped_count': len(skipped), 'skipped_first': sorted(skipped)[:20]}
+    save(data)
+    # The pinned digests travel with the artifact; unpack_tools re-checks every restored binary.
+    write_json(TOOLS_ARTIFACT / 'tool-sha256.json', {name: digest(WORK / rel) for name, rel in binaries.items()})
+    if os.environ.get('GITHUB_OUTPUT'):
+        with open(os.environ['GITHUB_OUTPUT'], 'a') as out:
+            out.write('tools_sha256=' + sha + '\n')
+    print(f"pack_tools: {len(members)} files, {total} bytes, {len(skipped)} skipped, sha256 {sha}", flush=True)
+
+
+def unpack_tools():
+    """Chained job 2 or 3, rule T1: check job 1's tools tar against BOS_TOOLS_SHA256, then restore
+    only the allowed members into the empty tool, cache and control/bin folders. Any other member
+    refuses the whole archive. Every restored executable is re-checked against tool-sha256.json."""
+    if os.environ.get('BOS_TOOLS_RESULT') != 'success':
+        raise RuntimeError('build job did not succeed')
+    expected = os.environ.get('BOS_TOOLS_SHA256', '')
+    if not re.fullmatch('[0-9a-f]{64}', expected):
+        raise ValueError('BOS_TOOLS_SHA256 must be 64 lowercase hex digits')
+    path = TOOLS_ARTIFACT / 'tools.tar'
+    if path.is_symlink() or not path.is_file() or digest(path) != expected:
+        raise ValueError('tools artifact is missing or its sha256 does not match')
+    pins_path = TOOLS_ARTIFACT / 'tool-sha256.json'
+    if pins_path.is_symlink() or not pins_path.is_file() or pins_path.stat().st_size > 64 * 1024:
+        raise ValueError('tool-sha256.json is missing or too large')
+    pins = json.loads(pins_path.read_text())
+    binaries = tool_binaries(json.loads((WORK / 'control/request.json').read_text())['request']['lean_toolchain'])
+    if set(pins) != set(binaries) or any(not re.fullmatch('[0-9a-f]{64}', value) for value in pins.values()):
+        raise ValueError('tool-sha256.json does not name exactly the pinned tools')
+    # Restore targets must be the empty folders from prepare (the cache folder does not exist yet).
+    for rel in ['tools', 'cache', 'control/bin']:
+        target = WORK / rel
+        if target.is_symlink() or (target.is_dir() and any(target.iterdir())):
+            raise RuntimeError('tools restore target is not empty: ' + rel)
+    if (WORK / 'control/inside.py').is_symlink() or (WORK / 'control/inside.py').exists():
+        raise RuntimeError('tools restore target is not empty: control/inside.py')
+    total, checked = 0, []
+    with tarfile.open(path, 'r:') as tar:
+        for m in tar:
+            mtime = re.fullmatch(r'([0-9]{1,12})\.([0-9]{9})', m.pax_headers.get('mtime', ''))
+            if (m.type != tarfile.REGTYPE or set(m.pax_headers) - {'mtime', 'path'} or not mtime
+                    or m.name in {name for name, _, _ in checked} or not tools_allowed(m.name, False)):
+                raise ValueError('tools artifact has a member outside the allow-list')
+            checked.append((m.name, m, int(mtime[1]) * 10**9 + int(mtime[2])))
+            total += m.size
+            if len(checked) > TOOLS_MAX_MEMBERS or total > TOOLS_MAX_BYTES:
+                raise ValueError('tools artifact exceeds the pack caps')
+        for name, m, ns in checked:
+            target = tools_disk_path(name)
+            target.parent.mkdir(parents=True, exist_ok=True)
+            fd = os.open(target, os.O_WRONLY | os.O_CREAT | os.O_EXCL | os.O_NOFOLLOW | os.O_CLOEXEC, 0o644)
+            with os.fdopen(fd, 'wb') as out, tar.extractfile(m) as src:
+                shutil.copyfileobj(src, out, 1024 * 1024)
+                out.flush(); os.fchmod(fd, 0o644); os.utime(fd, ns=(ns, ns))
+    for name, rel in binaries.items():
+        if digest(WORK / rel) != pins[name]:
+            raise ValueError('the restored ' + name + ' does not match its pinned sha256')
+    shutil.copyfile(pins_path, ART / 'tool-sha256.json')
+    path.unlink()  # Disk space for the checks and the nanoda swap.
+    data = receipt()
+    data['unpack_tools'] = {'sha256': expected, 'files': len(checked), 'bytes': total}
+    save(data)
+
+
+def merge_lean():
+    """Chained job 3: merge job 2's Lean-stage receipt (the downloaded '-lean' artifact) into this
+    job's receipt, and record the chain provenance. The merged receipt keeps one final record per
+    stage: job 1's build and pack, this job's unpack, tools and nanoda result, and job 2's Lean
+    kernel and axiom audit under stages.lean with the sha256 of the exact receipt bytes merged."""
+    source = Path(os.environ.get('BOS_LEAN_ARTIFACT', '')) / 'receipt.json'
+    if source.is_symlink() or not source.is_file() or source.stat().st_size > 2 * 1024**2:
+        raise ValueError('the Lean receipt artifact is missing or too large')
+    lean = json.loads(source.read_text())
+    data = receipt()
+    for field in ['request', 'theorem_names', 'verifier_commit']:
+        if lean.get(field) != data.get(field):
+            raise ValueError('the Lean receipt does not belong to this request and commit')
+    if lean.get('verification_stage') != 'lean' or lean.get('kernels', {}).get('nanoda', {}).get('status') != 'pending':
+        raise ValueError('the Lean receipt is not a Lean-stage receipt with the advisory nanoda queued')
+    folder = source.parent
+    for item in sorted(folder.iterdir()):
+        # This job's receipt.json stays its own; the gate.json of job 2 is the gate that admitted the checks.
+        if item.name == 'receipt.json' or item.is_symlink() or not item.is_file() or item.stat().st_size > 32 * 1024**2:
+            continue
+        shutil.copyfile(item, ART / item.name)
+    for field in ['tool_pins', 'build', 'pack', 'lake_workers', 'lean_path', 'chain_started_unix']:
+        if field in lean:
+            data[field] = lean[field]
+    data['kernels']['lean'] = lean['kernels']['lean']
+    data['axiom_audit'] = lean['axiom_audit']
+    data['stages'] = {'lean': {'status': lean.get('status'), 'steps': lean.get('steps', []),
+                               'receipt_sha256': digest(source), 'unpack': lean.get('unpack'),
+                               'unpack_tools': lean.get('unpack_tools')}}
+    run_id, attempt, number = (os.environ.get('GITHUB_RUN_ID', ''), os.environ.get('GITHUB_RUN_ATTEMPT', ''),
+                               os.environ.get('ISSUE_NUMBER', ''))
+    data['chain'] = {
+        'jobs': [
+            {'job': 'build', 'run_id': run_id, 'attempt': attempt, 'artifacts': {
+                'build': {'name': f'verifier-build-{run_id}-{attempt}-{number}', 'sha256': os.environ.get('BOS_BUILD_SHA256', '')},
+                'tools': {'name': f'verifier-tools-{run_id}-{attempt}-{number}', 'sha256': os.environ.get('BOS_TOOLS_SHA256', '')}}},
+            {'job': 'lean', 'run_id': run_id, 'attempt': attempt, 'artifacts': {
+                'lean_receipt': {'name': f'verifier-receipt-and-logs-{run_id}-{attempt}-{number}-lean',
+                                 'sha256': digest(source)}}},
+            {'job': 'nanoda', 'run_id': run_id, 'attempt': attempt, 'artifacts': {
+                'consumed': ['build', 'tools', 'lean_receipt']}},
+        ],
+        'started_unix': lean.get('chain_started_unix') or lean.get('started_unix'),
+    }
+    save(data)
+
+
 def verify_lean():
     verify(['lean', 'audit'])
     data = receipt()
@@ -884,6 +1115,22 @@ def verify_lean():
 
 
 def verify_nanoda():
+    if os.environ.get('BOS_CHAIN') == 'true':
+        data = receipt()
+        lean = data.get('kernels', {}).get('lean', {})
+        if lean.get('status') in [None, 'not_started']:
+            # Chained job 3 without a Lean result: job 2's gate said claimed only, or its prepare
+            # failed there. Admission reads the Lean kernel first, so the advisory nanoda pass
+            # cannot change such a receipt, and the single job would have skipped both checks at
+            # its gate. Record the reason and end.
+            data['kernels']['nanoda'] = {'status': 'not_started', 'reason': 'lean_check_did_not_run'}
+            data['status'] = 'not_verified'; save(data); return
+        if lean.get('systemd_result') in ['oom-kill', 'timeout'] or lean.get('guard_stop'):
+            # The single-job loop breaks after a Lean resource stop (verifier.verify). On a fresh
+            # VM the nanoda pass would rebuild and check for hours only to reach the same
+            # not_verified end, so skip it and say why.
+            data['kernels']['nanoda'] = {'status': 'not_started', 'reason': 'lean_resource_stop'}
+            data['status'] = 'not_verified'; save(data); return
     verify(['nanoda'])
     data = receipt()
     data['verification_stage'] = 'final'
@@ -926,7 +1173,7 @@ def finalize():
 
 
 def main():
-    parser = argparse.ArgumentParser(); parser.add_argument('phase', choices=['prepare', 'setup', 'build', 'pack', 'verify', 'unpack', 'verify_lean', 'verify_nanoda', 'finalize'])
+    parser = argparse.ArgumentParser(); parser.add_argument('phase', choices=['prepare', 'setup', 'build', 'pack', 'pack_tools', 'verify', 'unpack', 'unpack_tools', 'merge_lean', 'verify_lean', 'verify_nanoda', 'finalize'])
     phase = parser.parse_args().phase
     try:
         globals()[phase]()

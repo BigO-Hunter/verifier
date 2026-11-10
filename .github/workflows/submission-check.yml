@@ -30,6 +30,7 @@ jobs:
     outputs:
       proceed: ${{ steps.gate.outputs.proceed }}
       build_sha256: ${{ steps.pack.outputs.build_sha256 }}
+      tools_sha256: ${{ steps.pack_tools.outputs.tools_sha256 }}
     steps:
       - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
         with:
@@ -55,6 +56,20 @@ jobs:
       - if: steps.gate.outputs.proceed == 'true'
         timeout-minutes: 45
         run: python3 scripts/verifier.py setup
+      # Chained stages (docs/execution.md): the tools and cache for jobs 2 and 3, packed before the
+      # build so a failed build still leaves a usable tools artifact.
+      - id: pack_tools
+        if: ${{ !cancelled() && steps.setup.outcome == 'success' }}
+        run: python3 scripts/verifier.py pack_tools
+      - if: ${{ !cancelled() && steps.pack_tools.outcome == 'success' }}
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        with:
+          name: verifier-tools-${{ github.run_id }}-${{ github.run_attempt }}-${{ inputs.issue_number }}
+          path: tools-artifact/
+          if-no-files-found: error
+          # Two days: a chained run's later jobs can start long after job 1 (retention covers a
+          # requeue of a failed leg without rebuilding the tools).
+          retention-days: 2
       - if: steps.gate.outputs.proceed == 'true'
         run: python3 scripts/verifier.py build
       # Also after a failed build step: pack keeps what exists. Never upload the raw folder.
@@ -67,7 +82,7 @@ jobs:
           name: verifier-build-${{ github.run_id }}-${{ github.run_attempt }}-${{ inputs.issue_number }}
           path: build-artifact/
           if-no-files-found: error
-          retention-days: 1
+          retention-days: 2
   verify:
     needs: build
     # build is skipped when not split. A status function lets this job run then; unpack refuses a failed build.
@@ -77,6 +92,8 @@ jobs:
     permissions:
       contents: read
       issues: read
+    outputs:
+      proceed: ${{ steps.gate.outputs.proceed }}
     env:
       BOS_REQUEST_PATH: request/request.json
       ISSUE_NUMBER: ${{ inputs.issue_number }}
@@ -105,7 +122,20 @@ jobs:
         run: python3 -m unittest discover -s tests -v
       - if: steps.gate.outputs.proceed == 'true'
         run: python3 scripts/verifier.py prepare
-      - if: steps.gate.outputs.proceed == 'true'
+      # Chained stages: a split run restores job 1's tools and cache instead of rebuilding them
+      # (docs/execution.md, Chained stages); the sha256 comes from job 1's output.
+      - if: inputs.split && steps.gate.outputs.proceed == 'true'
+        uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093
+        with:
+          name: verifier-tools-${{ github.run_id }}-${{ github.run_attempt }}-${{ inputs.issue_number }}
+          path: tools-artifact
+      - if: inputs.split && steps.gate.outputs.proceed == 'true'
+        env:
+          BOS_TOOLS_RESULT: ${{ needs.build.result }}
+          BOS_TOOLS_SHA256: ${{ needs.build.outputs.tools_sha256 }}
+        run: python3 scripts/verifier.py unpack_tools
+      # One job only: in a split run, unpack_tools replaces this 45-minute setup step.
+      - if: ${{ !inputs.split && steps.gate.outputs.proceed == 'true' }}
         timeout-minutes: 45
         run: python3 scripts/verifier.py setup
       - if: inputs.split && steps.gate.outputs.proceed == 'true'
@@ -131,7 +161,90 @@ jobs:
           path: artifacts/
           if-no-files-found: error
           retention-days: 90
-      - if: steps.gate.outputs.proceed == 'true'
+      # A split run chains the advisory nanoda pass into its own job below; a single job runs it here.
+      - if: ${{ !inputs.split && steps.gate.outputs.proceed == 'true' }}
+        continue-on-error: true
+        run: python3 scripts/verifier.py verify_nanoda
+      - if: ${{ always() && !inputs.split }}
+        env:
+          BOS_RECEIPT_STAGE: final
+        run: python3 scripts/verifier.py finalize
+      - if: ${{ always() && !inputs.split }}
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        with:
+          name: verifier-receipt-and-logs-${{ github.run_id }}-${{ github.run_attempt }}-${{ inputs.issue_number }}
+          path: artifacts/
+          if-no-files-found: error
+          retention-days: 90
+  nanoda:
+    needs: [build, verify]
+    # Chained job 3 (split profiles, docs/execution.md): the advisory nanoda pass with its own
+    # 350-minute job timeout and its own 320-minute deadline from prepare, so a heavy proof gets
+    # a full third budget instead of the minutes left over after the Lean check.
+    if: ${{ !cancelled() && inputs.split && inputs.route == 'issue' }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 350
+    permissions:
+      contents: read
+      issues: read
+    env:
+      BOS_REQUEST_PATH: request/request.json
+      ISSUE_NUMBER: ${{ inputs.issue_number }}
+      BOS_SPLIT: ${{ inputs.split }}
+      # prepare reads it; verify_nanoda uses it to skip without a Lean result (a single job
+      # skips both checks at its gate).
+      BOS_CHAIN: 'true'
+      BOS_BUILD_RESULT: ${{ needs.build.result }}
+      BOS_BUILD_SHA256: ${{ needs.build.outputs.build_sha256 }}
+      BOS_TOOLS_RESULT: ${{ needs.build.result }}
+      BOS_TOOLS_SHA256: ${{ needs.build.outputs.tools_sha256 }}
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        with:
+          ref: ${{ github.sha }}
+          persist-credentials: false
+      - uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093
+        with:
+          name: direct-requests-${{ github.run_id }}-${{ github.run_attempt }}
+          path: requests
+      - run: python3 scripts/submissions.py materialize
+      # No gate here: jobs 1 and 2 admitted the run, and the report job's staleness check covers
+      # later issue changes. A third record-gate read could contradict the Lean evidence already
+      # collected and would only decide whether hours of advisory compute start.
+      - if: needs.verify.outputs.proceed == 'true'
+        env:
+          BOS_SPLIT: ''
+        run: python3 -m unittest discover -s tests -v
+      - id: prepare
+        if: needs.verify.outputs.proceed == 'true'
+        run: python3 scripts/verifier.py prepare
+      - if: always()
+        uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093
+        with:
+          name: verifier-receipt-and-logs-${{ github.run_id }}-${{ github.run_attempt }}-${{ inputs.issue_number }}-lean
+          path: lean-artifact
+      - id: merge
+        if: ${{ always() && steps.prepare.outcome == 'success' }}
+        env:
+          BOS_LEAN_ARTIFACT: lean-artifact
+        run: python3 scripts/verifier.py merge_lean
+      - if: ${{ steps.merge.outcome == 'success' }}
+        uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093
+        with:
+          name: verifier-tools-${{ github.run_id }}-${{ github.run_attempt }}-${{ inputs.issue_number }}
+          path: tools-artifact
+      - id: tools
+        if: ${{ steps.merge.outcome == 'success' }}
+        run: python3 scripts/verifier.py unpack_tools
+      - if: ${{ steps.tools.outcome == 'success' }}
+        uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093
+        with:
+          name: verifier-build-${{ github.run_id }}-${{ github.run_attempt }}-${{ inputs.issue_number }}
+          path: build-artifact
+      - id: unpack
+        if: ${{ steps.tools.outcome == 'success' }}
+        run: python3 scripts/verifier.py unpack
+      - if: ${{ steps.unpack.outcome == 'success' }}
         continue-on-error: true
         run: python3 scripts/verifier.py verify_nanoda
       - if: always()
@@ -141,6 +254,7 @@ jobs:
       - if: always()
         uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
         with:
+          # The final name: the report job and live_publish read this one.
           name: verifier-receipt-and-logs-${{ github.run_id }}-${{ github.run_attempt }}-${{ inputs.issue_number }}
           path: artifacts/
           if-no-files-found: error

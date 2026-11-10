@@ -253,7 +253,8 @@ class SetupPinTests(Base):
         data = v.receipt()
         self.assertEqual((data['status'], data['tool_pins']), ('tools_ready', pins))
         self.assertNotIn('setup_skipped', data)
-        self.assertEqual(sorted(json.loads((self.art / 'tool-sha256.json').read_text())), ['comparator', 'landrun', 'lean', 'lean4export', 'nanoda'])
+        self.assertEqual(sorted(json.loads((self.art / 'tool-sha256.json').read_text())),
+                         ['comparator', 'lake_shim', 'landrun', 'lean', 'lean4export', 'nanoda'])
 
 
 class BuildPinTests(Base):
