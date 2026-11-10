@@ -27,7 +27,8 @@ insufficient. A pass does not establish novelty or authorship.
 For verifier development, run python3 -m unittest discover -s tests -v.
 Run Lean only on GitHub Actions. Never run Lean on the office box.
 A split profile builds in a separate GitHub job; only allow-listed build files
-pass to the check job (docs/execution.md, Split build).
+pass to the check job, and the Lean and nanoda checks run as separate chained
+jobs (docs/execution.md, Split build and Chained stages).
 Keep proof execution and result publication on separate fresh runners.
 Never execute submission code in a job with write permission or secrets.
 Use the trusted scheduler lease for a shared batch of nine distinct public accounts plus one maintainer smoke.

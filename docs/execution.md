@@ -149,6 +149,72 @@ build job and never splits: a 3SUM PR runs as one job, as before, and keeps the 
    the time that is left. For Catalan it can end incomplete (time or memory limit);
    that does not prevent Lean Verified.
 
+## Chained stages for split profiles
+
+A single job cannot run longer than 6 hours (verifier#187), and one hosted job
+holds at most about 5.3 check hours after setup. A 3SUM build once took 5 h 16
+minutes in job 1 (#99); a Catalan Lean replay alone took about 5 h 10 minutes,
+so a check leg that also had to rebuild the tools could not reach the nanoda
+pass (#182). Since 2026-11-09, a split run chains its checks into three hosted
+jobs of one workflow run. Each has the 350-minute job timeout and its own
+320-minute deadline from its own `prepare`, so a heavy proof gets three full
+budgets where one job hit the wall.
+
+1. Job `build` is the split build above, plus `verifier.py pack_tools` (rule
+   T2): right after `setup` and before `build`, it writes a deterministic tar
+   `tools-artifact/tools.tar` of the built tools, the pinned Mathlib and
+   dependency cache, the Lake adapter and `control/inside.py`. It never follows
+   a symlink, refuses caps of 12 GiB and 400,000 members, and refuses to finish
+   if a pinned tool could not be packed. `tool-sha256.json` (the sha256 of each
+   pinned executable) travels with the tar; the tar's sha256 is the job output
+   `tools_sha256`. The job uploads it as `verifier-tools-<run>-<attempt>-<issue>`
+   (2 days; the build artifact keeps the same retention now that three jobs run
+   serially).
+2. Job `verify` (the Lean leg) runs the gate, tests and `prepare`, then —
+   instead of the 45-minute setup — `verifier.py unpack_tools` (rule T1): it
+   checks the tar against `BOS_TOOLS_SHA256`, refuses any member outside the
+   allow-list (the toolchain folders, `cache/packages/…` for the read-only
+   dependency cache, `control/bin/lake`, `control/inside.py`), restores into the
+   empty folders with `O_EXCL`/`O_NOFOLLOW` and the packed mtimes, and re-checks
+   every restored executable against `tool-sha256.json`. Then it downloads and
+   unpacks the build artifact as before and runs `verify_lean`. Its final step
+   uploads the `-lean` receipt artifact, exactly as the checkpoint flow expects.
+   A single-job run (`BOS_SPLIT` unset) keeps the old steps: setup, Lean,
+   nanoda, both uploads.
+3. Job `nanoda` (chained job 3, `needs: [build, verify]`) materializes the
+   request, prepares, downloads the `-lean` artifact and runs
+   `verifier.py merge_lean`: it merges job 2's Lean kernel and axiom audit into
+   this job's receipt (only if the request, commit and Lean-stage shape match),
+   copies the small artifact files, records job 2's stage under `stages.lean`
+   with the sha256 of the exact receipt bytes merged, and writes `chain`: the
+   job names, artifact names and pinned sha256s each link consumed. Then it
+   restores the tools (rule T1) and the build (rule S1) again — each link pins
+   its input — and runs the advisory nanoda pass with a full fresh budget. Its
+   final upload keeps the unsuffixed name the report job and `live_publish`
+   read, so publication and the verdict flow are unchanged.
+4. The chain runs no third record gate. Jobs 1 and 2 admitted the run; a gate
+   disagreement in job 3 could only contradict the Lean evidence already
+   collected, and the report job's staleness check covers later issue changes.
+   Without a Lean result (job 2's gate said claimed only, or its prepare
+   failed) or after a Lean resource stop, `verify_nanoda` skips the advisory
+   pass and records the reason (`lean_check_did_not_run`,
+   `lean_resource_stop`) instead of spending hours on a receipt that admission
+   reads the Lean kernel first in.
+
+What stays unchanged: the receipt fields the verdict cites (steps are job 2's
+under `stages.lean.steps`, plus job 3's own), `build.attempts`, the kernel
+records, the tool pins, the artifact names of the report and checkpoint flows,
+the admission semantics in `verdicts.py`, the PR route, and every single-job
+run. A chain keeps provenance in the receipt: anyone re-checking a verdict can
+recompute each artifact hash and each tool binary from the pinned sources.
+
+The tools allow-list (`verifier.tools_allowed`, one function for pack_tools and
+unpack_tools): `tools/…` except `tools/elan/downloads/…` and `tools/elan/tmp/…`,
+`cache/packages/…` (restored into the read-only `.lake/packages` cache),
+`control/bin/lake` and `control/inside.py`. Nothing else: no receipt, no
+request, no submission file. The build artifact (rule S1) already carries the
+submission's own outputs; rule T1 never carries one.
+
 The allow-list (`verifier.build_allowed`, one function for pack and unpack),
 for each source root R of the profile and its solution dependencies:
 `lib/lean/R.<ext>`, `lib/lean/R/…`, `ir/R.<ext>` and `ir/R/…`. Nothing else:
