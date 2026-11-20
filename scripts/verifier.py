@@ -498,12 +498,39 @@ def sandbox_args(config_write=False):
 # bounds the memory of these threads.
 TASKS_MAX = 4096
 
+# Lake starts one Lean process per worker of its task pool, and LEAN_NUM_THREADS sets the size of that pool
+# (Lean v4.34.1 src/runtime/object.cpp get_lean_num_threads; that Lake has no -j option). A Lean process
+# ignores the variable (src/Lean/Shell.lean defaultNumThreads), so it only sets how many modules build at once.
+# The 14G cap is for the whole unit: on verifier#182 four large modules at once hit it (oom-kill at Lake job
+# 4214/6130, and again after 124 s when job 2 continued at 4). After an oom-kill during the build, the build
+# continues in a new unit with the next count. Lake keeps each finished module.
+LAKE_WORKERS = (4, 3, 2, 1)
+
+
+def first_lake_workers(data):
+    """The count that the last build attempt of this run used: the earlier stage of this job (lake_workers),
+    else split job 1 (build.attempts, restored by unpack). Any other value starts at 4."""
+    jobs = data.get('lake_workers')
+    if jobs is None:
+        build = data.get('build')
+        attempts = build.get('attempts') if isinstance(build, dict) else None
+        jobs = attempts[-1].get('lake_jobs') if isinstance(attempts, list) and attempts and isinstance(attempts[-1], dict) else None
+    return jobs if type(jobs) is int and jobs in LAKE_WORKERS else LAKE_WORKERS[0]
+
+
+def build_unfinished(text):
+    """True when the log of one check shows fewer finished Lake chains (the shim's 'exit=0' lines) than chain targets."""
+    targets = [line for line in (WORK / 'control/chain-targets.txt').read_text().splitlines() if line]
+    return len(re.findall(r'^VERIFIER source chain \d+: exit=0 seconds=', text, re.M)) < len(targets)
+
 
 def prepare_nanoda_swap():
     # Comparator retains its parsed proof while its external kernel runs.
     # Swap lets those idle pages leave RAM on the standard hosted runner.
     # This file is outside every submission mount and exists only on the VM.
     swap = WORK / 'nanoda.swap'
+    if swap.exists():
+        return  # An earlier attempt of this stage made it.
     if shutil.disk_usage(WORK).free < 20 * 1024**3:
         raise RuntimeError('nanoda swap needs at least 20 GiB free disk')
     command(['sudo', 'fallocate', '-l', '16G', swap], 'nanoda-swap-allocate')
@@ -536,7 +563,7 @@ print('Network/process namespaces, credential visibility, and read-only mounts p
             str(WORK / 'stage/.lake/packages/mathlib/lean-toolchain')], 'sandbox-preflight')
 
 
-def launch_github(kernel, command_args, deadline):
+def launch_github(kernel, command_args, deadline, log_mode='w'):
     """One systemd-run unit per stage with its own caps; returns exit code, unit result, guard stop, start, usage."""
     if kernel == 'nanoda':
         prepare_nanoda_swap()
@@ -550,7 +577,7 @@ def launch_github(kernel, command_args, deadline):
             '--property=RuntimeMaxSec=' + str(remaining), '--property=TasksMax=' + str(TASKS_MAX), *command_args]
     print(f'{kernel}: isolated check started', flush=True)
     start, peak, swap_peak, tasks_peak, guard_stop = time.monotonic(), 0, 0, 0, None
-    with (ART / f'{kernel}.log').open('w') as log:
+    with (ART / f'{kernel}.log').open(log_mode) as log:
         proc = subprocess.Popen(args, stdout=log, stderr=subprocess.STDOUT)
         while proc.poll() is None:
             memory = Path('/sys/fs/cgroup/system.slice') / (unit + '.service') / 'memory.peak'
@@ -586,13 +613,39 @@ def verify(kernels=None):
                 data['kernels']['nanoda'] = {'status': 'incomplete', 'reason': 'total_deadline'}
             save(data); return
         command_args = sandbox_args() + ['/usr/bin/python3', str(WORK / 'control/inside.py'), str(WORK), kernel]
-        code, systemd_result, guard_stop, start, usage = launch_github(kernel, command_args, deadline)
+        log = ART / f'{kernel}.log'
+        if kernel == 'audit':
+            code, systemd_result, guard_stop, start, usage = launch_github(kernel, command_args, deadline)
+            text = log.read_text(errors='replace')
+        else:
+            # The shim reads the Lake worker count (lake-shim.c). Start at the count of the last build attempt.
+            workers = LAKE_WORKERS[LAKE_WORKERS.index(first_lake_workers(data)):]
+            attempts, offset = [], 0
+            for jobs in workers:
+                if attempts:
+                    subprocess.run(['sudo', 'systemctl', 'reset-failed', 'bos-verifier-' + kernel], check=False,
+                                   stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+                    with log.open('a') as f:
+                        f.write(f'VERIFIER {kernel}: oom-kill during the build, the check starts again with {jobs} Lake workers\n')
+                    offset = log.stat().st_size
+                (WORK / 'control/lake-workers.txt').write_text(f'{jobs}\n')
+                code, systemd_result, guard_stop, start, usage = launch_github(kernel, command_args, deadline,
+                                                                               'a' if attempts else 'w')
+                with log.open('rb') as f:
+                    f.seek(offset); text = f.read().decode(errors='replace')
+                attempts.append({'lake_jobs': jobs, 'exit_code': code, 'systemd_result': systemd_result,
+                                 'wall_seconds': round(time.monotonic() - start, 3), **usage, 'guard_stop': guard_stop})
+                data = receipt(); data['lake_workers'] = jobs; save(data)
+                if (systemd_result != 'oom-kill' or guard_stop or not build_unfinished(text)
+                        or jobs == workers[-1] or time.time() >= deadline):
+                    break
         record = {'systemd_result': systemd_result, 'status': 'passed' if code == 0 else 'not_completed_or_rejected',
                   'exit_code': code, 'wall_seconds': round(time.monotonic() - start, 3),
                   **usage, 'guard_stop': guard_stop, 'log': kernel + '.log'}
-        text = (ART / f'{kernel}.log').read_text(errors='replace')
         if kernel != 'audit':
+            # The outcome comes from the last attempt's part of the log only.
             record.update(kernel_outcome(kernel, code, text, systemd_result, guard_stop))
+            record['attempts'] = attempts
             data = receipt(); data['kernels'][kernel] = record
         else:
             reported = {}
@@ -660,13 +713,33 @@ def build():
     not fatal: pack keeps what exists, and job 2 continues or fails as one job would."""
     sandbox_preflight()
     deadline = receipt()['started_unix'] + DEADLINE_SECONDS - BUILD_PACK_SECONDS
-    command_args = sandbox_args() + ['/usr/bin/python3', str(WORK / 'control/inside.py'), str(WORK), 'build']
-    code, systemd_result, guard_stop, start, usage = launch_github('build', command_args, deadline)
+    attempts = []
+    for jobs in LAKE_WORKERS:
+        if attempts:
+            if time.time() >= deadline:
+                break
+            # A failed transient unit stays loaded, and systemd-run refuses its name until it is reset.
+            subprocess.run(['sudo', 'systemctl', 'reset-failed', 'bos-verifier-build'], check=False,
+                           stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+            with (ART / 'build.log').open('a') as log:
+                log.write(f'VERIFIER build: oom-kill, the build continues with {jobs} Lake workers\n')
+        command_args = sandbox_args() + ['/usr/bin/python3', str(WORK / 'control/inside.py'), str(WORK), 'build', str(jobs)]
+        code, systemd_result, guard_stop, start, usage = launch_github('build', command_args, deadline,
+                                                                       'a' if attempts else 'w')
+        attempts.append({'lake_jobs': jobs, 'exit_code': code, 'systemd_result': systemd_result,
+                         'wall_seconds': round(time.monotonic() - start, 3), **usage, 'guard_stop': guard_stop})
+        print(f'build: {jobs} Lake workers, exit {code}, {systemd_result}', flush=True)
+        if systemd_result != 'oom-kill' or guard_stop:
+            break
+    # The top-level fields are those of the last attempt, with the total time and the highest samples.
     data = receipt()
-    data['build'] = {'exit_code': code, 'systemd_result': systemd_result, 'wall_seconds': round(time.monotonic() - start, 3),
-                     **usage, 'guard_stop': guard_stop, 'log': 'build.log'}
+    data['build'] = {**{k: v for k, v in attempts[-1].items() if k != 'lake_jobs'},
+                     'wall_seconds': round(sum(a['wall_seconds'] for a in attempts), 3),
+                     'sampled_peak_cgroup_bytes': max(a['sampled_peak_cgroup_bytes'] for a in attempts),
+                     'sampled_peak_swap_bytes': max(a['sampled_peak_swap_bytes'] for a in attempts),
+                     'sampled_peak_tasks': max(a['sampled_peak_tasks'] for a in attempts),
+                     'log': 'build.log', 'attempts': attempts}
     save(data)
-    print(f'build: exit {code}, {systemd_result}', flush=True)
 
 
 def pack():

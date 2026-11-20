@@ -14,8 +14,24 @@
 #ifndef SOLUTION_MODULE
 #error SOLUTION_MODULE is required
 #endif
+/* LEAN_NUM_THREADS of Lake sets how many modules build at once (verifier.py LAKE_WORKERS). The trusted
+   verifier writes the count, 1 to 4, to CONTROL/lake-workers.txt before each check; without the file it is 4. */
+static const char *lake_workers(void) {
+    static char value[2] = "4";
+    FILE *f = fopen(CONTROL "/lake-workers.txt", "r");
+    if (!f) return value;
+    char buf[8] = {0};
+    size_t n = fread(buf, 1, sizeof buf - 1, f);
+    fclose(f);
+    if (!((n == 1 || (n == 2 && buf[1] == '\n')) && buf[0] >= '1' && buf[0] <= '4')) return NULL;
+    value[0] = buf[0];
+    return value;
+}
+
 int main(int argc, char **argv) {
-    if (setenv("LEAN_NUM_THREADS", "4", 1)) return 1;
+    const char *workers = lake_workers();
+    if (!workers) { fprintf(stderr, "invalid lake-workers.txt\n"); return 1; }
+    if (setenv("LEAN_NUM_THREADS", workers, 1)) return 1;
     if (argc != 3 || strcmp(argv[1], "build") || strcmp(argv[2], SOLUTION_MODULE)) {
         argv[0] = REAL_LAKE;
         execv(REAL_LAKE, argv);

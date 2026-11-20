@@ -421,12 +421,49 @@ class BuildTests(Base):
         class Exec(Exception): pass
         def execve(path, args, env):
             calls.append((path, args, env['LEAN_NUM_THREADS'])); raise Exec()
-        with patch.object(sys, 'argv', ['inside.py', str(self.work), 'build']), patch.object(os, 'execve', side_effect=execve), \
-             self.assertRaises(Exec):
-            runpy.run_path(str(ROOT / 'scripts/inside.py'), run_name='__main__')
+        for jobs in ['4', '2']:
+            with patch.object(sys, 'argv', ['inside.py', str(self.work), 'build', jobs]), \
+                 patch.object(os, 'execve', side_effect=execve), self.assertRaises(Exec):
+                runpy.run_path(str(ROOT / 'scripts/inside.py'), run_name='__main__')
         lake = str(self.work / 'tools/elan/toolchains/leanprover--lean4---v4.34.1/bin/lake')
-        self.assertEqual(calls, [(lake, [lake, 'build', 'Submission'], '4')])
+        self.assertEqual(calls, [(lake, [lake, 'build', 'Submission'], '4'), (lake, [lake, 'build', 'Submission'], '2')])
         self.assertFalse(challenge.exists())
+        # The Lake worker count comes only from the controller, and only 1 to 4.
+        for argv in [['build'], ['build', '0'], ['build', '5'], ['build', '2 '], ['build', '2', 'x']]:
+            with patch.object(sys, 'argv', ['inside.py', str(self.work), *argv]), \
+                 patch.object(os, 'execve', side_effect=execve), self.assertRaises(ValueError):
+                runpy.run_path(str(ROOT / 'scripts/inside.py'), run_name='__main__')
+        self.assertEqual(len(calls), 2)
+
+    def test_inside_every_phase_reaches_execve(self):
+        # verifier#188 (AnanasClassic; test idea from darkhipo's PR #189): 195060b2 set LEAN_NUM_THREADS only in
+        # the build branch, so the audit raised NameError before its execve. The build test above was the only
+        # unit test of inside.py; the other phases ran only in real sandbox runs. Run every phase here.
+        v.write_json(self.work / 'control/request.json', {'request': {'lean_toolchain': 'leanprover/lean4:v4.34.1'},
+                                                          'profile': {'solution_module': 'Submission'}})
+        lake = str(self.work / 'tools/elan/toolchains/leanprover--lean4---v4.34.1/bin/lake')
+        comparator = str(self.work / 'tools/comparator/.lake/build/bin/comparator')
+        expected = {
+            'audit': (lake, [lake, 'env', 'lean', str(self.work / 'stage/VerifierAudit.lean')]),
+            'lean': (lake, [lake, 'env', '/usr/bin/python3', str(self.work / 'control/inside.py'), str(self.work), 'lean-exec']),
+            'nanoda': (lake, [lake, 'env', '/usr/bin/python3', str(self.work / 'control/inside.py'), str(self.work), 'nanoda-exec']),
+            'lean-exec': (comparator, [comparator, str(self.work / 'control/lean.json')]),
+            'nanoda-exec': (comparator, [comparator, str(self.work / 'control/nanoda.json')]),
+        }
+        class Exec(Exception): pass
+        for phase, (path, args) in expected.items():
+            calls = []
+            def execve(p, a, env):
+                calls.append((p, a, env['LEAN_NUM_THREADS'], env.get('PATH', ''))); raise Exec()
+            with self.subTest(phase=phase), patch.object(sys, 'argv', ['inside.py', str(self.work), phase]), \
+                 patch.object(os, 'execve', side_effect=execve), self.assertRaises(Exec):
+                runpy.run_path(str(ROOT / 'scripts/inside.py'), run_name='__main__')
+            self.assertEqual(calls[0][:3], (path, args, '4'), phase)
+            if phase.endswith('-exec'):
+                self.assertTrue(calls[0][3].startswith(str(self.work / 'control/bin') + ':'), phase)
+        with patch.object(sys, 'argv', ['inside.py', str(self.work), 'audit-exec']), \
+             patch.object(os, 'execve', side_effect=AssertionError('no execve')), self.assertRaises(ValueError):
+            runpy.run_path(str(ROOT / 'scripts/inside.py'), run_name='__main__')
 
 
 try:
@@ -447,7 +484,7 @@ class WorkflowTests(unittest.TestCase):
 
     def test_build_job(self):
         jobs = self.load('submission-check.yml')['jobs']
-        self.assertEqual(list(jobs), ['build', 'verify', 'report', 'pr_verify'])
+        self.assertEqual(list(jobs), ['build', 'verify', 'pr_verify'])
         build, verify = jobs['build'], jobs['verify']
         self.assertEqual(build['if'], "inputs.split && inputs.route == 'issue'")
         self.assertEqual(build['permissions'], {'contents': 'read', 'issues': 'read'})
@@ -507,8 +544,41 @@ class WorkflowTests(unittest.TestCase):
                                  'python3 scripts/verifier.py verify_lean', 'python3 scripts/verifier.py finalize',
                                  'actions/upload-artifact', 'python3 scripts/verifier.py verify_nanoda',
                                  'python3 scripts/verifier.py finalize', 'actions/upload-artifact'])
-        self.assertEqual((jobs['report']['needs'], jobs['report']['if']), ('verify', "always() && inputs.route == 'issue'"))
         self.assertNotIn('needs', jobs['pr_verify'])
+
+    def test_each_issue_of_a_matrix_gets_its_report(self):
+        # Run 42648121034 (2026-11-09) checked #187 and #190 in one matrix. The report job inside the reusable workflow
+        # was never created for #190 (no error; the run ended failure), so #190 got no verdict. The report is now a plain
+        # matrix job of the caller, over the same matrix, after every check leg: one report per selected issue.
+        caller = self.load('submissions.yml')['jobs']
+        check, report = caller['check'], caller['report']
+        self.assertEqual(report['needs'], ['select', 'check'])
+        self.assertEqual(report['if'], "${{ always() && needs.select.outputs.selected == 'true' }}")
+        self.assertEqual(report['strategy'], check['strategy'])
+        self.assertNotIn('uses', report)
+        self.assertEqual(report['permissions'], {'contents': 'read', 'actions': 'read', 'issues': 'write'})
+        self.assertEqual(report['env'], {'ISSUE_NUMBER': '${{ matrix.issue_number }}'})
+        # Issue write moves from the check legs (which run the submitted Lean code) to the report job only.
+        self.assertEqual(check['permissions']['issues'], 'read')
+        for name, job in self.load('submission-check.yml')['jobs'].items():
+            self.assertNotEqual(job.get('permissions', {}).get('issues'), 'write', name)
+        steps = report['steps']
+        self.assertTrue(all(step['if'] == "matrix.route == 'issue'" for step in steps))
+        runs = [step.get('run') or step['uses'].split('@')[0] for step in steps]
+        self.assertEqual(runs, ['actions/checkout', 'actions/download-artifact', 'python3 scripts/submissions.py materialize',
+                                'actions/download-artifact', 'python3 scripts/submissions.py report', 'actions/upload-artifact',
+                                'python3 scripts/submissions.py publish'])
+        self.assertEqual(steps[0]['with'], {'ref': '${{ github.sha }}', 'persist-credentials': False})
+        # The artifact names of the check legs and of the site import are unchanged.
+        self.assertEqual(steps[1]['with']['name'], 'direct-requests-${{ github.run_id }}-${{ github.run_attempt }}')
+        self.assertEqual(steps[3]['with']['name'], 'verifier-receipt-and-logs-${{ github.run_id }}-${{ github.run_attempt }}-${{ matrix.issue_number }}')
+        self.assertEqual(steps[5]['with']['name'], 'direct-submission-${{ github.run_id }}-${{ github.run_attempt }}-${{ matrix.issue_number }}')
+        verify = self.load('submission-check.yml')['jobs']['verify']
+        uploads = [step['with']['name'] for step in verify['steps'] if step.get('uses', '').startswith('actions/upload-artifact')]
+        self.assertIn('verifier-receipt-and-logs-${{ github.run_id }}-${{ github.run_attempt }}-${{ inputs.issue_number }}', uploads)
+        # The same action pins as the check jobs.
+        pins = {step['uses'] for step in verify['steps'] if 'uses' in step}
+        self.assertTrue({step['uses'] for step in steps if 'uses' in step} <= pins)
 
 
 class SuiteUnderSplitTests(unittest.TestCase):

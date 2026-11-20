@@ -157,8 +157,10 @@ because GitHub artifacts expire after 90 days.
 
 The README and AGENTS.md explain submission. `docs/targets.md` gives exact targets.
 `.github/ISSUE_TEMPLATE/lean-submission.yml` supplies the four-field form.
-`submissions.yml` selects the matrix; `submission-check.yml` separates proof and
-publication jobs. `scripts/submissions.py` parses, queues, generates targets, and
+`submissions.yml` selects the matrix and runs one report job per issue after every
+check leg; `submission-check.yml` runs the proof jobs. (The report job was inside
+`submission-check.yml` until run 42648121034, where GitHub never created it for
+#190 in a two-issue matrix.) `scripts/submissions.py` parses, queues, generates targets, and
 publishes; `scripts/verdicts.py` contains the independent evidence policy.
 The existing controller and sandbox entry support each profile's Lean version.
 
